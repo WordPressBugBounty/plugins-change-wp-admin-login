@@ -101,7 +101,7 @@ if ( ! class_exists( 'AIO_Login\\Login_Customization\\Login_Customization_Output
 
 			if ( ! empty( $this->logo ) ) {
 				$custom_css .= '
-					.login h1 a {
+					.login .wp-login-logo a {
 						background-image: url(' . esc_url( $this->logo ) . ');
 						background-size: contain;
 					}
@@ -110,7 +110,7 @@ if ( ! class_exists( 'AIO_Login\\Login_Customization\\Login_Customization_Output
 
 			if ( ! empty( $this->logo_width ) ) {
 				$custom_css .= '
-					.login h1 a {
+					.login .wp-login-logo a {
 						width: ' . esc_attr( $this->logo_width ) . 'px;
 					}
 				';
@@ -118,7 +118,7 @@ if ( ! class_exists( 'AIO_Login\\Login_Customization\\Login_Customization_Output
 
 			if ( ! empty( $this->logo_height ) ) {
 				$custom_css .= '
-					.login h1 a {
+					.login .wp-login-logo a {
 						height: ' . esc_attr( $this->logo_height ) . 'px;
 					}
 				';
@@ -126,7 +126,7 @@ if ( ! class_exists( 'AIO_Login\\Login_Customization\\Login_Customization_Output
 
 			if ( ! empty( $this->logo_margin_bottom ) ) {
 				$custom_css .= '
-					.login h1 a {
+					.login .wp-login-logo a {
 						margin-bottom: ' . esc_attr( $this->logo_margin_bottom ) . 'px;
 					}
 				';
