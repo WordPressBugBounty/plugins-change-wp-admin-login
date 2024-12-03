@@ -55,7 +55,7 @@ if ( ! class_exists( 'AIO_Login\\Login_Controller\\Login_Controller' ) ) {
 			$this->lockout_message                 = get_option(
 				'aio_login_limit_attempts_lockout_message',
 				// translators: %d: Remaining minutes.
-				__( 'You have been blocked due to too many unsuccessful login attempts. Please try again in %d minutes.', 'aio-login' )
+				__( 'You have been blocked due to too many unsuccessful login attempts. Please try again in %d minutes.', 'change-wp-admin-login' )
 			);
 
 			/**
@@ -67,145 +67,16 @@ if ( ! class_exists( 'AIO_Login\\Login_Controller\\Login_Controller' ) ) {
 
 			if ( empty( $this->lockout_message ) ) {
 				$this->lockout_message = // translators: %d: Remaining minutes.
-					__( 'You have been blocked due to too many unsuccessful login attempts. Please try again in %d minutes.', 'aio-login' );
+					__( 'You have been blocked due to too many unsuccessful login attempts. Please try again in %d minutes.', 'change-wp-admin-login' );
 			}
-
-			add_action( 'admin_init', array( $this, 'register_settings' ) );
-			add_action( 'aio_login__tab_login-protection_limit-login-attempts', array( $this, 'settings_sections' ) );
-			add_action( 'wp_ajax_aio_login_save_limit_login_attempts', array( $this, 'save_limit_login_attempts' ) );
-
-			add_action( 'aio_login__tab_activity-log_failed-logins', array( $this, 'display_failed_login_attempts_content' ) );
-			add_action( 'aio_login__tab_activity-log_lockouts', array( $this, 'display_lockout_attempts_content' ) );
 
 			add_action( 'login_enqueue_scripts', array( $this, 'login_enqueue_scripts' ) );
 			add_filter( 'wp_authenticate_user', array( $this, 'wp_authenticate_user' ), 999, 2 );
 			add_action( 'wp_login_failed', array( $this, 'wp_login_failed' ), 10, 2 );
 			add_filter( 'login_errors', array( $this, 'wp_login_failed_message' ) );
 			add_action( 'login_form', array( $this, 'add_hidden_fields' ) );
-		}
 
-		/**
-		 * Register settings
-		 */
-		public function register_settings() {
-			register_setting( 'aio_login__limit_login_attempts', 'aio_login_limit_attempts_enable' );
-			register_setting( 'aio_login__limit_login_attempts', 'aio_login_limit_attempts_maximum_attempts' );
-			register_setting( 'aio_login__limit_login_attempts', 'aio_login_limit_attempts_timeout' );
-			register_setting( 'aio_login__limit_login_attempts', 'aio_login_limit_attempts_lockout_message' );
-
-			add_settings_section(
-				'aio_login__limit_login_attempts',
-				__( 'Limit Login Attempts', 'aio-login' ),
-				'__return_null',
-				'page=aio-login&tab=security&sub-tab=limit-attempts'
-			);
-
-			add_settings_field(
-				'aio_login_limit_attempts_enable',
-				__( 'Enable', 'aio-login' ),
-				array( $this, 'limit_attempts_enable' ),
-				'page=aio-login&tab=security&sub-tab=limit-attempts',
-				'aio_login__limit_login_attempts',
-				array(
-					'label_for' => 'aio_login_limit_attempts_enable',
-				)
-			);
-
-			add_settings_field(
-				'aio_login_limit_attempts_maximum_attempts',
-				__( 'Maximum Attempts', 'aio-login' ),
-				array( $this, 'limit_attempts_maximum_attempts' ),
-				'page=aio-login&tab=security&sub-tab=limit-attempts',
-				'aio_login__limit_login_attempts',
-				array(
-					'label_for' => 'aio_login_limit_attempts_maximum_attempts',
-				)
-			);
-
-			add_settings_field(
-				'aio_login_limit_attempts_timeout',
-				__( 'Timeout', 'aio-login' ),
-				array( $this, 'limit_attempts_timeout' ),
-				'page=aio-login&tab=security&sub-tab=limit-attempts',
-				'aio_login__limit_login_attempts',
-				array(
-					'label_for' => 'aio_login_limit_attempts_timeout',
-				)
-			);
-
-			add_settings_field(
-				'aio_login_limit_attempts_lockout_message',
-				__( 'Lockout Message', 'aio-login' ),
-				array( $this, 'lockout_message' ),
-				'page=aio-login&tab=security&sub-tab=limit-attempts',
-				'aio_login__limit_login_attempts',
-				array(
-					'label_for' => 'aio_login_limit_attempts_lockout_message',
-				)
-			);
-		}
-
-		/**
-		 * Limit attempts enable
-		 *
-		 * @param array $args Arguments.
-		 */
-		public function limit_attempts_enable( $args ) {
-			$enabled = get_option( $args['label_for'], 'off' );
-			echo '<div class="aio-login__toggle-switch-wrapper">
-				<input type="checkbox" name="' . esc_attr( $args['label_for'] ) . '" id="' . esc_attr( $args['label_for'] ) . '" ' . checked( $enabled, 'on', false ) . ' name="' . esc_attr( $args['label_for'] ) . '" class="aio-login__toggle-field">
-				<label for="' . esc_attr( $args['label_for'] ) . '" class="aio-login__toggle-switch">
-					<span class="aio-login__toggle-indicator"></span>
-				</label>
-			</div>';
-		}
-
-		/**
-		 * Limit attempts maximum attempts
-		 *
-		 * @param array $args Arguments.
-		 */
-		public function limit_attempts_maximum_attempts( $args ) {
-			echo '<input type="number" name="' . esc_attr( $args['label_for'] ) . '" id="' . esc_attr( $args['label_for'] ) . '" value="' . esc_attr( $this->limit_attempts_maximum_attempts ) . '" class="regular-text" min="1" placeholder="5">
-			<p class="description">
-				' . esc_html__( 'Maximum number of login attempts allowed before users IP are locked out.', 'aio-login' ) . '
-				<br>
-				<strong>
-					' . esc_html__( 'By default, this is set to 5 failed attempts if left blank.', 'aio-login' ) . '
-				</strong>
-			</p>';
-		}
-
-		/**
-		 * Limit attempts timeout
-		 *
-		 * @param array $args Arguments.
-		 */
-		public function limit_attempts_timeout( $args ) {
-			echo '<input type="number" name="' . esc_attr( $args['label_for'] ) . '" id="' . esc_attr( $args['label_for'] ) . '" value="' . esc_attr( $this->limit_attempts_timeout ) . '" class="regular-text" min="1" placeholder="5">
-			<p class="description">
-				' . esc_html__( 'Amount of time a particular IP will be locked out once a lockout has been triggered.', 'aio-login' ) . '
-				<br>
-				<strong>
-					' . esc_html__( 'By default, this is set to 5 mins if left blank.', 'aio-login' ) . '
-				</strong>
-			</p>';
-		}
-
-		/**
-		 * Lockout message
-		 *
-		 * @param array $args Arguments.
-		 */
-		public function lockout_message( $args ) {
-			echo '<textarea name="' . esc_attr( $args['label_for'] ) . '" id="' . esc_attr( $args['label_for'] ) . '" class="regular-text" required>' . esc_html( $this->lockout_message ) . '</textarea>';
-			echo '<p class="description">
-				<strong>' . esc_attr__( 'Message displayed to locked out visitors due to too many failed login attempts.', 'aio-login' ) . '</strong>
-				<br>
-				<strong>' . esc_html__( 'Available placeholders', 'aio-login' ) . '</strong>
-				<br>
-				<strong>%d</strong> - ' . esc_html__( 'Remaining minutes', 'aio-login' ) . '
-			</p>';
+            add_action( 'rest_api_init', array( $this, 'rest_api_init' ) );
 		}
 
 		/**
@@ -214,54 +85,6 @@ if ( ! class_exists( 'AIO_Login\\Login_Controller\\Login_Controller' ) ) {
 		public function login_enqueue_scripts() {
 			wp_register_script( 'aio-login--detect-js', AIO_LOGIN__DIR_URL . 'assets/js/detect.js', array(), AIO_LOGIN__VERSION, true );
 			wp_enqueue_script( 'aio-login--login-js', AIO_LOGIN__DIR_URL . 'assets/js/login.js', array( 'jquery', 'aio-login--detect-js' ), AIO_LOGIN__VERSION, true );
-		}
-
-		/**
-		 * Settings template
-		 */
-		public function settings_sections() {
-			echo '<aio-login-settings-form action="aio_login_save_limit_login_attempts">
-                <template v-slot:settings-fields>';
-					settings_fields( 'aio_login__limit_login_attempts' );
-					do_settings_sections( 'page=aio-login&tab=security&sub-tab=limit-attempts' );
-				echo '</template>
-            </aio-login-settings-form>';
-		}
-
-		/**
-		 * Save limit login attempts
-		 */
-		public function save_limit_login_attempts() {
-			if ( ! current_user_can( 'manage_options' ) ) {
-				wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'aio-login' ) );
-			}
-			if ( isset( $_POST['_wpnonce'] ) && wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['_wpnonce'] ) ), 'aio_login__limit_login_attempts-options' ) ) { // phpcs:ignore WordPress.Security.NonceVerification
-				if ( isset( $_POST['aio_login_limit_attempts_enable'] ) ) {
-					update_option( 'aio_login_limit_attempts_enable', 'on' );
-				} else {
-					update_option( 'aio_login_limit_attempts_enable', 'off' );
-				}
-
-				if ( isset( $_POST['aio_login_limit_attempts_maximum_attempts'] ) ) {
-					update_option( 'aio_login_limit_attempts_maximum_attempts', absint( sanitize_text_field( wp_unslash( $_POST['aio_login_limit_attempts_maximum_attempts'] ) ) ) );
-				}
-
-				if ( isset( $_POST['aio_login_limit_attempts_timeout'] ) ) {
-					update_option( 'aio_login_limit_attempts_timeout', absint( sanitize_text_field( wp_unslash( $_POST['aio_login_limit_attempts_timeout'] ) ) ) );
-				}
-
-				if ( isset( $_POST['aio_login_limit_attempts_lockout_message'] ) ) {
-					update_option( 'aio_login_limit_attempts_lockout_message', sanitize_text_field( wp_unslash( $_POST['aio_login_limit_attempts_lockout_message'] ) ) );
-				}
-
-				wp_send_json_success(
-					array(
-						'message' => __( 'Limit Login Attempts settings saved successfully.', 'aio-login' ),
-					),
-					200
-				);
-			}
-			exit( 0 );
 		}
 
 		/**
@@ -284,9 +107,12 @@ if ( ! class_exists( 'AIO_Login\\Login_Controller\\Login_Controller' ) ) {
 				}
 			}
 
-			if ( wp_check_password( $password, $wp_user->user_pass, $wp_user->ID ) ) {
-				self::insert_log( $wp_user->user_login, 'success' );
-				Helper::update_user_attempt_count( '', true );
+			// fixing the support ticket by adding the check user instance.
+			if ( $wp_user instanceof \WP_User ) {
+				if ( wp_check_password( $password, $wp_user->user_pass, $wp_user->ID ) ) {
+					self::insert_log( $wp_user->user_login, 'success' );
+					Helper::update_user_attempt_count( '', true );
+				}
 			}
 
 			$wp_user = apply_filters( 'aio_login__wp_authenticate_user', $wp_user );
@@ -345,7 +171,7 @@ if ( ! class_exists( 'AIO_Login\\Login_Controller\\Login_Controller' ) ) {
 			$location   = Helper::get_location( $ip_address );
 			$country    = $location['country'] ?? '';
 			$city       = $location['city'] ?? '';
-			$user_agent = '';
+			$user_agent = 'UNKNOWN';
 
 			if ( isset( $_POST['aio_login__user_agent'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification
 				$user_agent = sanitize_text_field( wp_unslash( $_POST['aio_login__user_agent'] ) ); // phpcs:ignore WordPress.Security.NonceVerification
@@ -382,7 +208,7 @@ if ( ! class_exists( 'AIO_Login\\Login_Controller\\Login_Controller' ) ) {
 						$error   .= '<br>';
 						$error   .= '<b>' . sprintf(
 							// translators: %d: Remaining attempts.
-							__( 'You have %d attempts remaining.', 'aio-login' ),
+							__( 'You have %d attempts remaining.', 'change-wp-admin-login' ),
 							absint( $this->limit_attempts_maximum_attempts ) - absint( $attempts )
 						) . '</b>';
 					}
@@ -399,53 +225,6 @@ if ( ! class_exists( 'AIO_Login\\Login_Controller\\Login_Controller' ) ) {
 		}
 
 		/**
-		 * Display failed login attempts tables.
-		 */
-		public function display_failed_login_attempts_content() {
-			?>
-			<aio-login-data-table
-				type="failed_login_activity_logs"
-				id="failed_login_attempts"
-				delete-logs-title="Empty failed login attempts"
-				:headers="[
-					{ key: 'id', value: '<?php esc_attr_e( 'ID', 'aio-login' ); ?>' },
-					{ key: 'user_login', value: '<?php esc_attr_e( 'User Login', 'aio-login' ); ?>' },
-					{ key: 'time', value: '<?php esc_attr_e( 'Date & Time', 'aio-login' ); ?>' },
-					{ key: 'country', value: '<?php esc_attr_e( 'Country', 'aio-login' ); ?>' },
-					{ key: 'city', value: '<?php esc_attr_e( 'City', 'aio-login' ); ?>' },
-					{ key: 'user_agent', value: '<?php esc_attr_e( 'User Agent', 'aio-login' ); ?>' },
-					{ key: 'ip_address', value: '<?php esc_attr_e( 'IP Address', 'aio-login' ); ?>' },
-				]"
-			></aio-login-data-table>
-			<?php
-		}
-
-		/**
-		 * Display lockout attempts content.
-		 */
-		public function display_lockout_attempts_content() {
-			if ( ! self::is_enabled() ) {
-				echo '<h2>Lockout settings are disabled by Administrator</h2>';
-				return;
-			}
-
-			?>
-			<aio-login-data-table
-				type="lockout_activity_logs"
-				id="lockout_activity_logs"
-                delete-logs-title="Empty lockout attempts logs"
-				:headers="[
-					{ key: 'time', value: '<?php esc_attr_e( 'Date & Time', 'aio-login' ); ?>' },
-					{ key: 'country', value: '<?php esc_attr_e( 'Country', 'aio-login' ); ?>' },
-					{ key: 'city', value: '<?php esc_attr_e( 'City', 'aio-login' ); ?>' },
-					{ key: 'user_agent', value: '<?php esc_attr_e( 'User Agent', 'aio-login' ); ?>' },
-					{ key: 'ip_address', value: '<?php esc_attr_e( 'IP Address', 'aio-login' ); ?>' },
-				]"
-			></aio-login-data-table>
-			<?php
-		}
-
-		/**
 		 * Is enabled
 		 *
 		 * @return bool
@@ -457,6 +236,127 @@ if ( ! class_exists( 'AIO_Login\\Login_Controller\\Login_Controller' ) ) {
 			);
 
 			return $this->limit_attempts_enabled;
+		}
+
+        public function rest_api_init() {
+	        register_rest_route(
+                'aio-login/limit-login-attempts',
+                '/get-settings',
+                array(
+                    'methods'             => 'GET',
+                    'callback'            => array( $this, 'get_settings' ),
+                    'permission_callback' => array( Helper::class, 'get_api_permission' ),
+                )
+            );
+
+            register_rest_route(
+                'aio-login/limit-login-attempts',
+                '/save-settings',
+                array(
+                    'methods'             => 'POST',
+                    'callback'            => array( $this, 'save_settings' ),
+                    'permission_callback' => array( Helper::class, 'get_api_permission' ),
+                )
+            );
+
+            register_rest_route(
+                'aio-login/logs',
+                '/failed-login',
+                array(
+                    'methods'             => 'GET',
+                    'callback'            => array( $this, 'get_failed_logs' ),
+                    'permission_callback' => array( Helper::class, 'get_api_permission' ),
+                )
+            );
+
+			register_rest_route(
+				'aio-login/logs',
+				'/lockouts',
+				array(
+					'methods'             => 'GET',
+					'callback'            => array( $this, 'lockouts' ),
+					'permission_callback' => array( Helper::class, 'get_api_permission' ),
+				)
+			);
+        }
+
+        public function get_settings() {
+            $settings = array(
+                'enabled'          => $this->limit_attempts_enabled,
+                'maximum_attempts' => $this->limit_attempts_maximum_attempts,
+                'timeout'          => $this->limit_attempts_timeout,
+                'lockout_message'  => $this->lockout_message,
+                'nonce'            => wp_create_nonce( 'limit-login-attempts' ),
+            );
+
+            return rest_ensure_response( $settings );
+        }
+
+        public function save_settings( \WP_REST_Request $request ) {
+	        $params          = $request->get_params();
+            $max_attempts    = sanitize_text_field( wp_unslash( $params['maximum_attempts'] ) );
+            $timeout         = sanitize_text_field( wp_unslash( $params['timeout'] ) );
+            $lockout_message = sanitize_text_field( wp_unslash( $params['lockout_message'] ) );
+
+            if ( isset( $params['_wpnonce'] ) && wp_verify_nonce( $params['_wpnonce'], 'limit-login-attempts' ) ) {
+                $enabled = 'off';
+                if ( isset( $params['enabled'] ) && true === $params['enabled'] ) {
+                    $enabled = 'on';
+                }
+
+                if ( empty( $max_attempts ) ) {
+                    $max_attempts = 5;
+                }
+
+                if ( empty( $timeout ) ) {
+                    $timeout = 5;
+                }
+
+                if ( empty( $lockout_message ) ) {
+                    $lockout_message = // translators: %d: Remaining minutes.
+                        __( 'You have been blocked due to too many unsuccessful login attempts. Please try again in %d minutes.', 'change-wp-admin-login' );
+                }
+
+                update_option( 'aio_login_limit_attempts_enable', $enabled );
+                update_option( 'aio_login_limit_attempts_maximum_attempts', $max_attempts );
+                update_option( 'aio_login_limit_attempts_timeout', $timeout );
+                update_option( 'aio_login_limit_attempts_lockout_message', $lockout_message );
+
+                return rest_ensure_response(
+                    array(
+                        'success' => true,
+                        'message' => __( 'Settings saved successfully', 'change-wp-admin-login' ),
+                    )
+                );
+            }
+
+            return new \WP_Error(
+                    'invalid_nonce',
+                    __( 'Nonce verification failed', 'change-wp-admin-login' ),
+                    array( 'status' => 401 )
+            );
+        }
+
+        public function get_failed_logs() {
+	        $logs = Helper::get_logs( 'failed' );
+
+            $logs = array_map( function( $log ) {
+                $log['time'] = date( 'F j, Y, g:i a', $log['time'] );
+                return $log;
+            }, $logs );
+
+            return rest_ensure_response( $logs );
+        }
+
+		public function lockouts() {
+			$logs = Helper::get_logs( 'lockout' );
+
+			$logs = array_map( function( $log ) {
+				$log['time'] = date( 'F j, Y, g:i a', $log['time'] );
+				return $log;
+			}, $logs );
+
+			return rest_ensure_response( $logs );
 		}
 
 		/**

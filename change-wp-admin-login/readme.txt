@@ -4,7 +4,7 @@ Tags: login url, login, wp admin, wp login, custom login
 Requires at least: 4.6
 Tested up to: 6.7
 Requires PHP: 7.4
-Stable tag: 2.0.2
+Stable tag: 2.0.3
 License: GPLv2 or later
 
 Do you want to secure and customize WordPress login page (wp-admin)❓ Download All in One Login plugin for ultimate WordPress login security and customization.
@@ -37,7 +37,7 @@ Let's explore some of its key features: 👇
 
 The default WP-Admin URL is an easy target for hackers, which means your WordPress login page is always vulnerable to attacks.
 
-But don't worry❗ 
+But don't worry❗
 
 All in One Login lets you change the WP-Admin URL, making it difficult for attackers to locate your login page. This simple change significantly improves your WordPress Admin Login Security and protects your site from unauthorized access attempts.
 
@@ -200,7 +200,7 @@ Add an extra layer of security with mobile-based 2FA.
 
 == Technical Documentation ==
 
-[Click here](https://aiologin.com/documentation) to check out our detailed step-by-step technical documentation to completely secure and customer your WordPress login page (wp-admin). 
+[Click here](https://aiologin.com/documentation) to check out our detailed step-by-step technical documentation to completely secure and customer your WordPress login page (wp-admin).
 
 == Need Help? Get Expert Assistance ==
 
@@ -256,12 +256,15 @@ Even though it is not mandatory, using AIO Login can significantly enhance the s
 
 == Changelog ==
 
-= 2.0.2 Nov 21, 2024=
+= 2.0.3 Dec 03, 2024 =
+* Updated backend with VueJS to improve UX
+
+= 2.0.2 Nov 21, 2024 =
 * Tested compatibility with latest WordPress (Version 6.7)
 * Updated - Feedback SDK to latest Version
 
 = 2.0.1 =
-* Fixed - Added multisite compatibility
+* New - Added multisite compatibility
 * New - Added button to clear all failed & lockout logs
 * Fix - Resolved php error for older versions
 
@@ -276,7 +279,7 @@ Even though it is not mandatory, using AIO Login can significantly enhance the s
 * New - Added login page customization options
 
 = 1.1.8 =
-* Fixed: compatibility issues with WPForms, WordFence 
+* Fixed: compatibility issues with WPForms, WordFence
 
 = 1.1.7 =
 * Fixed: Redirection to wp-admin when trying to access admin pages directly.
@@ -294,10 +297,10 @@ Even though it is not mandatory, using AIO Login can significantly enhance the s
 * Handover plugin
 
 = 1.1.2 =
-* More Fixes for php8 warnings 
+* More Fixes for php8 warnings
 
 = 1.1.1 =
-* Fix php8 warnings 
+* Fix php8 warnings
 
 = 1.1.0 =
 * Update WordPress API settings

@@ -5,8 +5,8 @@
  * Author: AIO Login
  * Author URI: https://aiologin.com/
  * Description: AIO Login is a top-notch WordPress admin security plugin that empowers you to secure and customize WordPress login page (wp-admin) at the same time. Which means it offers robust security features and extensive customization options.
- * Version: 2.0.2
- * Text Domain: aio-login
+ * Version: 2.0.3
+ * Text Domain: change-wp-admin-login
  * Domain Path: /languages
  *
  * @package All In One Login

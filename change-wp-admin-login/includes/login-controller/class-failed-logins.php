@@ -183,10 +183,10 @@ if ( ! class_exists( 'AIO_Login\\Login_Controller\\Failed_Logins' ) ) {
 		 */
 		public function add_blocked_tag( $data ) {
 			$timeout      = Helper::get_timeout( $data['time'] );
-			$current_time = time();
+			$current_time = current_time( 'timestamp' );
 
 			if ( $timeout >= $current_time ) {
-				$data['ip_address'] = $data['ip_address'] . ' [' . __( 'Blocked', 'aio-login' ) . ']';
+				$data['ip_address'] = $data['ip_address'] . ' [' . __( 'Blocked', 'change-wp-admin-login' ) . ']';
 			}
 
 			return $data;
@@ -243,7 +243,7 @@ if ( ! class_exists( 'AIO_Login\\Login_Controller\\Failed_Logins' ) ) {
 
 			if ( is_array( $data ) && isset( $data['time'] ) ) {
 				$timeout      = Helper::get_timeout( $data['time'] );
-				$current_time = time();
+				$current_time = current_time( 'timestamp' );
 
 				if ( $timeout >= $current_time ) {
 					return $data;

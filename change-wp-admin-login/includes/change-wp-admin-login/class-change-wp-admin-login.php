@@ -7,6 +7,8 @@
 
 namespace AIO_Login\Change_WP_Admin_Login;
 
+use AIO_Login\Helper\Helper;
+
 defined( 'ABSPATH' ) || exit;
 
 if ( ! class_exists( 'AIO_Login\\Change_WP_Admin_Login\\Change_WP_Admin_Login' ) ) {
@@ -148,8 +150,7 @@ if ( ! class_exists( 'AIO_Login\\Change_WP_Admin_Login\\Change_WP_Admin_Login' )
 				remove_action( 'template_redirect', 'wp_redirect_admin_locations', 1000 );
 			}
 
-			add_action( 'aio_login__tab_login-protection_change-login-url', array( $this, 'settings_sections' ) );
-			add_action( 'wp_ajax_aio_login_cwal_settings', array( $this, 'cwal_settings' ) );
+			add_action( 'rest_api_init', array( $this, 'rest_api_init' ) );
 		}
 
 		/**
@@ -171,8 +172,8 @@ if ( ! class_exists( 'AIO_Login\\Change_WP_Admin_Login\\Change_WP_Admin_Login' )
 				<p>'
 					. sprintf(
 						// translators: %1$s: plugin name.
-						wp_kses_post( __( 'Please upgrade to the latest version of WordPress to activate %1$s.', 'aio-login' ) ),
-						'<strong>' . wp_kses_post( __( 'Change wp-admin login', 'aio-login' ) ) . '</strong>'
+						wp_kses_post( __( 'Please upgrade to the latest version of WordPress to activate %1$s.', 'change-wp-admin-login' ) ),
+						'<strong>' . wp_kses_post( __( 'Change wp-admin login', 'change-wp-admin-login' ) ) . '</strong>'
 					)
 				. '</p>
 			</div>';
@@ -182,11 +183,11 @@ if ( ! class_exists( 'AIO_Login\\Change_WP_Admin_Login\\Change_WP_Admin_Login' )
 		 * Wpmu options.
 		 */
 		public function wpmu_options() {
-			$out  = '<h3>' . __( 'Change wp-admin login', 'aio-login' ) . '</h3>';
-			$out .= '<p>' . __( 'This option allows you to set a networkwide default, which can be overridden by individual sites. Simply go to to the siteâ€™s permalink settings to change the url.', 'aio-login' ) . '</p>';
+			$out  = '<h3>' . __( 'Change wp-admin login', 'change-wp-admin-login' ) . '</h3>';
+			$out .= '<p>' . __( 'This option allows you to set a networkwide default, which can be overridden by individual sites. Simply go to to the siteâ€™s permalink settings to change the url.', 'change-wp-admin-login' ) . '</p>';
 			$out .= '<table class="form-table">';
 			$out .= '<tr valign="top">';
-			$out .= '<th scope="row">' . __( 'Networkwide default', 'aio-login' ) . '</th>';
+			$out .= '<th scope="row">' . __( 'Networkwide default', 'change-wp-admin-login' ) . '</th>';
 			$out .= '<td><input id="rwl-page-input" type="text" name="rwl_page" value="' . get_site_option( 'rwl_page', 'login' ) . '"></td>';
 			$out .= '</tr>';
 			$out .= '</table>';
@@ -214,21 +215,21 @@ if ( ! class_exists( 'AIO_Login\\Change_WP_Admin_Login\\Change_WP_Admin_Login' )
 
 			add_settings_section(
 				'change-wp-admin-login-section',
-				__( 'Change wp-admin login', 'aio-login' ),
+				__( 'Change wp-admin login', 'change-wp-admin-login' ),
 				array( $this, 'rwl_section_desc' ),
 				'permalink'
 			);
 
 			add_settings_section(
 				'aio_login__cwpal_sections',
-				__( 'Change wp-admin login', 'aio-login' ),
+				__( 'Change wp-admin login', 'change-wp-admin-login' ),
 				array( $this, 'rwl_section_desc' ),
 				'page=aio-login&tab=general'
 			);
 
 			add_settings_field(
 				'aio_login__cwpal_enable',
-				__( 'Enable', 'aio-login' ),
+				__( 'Enable', 'change-wp-admin-login' ),
 				array( $this, 'rwl_enable_func' ),
 				'page=aio-login&tab=general',
 				'aio_login__cwpal_sections',
@@ -237,7 +238,7 @@ if ( ! class_exists( 'AIO_Login\\Change_WP_Admin_Login\\Change_WP_Admin_Login' )
 
 			add_settings_field(
 				'rwl-page',
-				'<label for="rwl-page">' . __( 'Login URL', 'aio-login' ) . '</label>',
+				'<label for="rwl-page">' . __( 'Login URL', 'change-wp-admin-login' ) . '</label>',
 				array( $this, 'rwl_page_input' ),
 				'permalink',
 				'change-wp-admin-login-section'
@@ -246,7 +247,7 @@ if ( ! class_exists( 'AIO_Login\\Change_WP_Admin_Login\\Change_WP_Admin_Login' )
 			// Add redirect field.
 			add_settings_field(
 				'rwl_redirect_field',
-				__( 'Redirect URL', 'aio-login' ),
+				__( 'Redirect URL', 'change-wp-admin-login' ),
 				array( $this, 'rwl_redirect_func' ),
 				'permalink',
 				'change-wp-admin-login-section'
@@ -254,7 +255,7 @@ if ( ! class_exists( 'AIO_Login\\Change_WP_Admin_Login\\Change_WP_Admin_Login' )
 
 			add_settings_field(
 				'rwl-page',
-				'<label for="rwl-page">' . __( 'Login URL', 'aio-login' ) . '</label>',
+				'<label for="rwl-page">' . __( 'Login URL', 'change-wp-admin-login' ) . '</label>',
 				array( $this, 'rwl_page_input' ),
 				'page=aio-login&tab=general',
 				'aio_login__cwpal_sections'
@@ -262,7 +263,7 @@ if ( ! class_exists( 'AIO_Login\\Change_WP_Admin_Login\\Change_WP_Admin_Login' )
 
 			add_settings_field(
 				'rwl_redirect_field',
-				__( 'Redirect URL', 'aio-login' ),
+				__( 'Redirect URL', 'change-wp-admin-login' ),
 				array( $this, 'rwl_redirect_func' ),
 				'page=aio-login&tab=general',
 				'aio_login__cwpal_sections'
@@ -371,8 +372,8 @@ if ( ! class_exists( 'AIO_Login\\Change_WP_Admin_Login\\Change_WP_Admin_Login' )
 				$out .= '<p>'
 					. sprintf(
 						// translators: %1$s: network settings url.
-						wp_kses_post( __( 'To set a networkwide default, go to %1$s.', 'aio-login' ) ),
-						'<a href="' . network_admin_url( 'settings.php#rwl-page-input' ) . '">' . __( 'Network Settings', 'aio-login' ) . '</a>'
+						wp_kses_post( __( 'To set a networkwide default, go to %1$s.', 'change-wp-admin-login' ) ),
+						'<a href="' . network_admin_url( 'settings.php#rwl-page-input' ) . '">' . __( 'Network Settings', 'change-wp-admin-login' ) . '</a>'
 					)
 				. '</p>';
 			}
@@ -395,7 +396,7 @@ if ( ! class_exists( 'AIO_Login\\Change_WP_Admin_Login\\Change_WP_Admin_Login' )
 
 			echo '<p class="description">
 				<strong>'
-					. esc_attr__( 'Enable this option to change the login page URL.', 'aio-login' )
+					. esc_attr__( 'Enable this option to change the login page URL.', 'change-wp-admin-login' )
 				. '</strong>
 			</p>';
 		}
@@ -408,7 +409,7 @@ if ( ! class_exists( 'AIO_Login\\Change_WP_Admin_Login\\Change_WP_Admin_Login' )
 			echo '<code>' . esc_url( trailingslashit( home_url() ) ) . '</code> <input type="text" value="' . esc_attr( $value ) . '" name="rwl_redirect_field" id="rwl_redirect_field" class="regular-text" /> <code>/</code>';
 			echo '<p class="description">
 				<strong>'
-					. esc_attr__( 'Specify URL where attempts to access wp-login or wp-admin should be redirected to. If custom URL is set above, By default, this will redirect to your site\'s Home page unless you set it to something else.', 'aio-login' )
+					. esc_attr__( 'Specify URL where attempts to access wp-login or wp-admin should be redirected to. If custom URL is set above, By default, this will redirect to your site\'s Home page unless you set it to something else.', 'change-wp-admin-login' )
 				. '</strong>
 			</p>';
 		}
@@ -425,7 +426,7 @@ if ( ! class_exists( 'AIO_Login\\Change_WP_Admin_Login\\Change_WP_Admin_Login' )
 
 			echo '<p class="description">
 				<strong>'
-					. esc_attr__( 'Protect your website by changing the login page URL.', 'aio-login' )
+					. esc_attr__( 'Protect your website by changing the login page URL.', 'change-wp-admin-login' )
 				. '</strong>';
 		}
 
@@ -440,7 +441,7 @@ if ( ! class_exists( 'AIO_Login\\Change_WP_Admin_Login\\Change_WP_Admin_Login' )
 					<p>'
 						. sprintf(
 							// translators: %1$s: new login url, %2$s: new login url.
-							wp_kses_post( __( 'Your login page is now here: %1$s. Bookmark this page!', 'aio-login' ) ),
+							wp_kses_post( __( 'Your login page is now here: %1$s. Bookmark this page!', 'change-wp-admin-login' ) ),
 							'<strong><a href="' . esc_url( $this->new_login_url() ) . '">' . esc_url( $this->new_login_url() ) . '</a></strong>'
 						)
 					. '</p>
@@ -459,7 +460,7 @@ if ( ! class_exists( 'AIO_Login\\Change_WP_Admin_Login\\Change_WP_Admin_Login' )
 
 				if ( ! is_multisite() && ( str_contains( rawurldecode( $request_url ), 'wp-signup' ) || str_contains( rawurldecode( $request_url ), 'wp-activate' ) ) ) {
 
-					wp_die( esc_attr__( 'This feature is not enabled.', 'aio-login' ) );
+					wp_die( esc_attr__( 'This feature is not enabled.', 'change-wp-admin-login' ) );
 
 				}
 
@@ -680,49 +681,70 @@ if ( ! class_exists( 'AIO_Login\\Change_WP_Admin_Login\\Change_WP_Admin_Login' )
 			return array_merge( $wp->public_query_vars, $wp->private_query_vars );
 		}
 
-		/**
-		 * Settings sections.
-		 */
-		public function settings_sections() {
-			echo '<aio-login-settings-form action="aio_login_cwal_settings">
-				<template v-slot:settings-fields>';
-					settings_fields( 'aio_login__cwpal_settings' );
+		public function rest_api_init() {
+			register_rest_route(
+				'aio-login/change-wp-admin-login',
+				'/get-settings',
+				array(
+					'methods'  => 'GET',
+					'callback' => array( $this, 'get_settings' ),
+					'permission_callback' => array( Helper::class, 'get_api_permission' ),
+				)
+			);
 
-					do_settings_sections( 'page=aio-login&tab=general' );
-				echo '</template>
-			</aio-login-settings-form>';
+			register_rest_route(
+				'aio-login/change-wp-admin-login',
+				'/save-settings',
+				array(
+					'methods' => 'POST',
+					'callback' => array( $this, 'save_settings' ),
+					'permission_callback' => array( Helper::class, 'get_api_permission' ),
+				)
+			);
 		}
 
-		/**
-		 * Cwal settings.
-		 */
-		public function cwal_settings() {
-			if ( ! current_user_can( 'manage_options' ) ) {
-				wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'aio-login' ) );
-			}
-			if ( isset( $_POST['_wpnonce'] ) && wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['_wpnonce'] ) ), 'aio_login__cwpal_settings-options' ) ) {
-				if ( isset( $_POST['aio_login__cwpal_enable'] ) ) {
-					update_option( 'aio_login__cwpal_enable', 'on' );
-				} else {
-					update_option( 'aio_login__cwpal_enable', 'off' );
+		public function get_settings() {
+			$settings = array(
+				'login_url'    => $this->new_login_slug(),
+				'redirect_url' => get_option( 'rwl_redirect_field', '' ),
+				'enabled'      => $this->is_cwpal_enabled(),
+				'nonce'        => wp_create_nonce( 'change-wp-admin-login' ),
+			);
+
+			return rest_ensure_response( $settings );
+		}
+
+		public function save_settings( \WP_REST_Request $request ) {
+			$params = $request->get_params();
+
+			if ( isset( $params['_wpnonce'] ) && wp_verify_nonce( $params['_wpnonce'], 'change-wp-admin-login' ) ) {
+				$enable       = 'off';
+				$login_url    = sanitize_text_field( $params['login_url'] );
+				$redirect_url = sanitize_text_field( $params['redirect_url'] );
+				if ( isset( $params['enabled'] ) && true === $params['enabled'] ) {
+					$enable = 'on';
+
+					update_option( 'rwl_page', sanitize_title_with_dashes( wp_unslash( $login_url ) ) );
+					update_option( 'rwl_redirect_field', sanitize_title_with_dashes( wp_unslash( $redirect_url ) ) );
 				}
 
-				if ( isset( $_POST['rwl_page'] ) ) {
-					update_option( 'rwl_page', sanitize_title_with_dashes( wp_unslash( $_POST['rwl_page'] ) ) );
-				}
+				update_option( 'aio_login__cwpal_enable', $enable );
 
-				if ( isset( $_POST['rwl_redirect_field'] ) ) {
-					update_option( 'rwl_redirect_field', sanitize_title_with_dashes( wp_unslash( $_POST['rwl_redirect_field'] ) ) );
-				}
-
-				wp_send_json_success(
+				return rest_ensure_response(
 					array(
-						'message' => __( 'Change Login URL settings saved successfully', 'aio-login' ),
-					),
-					200
+						'success' => true,
+						'message' => __( 'Settings saved successfully', 'change-wp-admin-login' ),
+					)
 				);
 			}
-			exit( 0 );
+
+			return new \WP_Error(
+				'invalid_nonce',
+				__( 'Nonce verification failed', 'change-wp-admin-login' ),
+				array(
+					'status' => 403,
+				)
+			);
 		}
 
 		/**

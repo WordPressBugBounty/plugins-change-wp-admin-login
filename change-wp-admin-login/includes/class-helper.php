@@ -274,5 +274,9 @@ if ( ! class_exists( 'AIO_Login\\Helper\\Helper' ) ) {
 
 			return Failed_Logins::query_all_logs( 'failed', '', 'id', 'desc', 0 );
 		}
+
+		public static function get_api_permission() {
+			return is_user_logged_in() && current_user_can( 'manage_options' );
+		}
 	}
 }

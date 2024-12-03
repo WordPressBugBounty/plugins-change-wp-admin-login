@@ -15,6 +15,7 @@ use AIO_Login\Login_Controller\Failed_Logins;
 use AIO_Login\Login_Controller\Login_Controller;
 use AIO_Login\Login_Customization\Login_Customization;
 use AIO_Login\Login_Customization\Login_Customization_Output;
+use AIO_Login\Rest_API\Controller;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -60,13 +61,6 @@ if ( ! class_exists( 'AIO_Login\\AIO_Login' ) ) {
 			require_once AIO_LOGIN__DIR_PATH . 'includes/login-controller/class-failed-logins.php';
 			require_once AIO_LOGIN__DIR_PATH . 'includes/login-customization/class-login-customization.php';
 			require_once AIO_LOGIN__DIR_PATH . 'includes/login-customization/class-login-customization-output.php';
-
-			if ( isset( $_GET['page'] ) && 'aio-login' === $_GET['page'] && isset( $_GET['tab'] ) && 'activity-log' === $_GET['tab'] && is_admin() ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-				require_once ABSPATH . 'wp-admin/includes/class-wp-list-table.php';
-			}
-
-			require_once AIO_LOGIN__DIR_PATH . 'includes/login-controller/class-failed-login-activity-logs.php';
-			require_once AIO_LOGIN__DIR_PATH . 'includes/login-controller/class-lockouts-activity-logs.php';
 		}
 
 		/**
@@ -94,8 +88,7 @@ if ( ! class_exists( 'AIO_Login\\AIO_Login' ) ) {
 			register_activation_hook( AIO_LOGIN__FILE, array( $this, 'activate_plugin' ) );
 			register_uninstall_hook( AIO_LOGIN__FILE, array( self::class, 'uninstall_plugin' ) );
 
-			add_action( 'plugins_loaded', array( $this, 'load_textdomain' ) );
-			add_action( 'wp_ajax_aio_login', array( $this, 'ajax_handler' ) );
+			add_action( 'init', array( $this, 'load_textdomain' ) );
 			add_action( 'init', array( $this, 'if_activation_hook_not_triggered' ) );
 
 			if ( is_multisite() ) {
@@ -172,182 +165,11 @@ if ( ! class_exists( 'AIO_Login\\AIO_Login' ) ) {
 			);
 		}
 
-
-
 		/**
 		 * Load textdomain.
 		 */
 		public function load_textdomain() {
-			load_plugin_textdomain( 'aio-login', false, AIO_LOGIN__DIR_PATH . '/languages' );
-		}
-
-		/**
-		 * Ajax handler.
-		 */
-		public function ajax_handler() {
-			if ( isset( $_REQUEST['aio_login_nonce'] ) && wp_verify_nonce( sanitize_text_field( wp_unslash( $_REQUEST['aio_login_nonce'] ) ), 'aio-login-dashboard' ) ) {
-				$method = '';
-				if ( isset( $_REQUEST['method'] ) ) {
-					$method = sanitize_text_field( wp_unslash( $_REQUEST['method'] ) );
-				}
-
-				if ( empty( $method ) ) {
-					wp_send_json_error(
-						array(
-							'message' => __( 'Method not found', 'aio-login' ),
-						),
-						400
-					);
-				}
-
-				if ( in_array( $method, array( 'success', 'failed', 'lockout' ), true ) ) {
-					$value = '';
-					$count = 0;
-
-					if ( isset( $_POST['value'] ) ) {
-						$value = sanitize_text_field( wp_unslash( $_POST['value'] ) );
-					}
-
-					if ( 'success' === $method ) {
-						$count = Failed_Logins::get_attempts_count( 'success', $value );
-					}
-
-					if ( 'failed' === $method ) {
-						$count = Failed_Logins::get_attempts_count( 'failed', $value );
-					}
-
-					if ( 'lockout' === $method ) {
-						$count = Failed_Logins::get_lockout_attempts_count( $value );
-					}
-
-					wp_send_json_success(
-						array(
-							'count' => $count,
-						)
-					);
-				}
-
-				if ( 'lla_toggle' === $method ) {
-					if ( isset( $_POST['value'] ) ) {
-						$value = sanitize_text_field( wp_unslash( $_POST['value'] ) );
-						if ( empty( $value ) ) {
-							$value = get_option( 'aio_login_limit_attempts_enable', 'off' );
-						}
-
-						update_option( 'aio_login_limit_attempts_enable', $value );
-
-						wp_send_json_success(
-							array(
-								'value'   => $value,
-								'message' => __( 'Limit login attempts has been updated', 'aio-login' ),
-							)
-						);
-					}
-				}
-
-				if ( in_array( $method, array( 'failed_login_activity_logs', 'lockout_activity_logs' ), true ) ) {
-					$limit  = 5;
-					$offset = 0;
-					if ( isset( $_GET['limit'] ) ) {
-						$limit = sanitize_text_field( wp_unslash( $_GET['limit'] ) );
-					}
-
-					if ( isset( $_GET['offset'] ) ) {
-						$offset = sanitize_text_field( wp_unslash( $_GET['offset'] ) );
-					}
-
-					$logs = array();
-					if ( 'failed_login_activity_logs' === $method ) {
-						$logs = Helper::get_logs( 'failed' );
-					}
-
-					if ( 'lockout_activity_logs' === $method ) {
-						$logs = Helper::get_logs( 'lockout' );
-					}
-
-					$count = count( $logs );
-					if ( $count > $limit ) {
-						$logs = array_slice( $logs, $offset, $limit );
-					}
-
-					$logs = array_map(
-						function ( $log ) {
-							$log['time'] = gmdate( 'F j, Y, g:i a', $log['time'] );
-							return $log;
-						},
-						$logs
-					);
-
-					wp_send_json_success(
-						array(
-							'logs'      => $logs,
-							'count'     => $count,
-							'log_count' => count( $logs ),
-						),
-						200
-					);
-				}
-
-				if ( in_array( $method, array( 'delete_logs_failed_login_activity_logs', 'delete_logs_lockout_activity_logs' ), true ) ) {
-					$logs = array();
-					if ( isset( $_POST['logs'] ) ) {
-						if ( is_array( $_POST['logs'] ) ) {
-							$logs = array_map( 'sanitize_text_field', wp_unslash( $_POST['logs'] ) );
-						} else {
-							$logs = sanitize_text_field( wp_unslash( $_POST['logs'] ) );
-						}
-					}
-
-					if ( 'delete_logs_failed_login_activity_logs' === $method ) {
-						$result = Failed_Logins::delete_logs( $logs );
-					}
-
-					if ( 'delete_logs_lockout_activity_logs' === $method ) {
-						$result = Failed_Logins::delete_lockouts( $logs );
-					}
-
-					if ( $result ) {
-						wp_send_json_success(
-							array(
-								'message' => __( 'Logs has been deleted', 'aio-login' ),
-							),
-							200
-						);
-					}
-				}
-
-				if ( 'enable_block_ip_address' === $method ) {
-					$value = 'off';
-					if ( isset( $_POST['value'] ) ) {
-						$value = sanitize_text_field( wp_unslash( $_POST['value'] ) );
-					}
-
-					update_option( 'aio_login_block_ip_address_enable', $value );
-
-					wp_send_json_success(
-						array(
-							'value'   => $value,
-							'message' => __( 'Block IP address has been updated', 'aio-login' ),
-						)
-					);
-				}
-
-				if ( 'enable_2fa' === $method ) {
-					$value = 'off';
-					if ( isset( $_POST['value'] ) ) {
-						$value = sanitize_text_field( wp_unslash( $_POST['value'] ) );
-					}
-
-					update_option( 'aio_login_pro__two_factor_auth_enable', $value );
-
-					wp_send_json_success(
-						array(
-							'value'   => $value,
-							'message' => __( '2FA has been updated', 'aio-login' ),
-						)
-					);
-				}
-			}
+			load_plugin_textdomain( 'change-wp-admin-login', false, AIO_LOGIN__DIR_PATH . '/languages' );
 		}
 
 		/**
