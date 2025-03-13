@@ -44,7 +44,7 @@ if ( ! class_exists( 'AIO_Login\\Login_Customization\\Login_Customization' ) ) {
 					'methods'  => 'POST',
 					'callback' => array( $this, 'save_custom_css_settings' ),
 					'permission_callback' => array( Helper::class, 'get_api_permission' ),
-				)
+				),
 			);
 
 			register_rest_route(

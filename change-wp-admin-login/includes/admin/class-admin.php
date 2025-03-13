@@ -65,6 +65,7 @@ if ( ! class_exists( 'AIO_Login\Admin\Admin' ) ) {
 								'title'  => __( 'Disable Common Usernames', 'change-wp-admin-login' ),
 								'slug'   => 'disable-common-usernames',
 								'is-pro' => true,
+								'plan'   => 'professional',
 							),
 						),
 					),
@@ -88,19 +89,21 @@ if ( ! class_exists( 'AIO_Login\Admin\Admin' ) ) {
 						'slug'     => 'security',
 						'icon'     => 'security',
 						'sub-tabs' => array(
-							'grecaptcha' => array(
+							'grecaptcha'         => array(
 								'title' => __( 'Google reCAPTCHA', 'change-wp-admin-login' ),
 								'slug'  => 'grecaptcha',
 							),
-							'2fa'        => array(
+							'2fa'                => array(
 								'title'  => __( '2FA', 'change-wp-admin-login' ),
 								'slug'   => '2fa',
 								'is-pro' => true,
+								'plan'   => 'professional',
 							),
-							'block-ip-addresses'       => array(
-								'title'  => __( 'Block IP Addresses', 'change-wp-admin-login' ),
+							'block-ip-addresses' => array(
+								'title'  => __( 'Ban / Whitelist IP Addresses', 'change-wp-admin-login' ),
 								'slug'   => 'block-ip-addresses',
 								'is-pro' => true,
+								'plan'   => 'basic',
 							),
 						),
 					),
@@ -109,6 +112,7 @@ if ( ! class_exists( 'AIO_Login\Admin\Admin' ) ) {
 						'slug'   => 'temp-access',
 						'icon'   => 'temp-access',
 						'is-pro' => true,
+						'plan'   => 'business',
 					),
 					'customization'    => array(
 						'title'    => __( 'Customize', 'change-wp-admin-login' ),
@@ -131,6 +135,13 @@ if ( ! class_exists( 'AIO_Login\Admin\Admin' ) ) {
 								'title'  => __( 'Templates', 'change-wp-admin-login' ),
 								'slug'   => 'templates',
 								'is-pro' => true,
+								'plan'   => 'business',
+							),
+							'social-login'  => array(
+								'title'  => __( 'Social Login', 'change-wp-admin-login' ),
+								'slug'   => 'social-login',
+								'is-pro' => true,
+								'plan'   => 'professional',
 							),
 						),
 					),
@@ -191,6 +202,12 @@ if ( ! class_exists( 'AIO_Login\Admin\Admin' ) ) {
 				wp_enqueue_script( 'aio-login__app' );
 				wp_set_script_translations( 'aio-login__app', 'change-wp-admin-login', AIO_LOGIN__DIR_PATH . 'languages' );
 				wp_localize_script( 'aio-login__app', 'aio_login__app_object', $l10n );
+				
+			}
+			if ( ! \AIO_Login\Aio_Login::has_pro() ) {
+				echo '<style type="text/css" id="aio-login__submenu-handler-styles">
+					#toplevel_page_aio-login > ul li:last-child { background-image: linear-gradient(180deg, #6D16DF 0%, #490F95 100%); } #toplevel_page_aio-login > ul li:last-child a { color: #fff !important;}
+				</style>';
 			}
 		}
 
