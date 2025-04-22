@@ -54,8 +54,7 @@ if ( ! class_exists( 'AIO_Login\\Login_Controller\\Login_Controller' ) ) {
 			$this->limit_attempts_timeout          = get_option( 'aio_login_limit_attempts_timeout', 5 );
 			$this->lockout_message                 = get_option(
 				'aio_login_limit_attempts_lockout_message',
-				// translators: %d: Remaining minutes.
-				__( 'You have been blocked due to too many unsuccessful login attempts. Please try again in %d minutes.', 'change-wp-admin-login' )
+				'You have been blocked due to too many unsuccessful login attempts. Please try again in %d minutes.'
 			);
 
 			/**
@@ -65,11 +64,7 @@ if ( ! class_exists( 'AIO_Login\\Login_Controller\\Login_Controller' ) ) {
 			$this->limit_attempts_maximum_attempts = empty( $this->limit_attempts_maximum_attempts ) ? 5 : $this->limit_attempts_maximum_attempts;
 			$this->limit_attempts_timeout          = empty( $this->limit_attempts_timeout ) ? 5 : $this->limit_attempts_timeout;
 
-			if ( empty( $this->lockout_message ) ) {
-				$this->lockout_message = // translators: %d: Remaining minutes.
-					__( 'You have been blocked due to too many unsuccessful login attempts. Please try again in %d minutes.', 'change-wp-admin-login' );
-			}
-
+			add_action( 'init', array( $this, 'after_init' ) );
 			add_action( 'login_enqueue_scripts', array( $this, 'login_enqueue_scripts' ) );
 			add_filter( 'wp_authenticate_user', array( $this, 'wp_authenticate_user' ), 999, 2 );
 			add_action( 'wp_login_failed', array( $this, 'wp_login_failed' ), 10, 2 );
@@ -77,6 +72,17 @@ if ( ! class_exists( 'AIO_Login\\Login_Controller\\Login_Controller' ) ) {
 			add_action( 'login_form', array( $this, 'add_hidden_fields' ) );
 
             add_action( 'rest_api_init', array( $this, 'rest_api_init' ) );
+		}
+
+		/**
+		 * After init.
+		 * Fixed error notice for translation.
+		 */
+		public function after_init() {
+			if ( empty( $this->lockout_message ) ) {
+				$this->lockout_message = // translators: %d: Remaining minutes.
+					__( 'You have been blocked due to too many unsuccessful login attempts. Please try again in %d minutes.', 'change-wp-admin-login' );
+			}
 		}
 
 		/**

@@ -2,9 +2,9 @@
 Contributors: wpexpertsio
 Tags: login url, login, wp admin, wp login, custom login
 Requires at least: 4.6
-Tested up to: 6.7
+Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 2.0.6
+Stable tag: 2.0.7
 License: GPLv2 or later
 
 Do you want to secure and customize WordPress login page (wp-admin)❓ Download All in One Login plugin for ultimate WordPress login security and customization.
@@ -256,8 +256,12 @@ Even though it is not mandatory, using AIO Login can significantly enhance the s
 
 == Changelog ==
 
+= 2.0.7 Apr 22, 2025 =
+* Fixed translation notice.
+* Tested compatibility with latest WordPress (Version 6.8)
+
 = 2.0.6 Mar 13, 2025 =
-* TWEAK - UX Improvement.
+* Updated readme with a new feature.
 
 = 2.0.5 - Jan 27, 2025 =
 * Update feedback SDK
@@ -265,7 +269,7 @@ Even though it is not mandatory, using AIO Login can significantly enhance the s
 = 2.0.4 - Dec 05, 2024 =
 * Fixed - Backward compatibility with PHP < 8.0
 
-= 2.0.3 - Dec 03, 2024 =
+= 2.0.3 Dec 02, 2024 =
 * Updated backend with VueJS to improve UX
 
 = 2.0.2 Nov 21, 2024 =
