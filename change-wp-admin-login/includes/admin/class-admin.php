@@ -141,7 +141,7 @@ if ( ! class_exists( 'AIO_Login\Admin\Admin' ) ) {
 								'title'  => __( 'Social Login', 'change-wp-admin-login' ),
 								'slug'   => 'social-login',
 								'is-pro' => true,
-								'plan'   => 'professional',
+								'plan'   => 'business',
 							),
 						),
 					),
