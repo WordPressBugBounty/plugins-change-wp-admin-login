@@ -67,6 +67,12 @@ if ( ! class_exists( 'AIO_Login\Admin\Admin' ) ) {
 								'is-pro' => true,
 								'plan'   => 'professional',
 							),
+							'password-strenght-checker' => array(
+								'title'  => __( 'Password Strength Checker', 'change-wp-admin-login' ),
+								'slug'   => 'password-strenght-checker',
+								'is-pro' => true,
+								'plan'   => 'professional',
+							),
 						),
 					),
 					'activity-log'     => array(

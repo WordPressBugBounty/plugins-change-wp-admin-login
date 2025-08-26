@@ -19,29 +19,61 @@ if ( ! class_exists( 'AIO_Login\\Helper\\Helper' ) ) {
 		/**
 		 * Getting the IP address of the user
 		 *
+		 * SECURITY NOTE: This function now only trusts REMOTE_ADDR by default to prevent
+		 * header spoofing attacks. Proxy headers (X-Forwarded-For, etc.) are completely
+		 * ignored for security reasons. This prevents attackers from bypassing IP-based
+		 * security measures by manipulating HTTP headers.
+		 *
 		 * @return string
 		 */
 		public static function get_ip() {
-			if ( isset( $_SERVER['HTTP_CLIENT_IP'] ) ) {
-				$ipaddress = sanitize_text_field( wp_unslash( $_SERVER['HTTP_CLIENT_IP'] ) );
-			} elseif ( isset( $_SERVER['HTTP_X_FORWARDED_FOR'] ) ) {
-				$ipaddress = sanitize_text_field( wp_unslash( $_SERVER['HTTP_X_FORWARDED_FOR'] ) );
-			} elseif ( isset( $_SERVER['HTTP_X_FORWARDED'] ) ) {
-				$ipaddress = sanitize_text_field( wp_unslash( $_SERVER['HTTP_X_FORWARDED'] ) );
-			} elseif ( isset( $_SERVER['HTTP_FORWARDED_FOR'] ) ) {
-				$ipaddress = sanitize_text_field( wp_unslash( $_SERVER['HTTP_FORWARDED_FOR'] ) );
-			} elseif ( isset( $_SERVER['HTTP_FORWARDED'] ) ) {
-				$ipaddress = sanitize_text_field( wp_unslash( $_SERVER['HTTP_FORWARDED'] ) );
-			} elseif ( isset( $_SERVER['REMOTE_ADDR'] ) ) {
+			// SECURITY FIX: Only trust REMOTE_ADDR to prevent header spoofing attacks
+			$ipaddress = 'UNKNOWN';
+			
+			// Always use REMOTE_ADDR for maximum security
+			if ( isset( $_SERVER['REMOTE_ADDR'] ) ) {
 				$ipaddress = sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) );
-			} else {
-				$ipaddress = 'UNKNOWN';
 			}
 
+			// Handle IPv6 localhost
 			if ( '::1' === $ipaddress ) {
 				$ipaddress = '127.0.0.1';
 			}
+			
+			// Validate the final IP address
+			if ( ! self::is_valid_ip( $ipaddress ) ) {
+				$ipaddress = 'UNKNOWN';
+			}
+			
 			return $ipaddress;
+		}
+
+		/**
+		 * Validate if an IP address is valid
+		 *
+		 * @param string $ip IP address to validate.
+		 * @return bool
+		 */
+		private static function is_valid_ip( $ip ) {
+			// Remove any whitespace
+			$ip = trim( $ip );
+			
+			// Check if it's a valid IPv4 or IPv6 address (excluding private and reserved ranges)
+			$is_valid = filter_var( $ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE ) !== false;
+			
+			// Allow localhost only in development/testing environment
+			if ( ! $is_valid && ( $ip === '127.0.0.1' || $ip === '::1' ) ) {
+				// Only allow localhost if we're in a development environment
+				if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+					return true;
+				}
+				// Or if we're on localhost (simple check)
+				if ( in_array( $_SERVER['HTTP_HOST'] ?? '', [ 'localhost', '127.0.0.1', '::1' ] ) ) {
+					return true;
+				}
+			}
+			
+			return $is_valid;
 		}
 
 		/**

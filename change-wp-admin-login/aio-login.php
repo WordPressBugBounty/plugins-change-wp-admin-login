@@ -12,7 +12,7 @@ global $all_in_one_login;
 if ( is_null( $all_in_one_login ) ) {
 	define( 'AIO_LOGIN__DIR_PATH', plugin_dir_path( AIO_LOGIN__FILE ) );
 	define( 'AIO_LOGIN__DIR_URL', plugin_dir_url( AIO_LOGIN__FILE ) );
-	define( 'AIO_LOGIN__VERSION', '2.0.8' );
+	define( 'AIO_LOGIN__VERSION', '2.0.9' );
 
 	require_once AIO_LOGIN__DIR_PATH . 'includes/freemius.php';
 	require_once AIO_LOGIN__DIR_PATH . 'includes/class-aio-login.php';

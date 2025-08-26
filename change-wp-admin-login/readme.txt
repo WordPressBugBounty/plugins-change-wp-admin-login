@@ -1,15 +1,17 @@
-=== All In One Login — WordPress Login Security Plugin to Protect and Customize WP Admin ===
+=== All In One Login — WP Admin Login Page Security and Customization with Google reCAPTCHA, Social Login, Limit Login Attempt, 2FA, and more. ===
 Contributors: wpexpertsio
 Tags: login url, login, wp admin, wp login, custom login
 Requires at least: 4.6
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 2.0.8
+Stable tag: 2.0.9
 License: GPLv2 or later
 
-Do you want to secure and customize WordPress login page (wp-admin)❓ Download All in One Login plugin for ultimate WordPress login security and customization.
+Do you want to secure and customize the WordPress login page? Download the All in One Login plugin for login page security and customization.
 
 == Description ==
+
+👑 [Check Out Premium Version](https://aiologin.com/pricing/?utm_source=wp_org&utm_medium=readme&utm_campaign=check_out_premium_version) | 📘 [Technical Documentation](https://aiologin.com/docs/?utm_source=wp_org&utm_medium=readme&utm_campaign=technical_documentation) | 🧰 [See all Features](https://aiologin.com/features/?utm_source=wp_org&utm_medium=readme&utm_campaign=see_all_features)
 
 Looking for a one-stop solution to protect and customize your WordPress login page (wp-admin)? If that's what you need, then✨**Download All in One Login Plugin NOW**✨
 
@@ -243,6 +245,9 @@ Yes, AIO Login allows you to track all login attempts and activity logs in real-
 = Is AIO Login required for WP-Admin security? =
 Even though it is not mandatory, using AIO Login can significantly enhance the security of your WP-Admin login page against unauthorized access.
 
+= Where do I report security bugs found in this plugin? =
+
+Please report security bugs found in the source code of the Change wp-admin login plugin through the [Patchstack Vulnerability Disclosure Program](https://patchstack.com/database/vdp/9e5fb882-a208-4e32-a495-da1d8f98c036). The Patchstack team will assist you with verification, CVE assignment, and notify the developers of this plugin.
 
 == Screenshots ==
 
@@ -255,22 +260,19 @@ Even though it is not mandatory, using AIO Login can significantly enhance the s
 
 
 == Changelog ==
+= 2.0.9 - Aug 26, 2025 =
+Security – Enhanced login protection to better defend against repeated failed login attempts and brute-force attacks.
 
-= 2.0.8 - May 27, 2025 =
+= 2.0.8 May 21, 2025 =
 * Updated feedback SDK to latest version.
 
-= 2.0.7 Apr 22, 2025 =
+= 2.0.7 Apr 21, 2025 =
 * Fixed translation notice.
 * Tested compatibility with latest WordPress (Version 6.8)
 
 = 2.0.6 Mar 13, 2025 =
 * Updated readme with a new feature.
 
-= 2.0.5 - Jan 27, 2025 =
-* Update feedback SDK
-
-= 2.0.4 - Dec 05, 2024 =
-* Fixed - Backward compatibility with PHP < 8.0
 = 2.0.3 Dec 02, 2024 =
 * Updated backend with VueJS to improve UX
 
