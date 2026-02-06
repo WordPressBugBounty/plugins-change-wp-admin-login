@@ -9,13 +9,14 @@ namespace AIO_Login\Helper;
 
 use AIO_Login\Login_Controller\Failed_Logins;
 
-defined( 'ABSPATH' ) || exit;
+defined('ABSPATH') || exit;
 
-if ( ! class_exists( 'AIO_Login\\Helper\\Helper' ) ) {
+if (!class_exists('AIO_Login\\Helper\\Helper')) {
 	/**
 	 * Class Helper
 	 */
-	class Helper {
+	class Helper
+	{
 		/**
 		 * Getting the IP address of the user
 		 *
@@ -26,25 +27,26 @@ if ( ! class_exists( 'AIO_Login\\Helper\\Helper' ) ) {
 		 *
 		 * @return string
 		 */
-		public static function get_ip() {
+		public static function get_ip()
+		{
 			// SECURITY FIX: Only trust REMOTE_ADDR to prevent header spoofing attacks
 			$ipaddress = 'UNKNOWN';
-			
+
 			// Always use REMOTE_ADDR for maximum security
-			if ( isset( $_SERVER['REMOTE_ADDR'] ) ) {
-				$ipaddress = sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) );
+			if (isset($_SERVER['REMOTE_ADDR'])) {
+				$ipaddress = sanitize_text_field(wp_unslash($_SERVER['REMOTE_ADDR']));
 			}
 
 			// Handle IPv6 localhost
-			if ( '::1' === $ipaddress ) {
+			if ('::1' === $ipaddress) {
 				$ipaddress = '127.0.0.1';
 			}
-			
+
 			// Validate the final IP address
-			if ( ! self::is_valid_ip( $ipaddress ) ) {
+			if (!self::is_valid_ip($ipaddress)) {
 				$ipaddress = 'UNKNOWN';
 			}
-			
+
 			return $ipaddress;
 		}
 
@@ -54,25 +56,26 @@ if ( ! class_exists( 'AIO_Login\\Helper\\Helper' ) ) {
 		 * @param string $ip IP address to validate.
 		 * @return bool
 		 */
-		private static function is_valid_ip( $ip ) {
+		private static function is_valid_ip($ip)
+		{
 			// Remove any whitespace
-			$ip = trim( $ip );
-			
+			$ip = trim($ip);
+
 			// Check if it's a valid IPv4 or IPv6 address (excluding private and reserved ranges)
-			$is_valid = filter_var( $ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE ) !== false;
-			
+			$is_valid = filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) !== false;
+
 			// Allow localhost only in development/testing environment
-			if ( ! $is_valid && ( $ip === '127.0.0.1' || $ip === '::1' ) ) {
+			if (!$is_valid && ($ip === '127.0.0.1' || $ip === '::1')) {
 				// Only allow localhost if we're in a development environment
-				if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+				if (defined('WP_DEBUG') && WP_DEBUG) {
 					return true;
 				}
 				// Or if we're on localhost (simple check)
-				if ( in_array( $_SERVER['HTTP_HOST'] ?? '', [ 'localhost', '127.0.0.1', '::1' ] ) ) {
+				if (in_array($_SERVER['HTTP_HOST'] ?? '', ['localhost', '127.0.0.1', '::1'])) {
 					return true;
 				}
 			}
-			
+
 			return $is_valid;
 		}
 
@@ -83,16 +86,17 @@ if ( ! class_exists( 'AIO_Login\\Helper\\Helper' ) ) {
 		 *
 		 * @return array
 		 */
-		public static function get_location( $ip = '' ) {
-			if ( empty( $ip ) ) {
+		public static function get_location($ip = '')
+		{
+			if (empty($ip)) {
 				$ip = self::get_ip();
 			}
 
-			$url      = 'https://ipapi.co/' . $ip . '/json/';
-			$response = wp_remote_get( $url );
-			$body     = wp_remote_retrieve_body( $response );
+			$url = 'https://ipapi.co/' . $ip . '/json/';
+			$response = wp_remote_get($url);
+			$body = wp_remote_retrieve_body($response);
 
-			return json_decode( $body, true );
+			return json_decode($body, true);
 		}
 
 		/**
@@ -103,15 +107,16 @@ if ( ! class_exists( 'AIO_Login\\Helper\\Helper' ) ) {
 		 *
 		 * @return bool
 		 */
-		public static function create_table( $table_name, $cols = array() ) {
+		public static function create_table($table_name, $cols = array())
+		{
 			global $wpdb;
 			$charset_collate = $wpdb->get_charset_collate();
-			$table_name      = $wpdb->prefix . 'aio_login_' . $table_name;
+			$table_name = $wpdb->prefix . 'aio_login_' . $table_name;
 
 			$sql = "CREATE TABLE IF NOT EXISTS $table_name (
 				id bigint(20) NOT NULL AUTO_INCREMENT,";
 
-			foreach ( $cols as $col => $val ) {
+			foreach ($cols as $col => $val) {
 				$sql .= $col . ' ' . $val . ',';
 			}
 
@@ -119,11 +124,11 @@ if ( ! class_exists( 'AIO_Login\\Helper\\Helper' ) ) {
 				PRIMARY KEY (id)
 			) $charset_collate;";
 
-			if ( ! function_exists( 'maybe_create_table' ) ) {
+			if (!function_exists('maybe_create_table')) {
 				require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 			}
 
-			return maybe_create_table( $table_name, $sql );
+			return maybe_create_table($table_name, $sql);
 		}
 
 		/**
@@ -133,7 +138,8 @@ if ( ! class_exists( 'AIO_Login\\Helper\\Helper' ) ) {
 		 *
 		 * @return bool
 		 */
-		public static function drop_table( $table_name ) {
+		public static function drop_table($table_name)
+		{
 			global $wpdb;
 			$table_name = $wpdb->prefix . 'aio_login_' . $table_name;
 
@@ -151,31 +157,32 @@ if ( ! class_exists( 'AIO_Login\\Helper\\Helper' ) ) {
 		 *
 		 * @param string $ip IP.
 		 */
-		public static function block_ip( $ip = '' ) {
+		public static function block_ip($ip = '')
+		{
 			// phpcs:ignore WordPress.DateTime.CurrentTimeTimestamp.Requested
-			$current_time = current_time( 'timestamp' );
-			if ( empty( $ip ) ) {
+			$current_time = current_time('timestamp');
+			if (empty($ip)) {
 				$ip = self::get_ip();
 			}
 
-			$location = self::get_location( $ip );
-			$country  = isset( $location['country'] ) ? $location['country'] : 'Unknown';
-			$city     = isset( $location['city'] ) ? $location['city'] : 'Unknown';
+			$location = self::get_location($ip);
+			$country = isset($location['country']) ? $location['country'] : 'Unknown';
+			$city = isset($location['city']) ? $location['city'] : 'Unknown';
 
 			$user_agent = 'Unknown';
-			if ( isset( $_POST['aio_login__user_agent'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification
-				$user_agent = sanitize_text_field( wp_unslash( $_POST['aio_login__user_agent'] ) ); // phpcs:ignore WordPress.Security.NonceVerification
+			if (isset($_POST['aio_login__user_agent'])) { // phpcs:ignore WordPress.Security.NonceVerification
+				$user_agent = sanitize_text_field(wp_unslash($_POST['aio_login__user_agent'])); // phpcs:ignore WordPress.Security.NonceVerification
 			}
 
 			$blocked_user_data = array(
 				'ip_address' => $ip,
-				'country'    => $country,
-				'city'       => $city,
-				'time'       => $current_time,
+				'country' => $country,
+				'city' => $city,
+				'time' => $current_time,
 				'user_agent' => $user_agent,
 			);
 
-			Failed_Logins::log_blocked_user( $blocked_user_data );
+			Failed_Logins::log_blocked_user($blocked_user_data);
 		}
 
 		/**
@@ -185,13 +192,14 @@ if ( ! class_exists( 'AIO_Login\\Helper\\Helper' ) ) {
 		 *
 		 * @return array|false
 		 */
-		public static function is_ip_blocked( $ip = '' ) {
-			if ( empty( $ip ) ) {
+		public static function is_ip_blocked($ip = '')
+		{
+			if (empty($ip)) {
 				$ip = self::get_ip();
 			}
-			$blocked_ip = Failed_Logins::is_user_blocked( $ip );
+			$blocked_ip = Failed_Logins::is_user_blocked($ip);
 
-			if ( \AIO_Login\Login_Controller\Login_Controller::get_instance()->is_enabled() ) {
+			if (\AIO_Login\Login_Controller\Login_Controller::get_instance()->is_enabled()) {
 				return $blocked_ip;
 			}
 
@@ -204,23 +212,24 @@ if ( ! class_exists( 'AIO_Login\\Helper\\Helper' ) ) {
 		 * @param string $ip IP.
 		 * @param bool   $clear Clear.
 		 */
-		public static function update_user_attempt_count( $ip = '', $clear = false ) {
-			if ( empty( $ip ) ) {
+		public static function update_user_attempt_count($ip = '', $clear = false)
+		{
+			if (empty($ip)) {
 				$ip = self::get_ip();
 			}
 
-			$attempts = get_transient( 'aio_login__user_attempts_' . $ip );
-			if ( false === $attempts ) {
+			$attempts = get_transient('aio_login__user_attempts_' . $ip);
+			if (false === $attempts) {
 				$attempts = 0;
 			}
 
 			++$attempts;
 
-			if ( $clear ) {
+			if ($clear) {
 				$attempts = 0;
 			}
 
-			set_transient( 'aio_login__user_attempts_' . $ip, $attempts, 60 * 60 );
+			set_transient('aio_login__user_attempts_' . $ip, $attempts, 60 * 60);
 		}
 
 		/**
@@ -230,13 +239,14 @@ if ( ! class_exists( 'AIO_Login\\Helper\\Helper' ) ) {
 		 *
 		 * @return int
 		 */
-		public static function get_user_attempt_count( $ip = '' ) {
-			if ( empty( $ip ) ) {
+		public static function get_user_attempt_count($ip = '')
+		{
+			if (empty($ip)) {
 				$ip = self::get_ip();
 			}
 
-			$attempts = get_transient( 'aio_login__user_attempts_' . $ip );
-			if ( false === $attempts ) {
+			$attempts = get_transient('aio_login__user_attempts_' . $ip);
+			if (false === $attempts) {
 				$attempts = 0;
 			}
 
@@ -250,12 +260,13 @@ if ( ! class_exists( 'AIO_Login\\Helper\\Helper' ) ) {
 		 *
 		 * @return int
 		 */
-		public static function get_timeout( $timestamp ) {
-			$timeout = get_option( 'aio_login_limit_attempts_timeout', 0 );
-			if ( empty( $timeout ) ) {
+		public static function get_timeout($timestamp)
+		{
+			$timeout = get_option('aio_login_limit_attempts_timeout', 0);
+			if (empty($timeout)) {
 				$timeout = 5;
 			}
-			return $timestamp + ( $timeout * 60 );
+			return $timestamp + ($timeout * 60);
 		}
 
 		/**
@@ -265,27 +276,28 @@ if ( ! class_exists( 'AIO_Login\\Helper\\Helper' ) ) {
 		 *
 		 * @return string[]
 		 */
-		public static function get_timestamps( $between ) {
-			$timestamps   = array();
-			$current_time = current_time( 'timestamp' ); // phpcs:ignore WordPress.DateTime.CurrentTimeTimestamp.Requested
+		public static function get_timestamps($between)
+		{
+			$timestamps = array();
+			$current_time = current_time('timestamp'); // phpcs:ignore WordPress.DateTime.CurrentTimeTimestamp.Requested
 
-			switch ( $between ) {
+			switch ($between) {
 				case 'last_7_days':
-					$timestamps['start'] = strtotime( '-7 days', $current_time );
-					$timestamps['end']   = $current_time;
+					$timestamps['start'] = strtotime('-7 days', $current_time);
+					$timestamps['end'] = $current_time;
 					break;
 				case 'last_14_days':
-					$timestamps['start'] = strtotime( '-14 days', $current_time );
-					$timestamps['end']   = $current_time;
+					$timestamps['start'] = strtotime('-14 days', $current_time);
+					$timestamps['end'] = $current_time;
 					break;
 				case 'last_month':
-					$timestamps['start'] = strtotime( 'first day of last month', $current_time );
-					$timestamps['end']   = strtotime( 'last day of last month', $current_time );
+					$timestamps['start'] = strtotime('first day of last month', $current_time);
+					$timestamps['end'] = strtotime('last day of last month', $current_time);
 					break;
 				case 'today':
 				default:
-					$timestamps['start'] = strtotime( 'today', $current_time );
-					$timestamps['end']   = strtotime( 'tomorrow', $current_time ) - 1;
+					$timestamps['start'] = strtotime('today', $current_time);
+					$timestamps['end'] = strtotime('tomorrow', $current_time) - 1;
 					break;
 			}
 
@@ -299,16 +311,75 @@ if ( ! class_exists( 'AIO_Login\\Helper\\Helper' ) ) {
 		 *
 		 * @return array
 		 */
-		public static function get_logs( $type ) {
-			if ( 'lockout' === $type ) {
+		public static function get_logs($type)
+		{
+			if ('lockout' === $type) {
 				return Failed_Logins::get_locked_ips();
 			}
 
-			return Failed_Logins::query_all_logs( 'failed', '', 'id', 'desc', 0 );
+			return Failed_Logins::query_all_logs('failed', '', 'id', 'desc', 0);
 		}
 
-		public static function get_api_permission() {
-			return is_user_logged_in() && current_user_can( 'manage_options' );
+		/**
+		 * Update the configured providers snapshot option.
+		 * This provides a single source of truth for which providers are fully active and configured,
+		 * allowing other settings (like WooCommerce integration) to load this data instantly without 
+		 * recalculating or making multiple API calls.
+		 *
+		 * @return void
+		 */
+		public static function update_configured_providers_snapshot()
+		{
+			// Helper to get option with default
+			$get_opt = function ($key, $default = '') {
+				return get_option($key, $default);
+			};
+
+			$snapshot = array(
+				'captcha' => array(),
+				'social' => array(),
+			);
+
+			// 1. Check hCaptcha
+			if (
+				$get_opt('aio_login_hcaptcha_enable') === 'on' &&
+				!empty($get_opt('aio_login_hcaptcha_site_key')) &&
+				!empty($get_opt('aio_login_hcaptcha_secret_key'))
+			) {
+				$snapshot['captcha'][] = 'hcaptcha';
+			}
+
+			// 2. Check reCAPTCHA
+			$version = $get_opt('aio_login_google_recaptcha_version', 'v2');
+			if ($get_opt('aio_login_google_recaptcha_enable') === 'on') {
+				if (
+					!empty($get_opt('aio_login_google_recaptcha_' . $version . '_site_key')) &&
+					!empty($get_opt('aio_login_google_recaptcha_' . $version . '_secret_key'))
+				) {
+					$snapshot['captcha'][] = 'recaptcha';
+				}
+			}
+
+			// 3. Check Social Providers
+			// Note: These options might be managed by the PRO plugin, but we can access the options table from here.
+			$social_providers = array('google', 'microsoft', 'facebook', 'line');
+			foreach ($social_providers as $provider) {
+				// Social Login Pro usually stores '1' for enabled
+				if (
+					$get_opt('aio_' . $provider . '_enabled') === '1' &&
+					!empty($get_opt('aio_' . $provider . '_client_id')) &&
+					!empty($get_opt('aio_' . $provider . '_client_secret'))
+				) {
+					$snapshot['social'][] = $provider;
+				}
+			}
+
+			update_option('aio_login_configured_providers_list', $snapshot);
+		}
+
+		public static function get_api_permission()
+		{
+			return is_user_logged_in() && current_user_can('manage_options');
 		}
 	}
 }

@@ -300,8 +300,8 @@ if ( ! class_exists( 'AIO_Login\\Login_Controller\\Login_Controller' ) ) {
 
         public function save_settings( \WP_REST_Request $request ) {
 	        $params          = $request->get_params();
-            $max_attempts    = sanitize_text_field( wp_unslash( $params['maximum_attempts'] ) );
-            $timeout         = sanitize_text_field( wp_unslash( $params['timeout'] ) );
+            $max_attempts    = absint( $params['maximum_attempts'] );
+            $timeout         = absint( $params['timeout'] );
             $lockout_message = sanitize_text_field( wp_unslash( $params['lockout_message'] ) );
 
             if ( isset( $params['_wpnonce'] ) && wp_verify_nonce( $params['_wpnonce'], 'limit-login-attempts' ) ) {

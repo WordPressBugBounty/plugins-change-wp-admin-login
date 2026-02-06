@@ -10,13 +10,14 @@ namespace AIO_Login\Admin;
 use AIO_Login\Helper\Helper;
 use AIO_Login\Login_Controller\Failed_Logins;
 
-defined( 'ABSPATH' ) || exit;
+defined('ABSPATH') || exit;
 
-if ( ! class_exists( 'AIO_Login\Admin\Admin' ) ) {
+if (!class_exists('AIO_Login\Admin\Admin')) {
 	/**
 	 * Class Admin
 	 */
-	class Admin {
+	class Admin
+	{
 
 		/**
 		 * Settings tabs.
@@ -28,138 +29,158 @@ if ( ! class_exists( 'AIO_Login\Admin\Admin' ) ) {
 		/**
 		 * Admin constructor.
 		 */
-		private function __construct() {
-			add_action( 'init', array( $this, 'register_settings_tabs' ), -3, 0 );
-			add_action( 'admin_enqueue_scripts', array( $this, 'admin_enqueue_scripts' ) );
-			add_action( 'admin_enqueue_scripts', array( $this, 'admin_mount_script' ), 20 );
-			add_action( 'admin_menu', array( $this, 'admin_menu' ) );
+		private function __construct()
+		{
+			add_action('init', array($this, 'register_settings_tabs'), -3, 0);
+			add_action('admin_enqueue_scripts', array($this, 'admin_enqueue_scripts'));
+			add_action('admin_enqueue_scripts', array($this, 'admin_mount_script'), 20);
+			add_action('admin_menu', array($this, 'admin_menu'));
 
-			add_action( 'rest_api_init', array( $this, 'rest_api_init' ) );
+			add_action('rest_api_init', array($this, 'rest_api_init'));
 		}
 
 		/**
 		 * Register_settings tabs.
 		 */
-		public function register_settings_tabs() {
-			if ( is_admin() ) {
+		public function register_settings_tabs()
+		{
+			if (is_admin()) {
 				$this->settings_tabs = array(
-					'dashboard'        => array(
-						'title' => __( 'Dashboard', 'change-wp-admin-login' ),
-						'slug'  => 'dashboard',
-						'icon'  => 'dashboard',
+					'dashboard' => array(
+						'title' => __('Dashboard', 'change-wp-admin-login'),
+						'slug' => 'dashboard',
+						'icon' => 'dashboard',
 					),
 					'login-protection' => array(
-						'title'    => __( 'Login Protection', 'change-wp-admin-login' ),
-						'slug'     => 'login-protection',
-						'icon'     => 'login-protection',
+						'title' => __('Login Protection', 'change-wp-admin-login'),
+						'slug' => 'login-protection',
+						'icon' => 'login-protection',
 						'sub-tabs' => array(
-							'change-login-url'         => array(
-								'title' => __( 'Change Login URL', 'change-wp-admin-login' ),
-								'slug'  => 'change-login-url',
+							'change-login-url' => array(
+								'title' => __('Change Login URL', 'change-wp-admin-login'),
+								'slug' => 'change-login-url',
 							),
-							'limit-login-attempts'     => array(
-								'title' => __( 'Limit Login Attempts', 'change-wp-admin-login' ),
-								'slug'  => 'limit-login-attempts',
+							'limit-login-attempts' => array(
+								'title' => __('Limit Login Attempts', 'change-wp-admin-login'),
+								'slug' => 'limit-login-attempts',
 							),
 							'disable-common-usernames' => array(
-								'title'  => __( 'Disable Common Usernames', 'change-wp-admin-login' ),
-								'slug'   => 'disable-common-usernames',
+								'title' => __('Disable Common Usernames', 'change-wp-admin-login'),
+								'slug' => 'disable-common-usernames',
 								'is-pro' => true,
-								'plan'   => 'professional',
+								'plan' => 'professional',
 							),
 							'password-strenght-checker' => array(
-								'title'  => __( 'Password Strength Checker', 'change-wp-admin-login' ),
-								'slug'   => 'password-strenght-checker',
+								'title' => __('Password Strength Checker', 'change-wp-admin-login'),
+								'slug' => 'password-strenght-checker',
 								'is-pro' => true,
-								'plan'   => 'professional',
+								'plan' => 'professional',
 							),
 						),
 					),
-					'activity-log'     => array(
-						'title'    => __( 'Activity Log', 'change-wp-admin-login' ),
-						'slug'     => 'activity-log',
-						'icon'     => 'activity-log',
+					'activity-log' => array(
+						'title' => __('Activity Log', 'change-wp-admin-login'),
+						'slug' => 'activity-log',
+						'icon' => 'activity-log',
 						'sub-tabs' => array(
-							'lockouts'      => array(
-								'title' => __( 'Lockouts', 'change-wp-admin-login' ),
-								'slug'  => 'lockouts',
+							'lockouts' => array(
+								'title' => __('Lockouts', 'change-wp-admin-login'),
+								'slug' => 'lockouts',
 							),
 							'failed-logins' => array(
-								'title' => __( 'Failed Logins', 'change-wp-admin-login' ),
-								'slug'  => 'failed-logins',
+								'title' => __('Failed Logins', 'change-wp-admin-login'),
+								'slug' => 'failed-logins',
+							),
+							'enumeration-protection-logs' => array(
+								'title' => __('Enumeration Protection Logs', 'change-wp-admin-login'),
+								'slug' => 'enumeration-protection-logs',
+								'is-pro' => true,
+								'plan' => 'professional',
 							),
 						),
 					),
-					'security'         => array(
-						'title'    => __( 'Security', 'change-wp-admin-login' ),
-						'slug'     => 'security',
-						'icon'     => 'security',
+					'security' => array(
+						'title' => __('Security', 'change-wp-admin-login'),
+						'slug' => 'security',
+						'icon' => 'security',
 						'sub-tabs' => array(
-							'grecaptcha'         => array(
-								'title' => __( 'Google reCAPTCHA', 'change-wp-admin-login' ),
-								'slug'  => 'grecaptcha',
+							'captcha' => array(
+								'title' => __('CAPTCHA', 'change-wp-admin-login'),
+								'slug' => 'captcha',
 							),
-							'2fa'                => array(
-								'title'  => __( '2FA', 'change-wp-admin-login' ),
-								'slug'   => '2fa',
+							'2fa' => array(
+								'title' => __('2FA', 'change-wp-admin-login'),
+								'slug' => '2fa',
 								'is-pro' => true,
-								'plan'   => 'professional',
+								'plan' => 'professional',
 							),
 							'block-ip-addresses' => array(
-								'title'  => __( 'Ban / Whitelist IP Addresses', 'change-wp-admin-login' ),
-								'slug'   => 'block-ip-addresses',
+								'title' => __('Ban / Whitelist IP Addresses', 'change-wp-admin-login'),
+								'slug' => 'block-ip-addresses',
 								'is-pro' => true,
-								'plan'   => 'basic',
+								'plan' => 'basic',
+							),
+							'user-enumeration-protection' => array(
+								'title' => __('User Enumeration Protection', 'change-wp-admin-login'),
+								'slug' => 'user-enumeration-protection',
 							),
 						),
 					),
-					'temp-access'      => array(
-						'title'  => __( 'Temporary Access', 'change-wp-admin-login' ),
-						'slug'   => 'temp-access',
-						'icon'   => 'temp-access',
+					'temp-access' => array(
+						'title' => __('Temporary Access', 'change-wp-admin-login'),
+						'slug' => 'temp-access',
+						'icon' => 'temp-access',
 						'is-pro' => true,
-						'plan'   => 'business',
+						'plan' => 'business',
 					),
-					'customization'    => array(
-						'title'    => __( 'Customize', 'change-wp-admin-login' ),
-						'slug'     => 'customization',
-						'icon'     => 'customize',
+					'social-login' => array(
+						'title' => __('Social Login', 'change-wp-admin-login'),
+						'slug' => 'social-login',
+						'icon' => 'social-login',
+						'is-pro' => true,
+						'plan' => 'business',
+					),
+					'customization' => array(
+						'title' => __('Customize', 'change-wp-admin-login'),
+						'slug' => 'customization',
+						'icon' => 'customize',
 						'sub-tabs' => array(
-							'logo'       => array(
-								'title' => __( 'Logo', 'change-wp-admin-login' ),
-								'slug'  => 'logo',
+							'logo' => array(
+								'title' => __('Logo', 'change-wp-admin-login'),
+								'slug' => 'logo',
 							),
 							'background' => array(
-								'title' => __( 'Background', 'change-wp-admin-login' ),
-								'slug'  => 'background',
+								'title' => __('Background', 'change-wp-admin-login'),
+								'slug' => 'background',
 							),
 							'custom-css' => array(
-								'title' => __( 'Custom CSS', 'change-wp-admin-login' ),
-								'slug'  => 'custom-css',
+								'title' => __('Custom CSS', 'change-wp-admin-login'),
+								'slug' => 'custom-css',
 							),
-							'templates'  => array(
-								'title'  => __( 'Templates', 'change-wp-admin-login' ),
-								'slug'   => 'templates',
+							'templates' => array(
+								'title' => __('Templates', 'change-wp-admin-login'),
+								'slug' => 'templates',
 								'is-pro' => true,
-								'plan'   => 'business',
-							),
-							'social-login'  => array(
-								'title'  => __( 'Social Login', 'change-wp-admin-login' ),
-								'slug'   => 'social-login',
-								'is-pro' => true,
-								'plan'   => 'business',
+								'plan' => 'business',
 							),
 						),
+					),
+					'integrations' => array(
+						'title' => __('Integrations', 'change-wp-admin-login'),
+						'slug' => 'integrations',
+						'icon' => 'integrations',
+						'is-pro' => true,
+						'plan' => 'business',
 					),
 				);
 
-				$this->settings_tabs = apply_filters( 'aio_login__register_settings_tabs', $this->settings_tabs );
+				$this->settings_tabs = apply_filters('aio_login__register_settings_tabs', $this->settings_tabs);
 
-				if ( ! \AIO_Login\Aio_Login::has_pro() ) {
+				if (!\AIO_Login\Aio_Login::has_pro()) {
 					$this->settings_tabs['getpro'] = array(
-						'title' => __( 'Get Pro', 'change-wp-admin-login' ),
-						'slug'  => 'getpro',
-						'icon'  => 'getpro-icon',
+						'title' => __('Get Pro', 'change-wp-admin-login'),
+						'slug' => 'getpro',
+						'icon' => 'getpro-icon',
 					);
 				}
 			}
@@ -170,47 +191,49 @@ if ( ! class_exists( 'AIO_Login\Admin\Admin' ) ) {
 		 *
 		 * @param string $hook Hook name.
 		 */
-		public function admin_enqueue_scripts( $hook ) {
+		public function admin_enqueue_scripts($hook)
+		{
 			$l10n = array(
-				'tabs'       => $this->settings_tabs,
-				'version'    => AIO_LOGIN__VERSION,
+				'tabs' => $this->settings_tabs,
+				'version' => AIO_LOGIN__VERSION,
 				'assets_url' => AIO_LOGIN__DIR_URL . 'assets/',
-				'admin_url'  => add_query_arg(
+				'admin_url' => add_query_arg(
 					array(
 						'page' => 'aio-login',
 					),
-					admin_url( 'admin.php' )
+					admin_url('admin.php')
 				),
-				'nonce'      => wp_create_nonce( 'wp_rest' ),
-				'rest_url'   => rest_url(),
-				'has_pro'    => ( \AIO_Login\Aio_Login::has_pro() ) ? 'true' : 'false',
-				'site_url'   => site_url(),
+				'nonce' => wp_create_nonce('wp_rest'),
+				'rest_url' => rest_url(),
+				'ajax_url' => admin_url('admin-ajax.php'),
+				'has_pro' => (\AIO_Login\Aio_Login::has_pro()) ? 'true' : 'false',
+				'site_url' => site_url(),
 			);
-			
-			if ( get_option( 'permalink_structure' ) ) {
-				$l10n['site_link_login_url'] = trailingslashit( home_url() );
+
+			if (get_option('permalink_structure')) {
+				$l10n['site_link_login_url'] = trailingslashit(home_url());
 			} else {
-				$l10n['site_link_login_url'] = trailingslashit( home_url() ) . '?';
+				$l10n['site_link_login_url'] = trailingslashit(home_url()) . '?';
 			}
-			$l10n['site_link_redirect_url'] = trailingslashit( home_url() );
-			$l10n['use_trailing_slashes'] = str_ends_with( get_option( 'permalink_structure' ), '/' ) ? 'true' : 'false';
-			
+			$l10n['site_link_redirect_url'] = trailingslashit(home_url());
+			$l10n['use_trailing_slashes'] = str_ends_with(get_option('permalink_structure'), '/') ? 'true' : 'false';
 
-			$dependencies = array( 'wp-color-picker', 'wp-i18n', 'jquery' );
 
-			wp_register_style ( 'aio-login__app', AIO_LOGIN__DIR_URL . 'assets/css/app.css', array( 'wp-color-picker' ), AIO_LOGIN__VERSION, 'all' );
-			wp_register_script( 'aio-login__app', AIO_LOGIN__DIR_URL . 'assets/js/app.js',   $dependencies,              AIO_LOGIN__VERSION, true   );
+			$dependencies = array('wp-color-picker', 'wp-i18n', 'jquery');
 
-			if ( 'toplevel_page_aio-login' === $hook ) {
+			wp_register_style('aio-login__app', AIO_LOGIN__DIR_URL . 'assets/css/app.css', array('wp-color-picker'), AIO_LOGIN__VERSION, 'all');
+			wp_register_script('aio-login__app', AIO_LOGIN__DIR_URL . 'assets/js/app.js', $dependencies, AIO_LOGIN__VERSION, true);
+
+			if ('toplevel_page_aio-login' === $hook) {
 				wp_enqueue_media();
 
-				wp_enqueue_style( 'aio-login__app' );
-				wp_enqueue_script( 'aio-login__app' );
-				wp_set_script_translations( 'aio-login__app', 'change-wp-admin-login', AIO_LOGIN__DIR_PATH . 'languages' );
-				wp_localize_script( 'aio-login__app', 'aio_login__app_object', $l10n );
-				
+				wp_enqueue_style('aio-login__app');
+				wp_enqueue_script('aio-login__app');
+				wp_set_script_translations('aio-login__app', 'change-wp-admin-login', AIO_LOGIN__DIR_PATH . 'languages');
+				wp_localize_script('aio-login__app', 'aio_login__app_object', $l10n);
+
 			}
-			if ( ! \AIO_Login\Aio_Login::has_pro() ) {
+			if (!\AIO_Login\Aio_Login::has_pro()) {
 				echo '<style type="text/css" id="aio-login__submenu-handler-styles">
 					#toplevel_page_aio-login > ul li:last-child { background-image: linear-gradient(180deg, #6D16DF 0%, #490F95 100%); } #toplevel_page_aio-login > ul li:last-child a { color: #fff !important;}
 				</style>';
@@ -222,8 +245,9 @@ if ( ! class_exists( 'AIO_Login\Admin\Admin' ) ) {
 		 *
 		 * @param string $hook Page hook.
 		 */
-		public function admin_mount_script( $hook ) {
-			if ( 'toplevel_page_aio-login' === $hook ) {
+		public function admin_mount_script($hook)
+		{
+			if ('toplevel_page_aio-login' === $hook) {
 				wp_add_inline_script(
 					'aio-login-dist',
 					'window.$aioLogin.aioLoginApp.mount( "#aio-login__app" )',
@@ -235,28 +259,29 @@ if ( ! class_exists( 'AIO_Login\Admin\Admin' ) ) {
 		/**
 		 * Admin_menu.
 		 */
-		public function admin_menu() {
+		public function admin_menu()
+		{
 			add_menu_page(
-				__( 'All in One Login', 'change-wp-admin-login' ),
-				__( 'AIO Login', 'change-wp-admin-login' ),
+				__('All in One Login', 'change-wp-admin-login'),
+				__('AIO Login', 'change-wp-admin-login'),
 				'manage_options',
 				'aio-login',
-				array( $this, 'admin_page' )
+				array($this, 'admin_page')
 			);
 
 			add_submenu_page(
 				'aio-login',
-				__( 'Dashboard', 'change-wp-admin-login' ),
-				__( 'Dashboard', 'change-wp-admin-login' ),
+				__('Dashboard', 'change-wp-admin-login'),
+				__('Dashboard', 'change-wp-admin-login'),
 				'manage_options',
 				'aio-login',
-				array( $this, 'admin_page' )
+				array($this, 'admin_page')
 			);
 
 			$tabs = $this->settings_tabs;
 
-			foreach ( $tabs as $tab ) {
-				if ( 'dashboard' === $tab['slug'] ) {
+			foreach ($tabs as $tab) {
+				if ('dashboard' === $tab['slug']) {
 					continue;
 				}
 
@@ -273,36 +298,38 @@ if ( ! class_exists( 'AIO_Login\Admin\Admin' ) ) {
 		/**
 		 * Admin_page.
 		 */
-		public function admin_page() {
-			$settings_tab         = $this->settings_tabs;
-			$setting_tab_slug     = 'dashboard';
-			$settings_sub_tab     = array();
+		public function admin_page()
+		{
+			$settings_tab = $this->settings_tabs;
+			$setting_tab_slug = 'dashboard';
+			$settings_sub_tab = array();
 			$setting_sub_tab_slug = '';
 
-			if ( isset( $_GET['tab' ] ) && ! empty( $_GET['tab'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended,WordPress.Arrays.ArrayKeySpacingRestrictions.SpacesAroundArrayKeys
-				$setting_tab_slug = sanitize_text_field( wp_unslash( $_GET['tab'] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+			if (isset($_GET['tab']) && !empty($_GET['tab'])) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended,WordPress.Arrays.ArrayKeySpacingRestrictions.SpacesAroundArrayKeys
+				$setting_tab_slug = sanitize_text_field(wp_unslash($_GET['tab'])); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 			}
 
-			if ( isset( $this->settings_tabs[ $setting_tab_slug ]['sub-tabs'] ) && ! empty( $this->settings_tabs[ $setting_tab_slug ]['sub-tabs'] ) ) {
-				$setting_sub_tab_slug = array_key_first( $this->settings_tabs[ $setting_tab_slug ]['sub-tabs'] );
-				$settings_sub_tab     = $this->settings_tabs[ $setting_tab_slug ]['sub-tabs'];
+			if (isset($this->settings_tabs[$setting_tab_slug]['sub-tabs']) && !empty($this->settings_tabs[$setting_tab_slug]['sub-tabs'])) {
+				$setting_sub_tab_slug = array_key_first($this->settings_tabs[$setting_tab_slug]['sub-tabs']);
+				$settings_sub_tab = $this->settings_tabs[$setting_tab_slug]['sub-tabs'];
 			}
 
-			if ( isset( $_GET['sub-tab'] ) && ! empty( $_GET['sub-tab'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-				$setting_sub_tab_slug = sanitize_text_field( wp_unslash( $_GET['sub-tab'] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+			if (isset($_GET['sub-tab']) && !empty($_GET['sub-tab'])) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+				$setting_sub_tab_slug = sanitize_text_field(wp_unslash($_GET['sub-tab'])); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 			}
 
 			require_once AIO_LOGIN__DIR_PATH . 'includes/admin/settings/admin.php';
 		}
 
-		public function rest_api_init() {
+		public function rest_api_init()
+		{
 			register_rest_route(
 				'aio-login/dashboard',
 				'/get-settings',
 				array(
-					'methods'  => 'GET',
-					'callback' => array( $this, 'get_settings' ),
-					'permission_callback' => array( Helper::class, 'get_api_permission' ),
+					'methods' => 'GET',
+					'callback' => array($this, 'get_settings'),
+					'permission_callback' => array(Helper::class, 'get_api_permission'),
 				)
 			);
 
@@ -310,9 +337,9 @@ if ( ! class_exists( 'AIO_Login\Admin\Admin' ) ) {
 				'aio-login/dashboard',
 				'/get-counts',
 				array(
-					'methods'  => 'GET',
-					'callback' => array( $this, 'get_counts' ),
-					'permission_callback' => array( Helper::class, 'get_api_permission' ),
+					'methods' => 'GET',
+					'callback' => array($this, 'get_counts'),
+					'permission_callback' => array(Helper::class, 'get_api_permission'),
 				)
 			);
 
@@ -320,9 +347,9 @@ if ( ! class_exists( 'AIO_Login\Admin\Admin' ) ) {
 				'aio-login/dashboard/update',
 				'/limit-login-attempts',
 				array(
-					'methods'  => 'POST',
-					'callback' => array( $this, 'update_limit_login_attempts' ),
-					'permission_callback' => array( Helper::class, 'get_api_permission' ),
+					'methods' => 'POST',
+					'callback' => array($this, 'update_limit_login_attempts'),
+					'permission_callback' => array(Helper::class, 'get_api_permission'),
 				)
 			);
 
@@ -330,9 +357,9 @@ if ( ! class_exists( 'AIO_Login\Admin\Admin' ) ) {
 				'aio-login/dashboard/update',
 				'/two-factor-authentication',
 				array(
-					'methods'  => 'POST',
-					'callback' => array( $this, 'update_two_factor_authentication' ),
-					'permission_callback' => array( Helper::class, 'get_api_permission' ),
+					'methods' => 'POST',
+					'callback' => array($this, 'update_two_factor_authentication'),
+					'permission_callback' => array(Helper::class, 'get_api_permission'),
 				)
 			);
 
@@ -340,9 +367,9 @@ if ( ! class_exists( 'AIO_Login\Admin\Admin' ) ) {
 				'aio-login/dashboard/update',
 				'/block-ip-address',
 				array(
-					'methods'  => 'POST',
-					'callback' => array( $this, 'update_block_ip_address' ),
-					'permission_callback' => array( Helper::class, 'get_api_permission' ),
+					'methods' => 'POST',
+					'callback' => array($this, 'update_block_ip_address'),
+					'permission_callback' => array(Helper::class, 'get_api_permission'),
 				)
 			);
 
@@ -350,9 +377,9 @@ if ( ! class_exists( 'AIO_Login\Admin\Admin' ) ) {
 				'aio-login/dashboard/logs',
 				'/lockouts',
 				array(
-					'methods'  => 'GET',
-					'callback' => array( $this, 'get_lockouts' ),
-					'permission_callback' => array( Helper::class, 'get_api_permission' ),
+					'methods' => 'GET',
+					'callback' => array($this, 'get_lockouts'),
+					'permission_callback' => array(Helper::class, 'get_api_permission'),
 				)
 			);
 
@@ -360,146 +387,310 @@ if ( ! class_exists( 'AIO_Login\Admin\Admin' ) ) {
 				'aio-login/dashboard/logs',
 				'/failed-logins',
 				array(
-					'methods'  => 'GET',
-					'callback' => array( $this, 'get_failed_logins' ),
-					'permission_callback' => array( Helper::class, 'get_api_permission' ),
+					'methods' => 'GET',
+					'callback' => array($this, 'get_failed_logins'),
+					'permission_callback' => array(Helper::class, 'get_api_permission'),
+				)
+			);
+
+			// User Enumeration Protection endpoints
+			register_rest_route(
+				'aio-login/dashboard',
+				'/user-enumeration-settings',
+				array(
+					'methods' => 'GET',
+					'callback' => array($this, 'get_user_enumeration_settings'),
+					'permission_callback' => array(Helper::class, 'get_api_permission'),
+				)
+			);
+
+			register_rest_route(
+				'aio-login/dashboard/update',
+				'/user-enumeration-settings',
+				array(
+					'methods' => 'POST',
+					'callback' => array($this, 'update_user_enumeration_settings'),
+					'permission_callback' => array(Helper::class, 'get_api_permission'),
+				)
+			);
+
+			// Activity Log Settings endpoints
+			register_rest_route(
+				'aio-login/dashboard',
+				'/activity-log-settings',
+				array(
+					'methods' => 'GET',
+					'callback' => array($this, 'get_activity_log_settings'),
+					'permission_callback' => array(Helper::class, 'get_api_permission'),
+				)
+			);
+
+			register_rest_route(
+				'aio-login/dashboard/update',
+				'/activity-log-settings',
+				array(
+					'methods' => 'POST',
+					'callback' => array($this, 'update_activity_log_settings'),
+					'permission_callback' => array(Helper::class, 'get_api_permission'),
 				)
 			);
 		}
 
-		public function get_settings() {
+		public function get_settings()
+		{
 			$settings = array(
-				'limit_login_attempts' => get_option( 'aio_login_limit_attempts_enable', 'off' ),
-				'two_factor_auth' => get_option( 'aio_login_pro__two_factor_auth_enable', 'off' ),
-				'block_ip_address' => get_option( 'aio_login_block_ip_address_enable', 'off' ),
+				'limit_login_attempts' => get_option('aio_login_limit_attempts_enable', 'off'),
+				'two_factor_auth' => get_option('aio_login_pro__two_factor_auth_enable', 'off'),
+				'block_ip_address' => get_option('aio_login_block_ip_address_enable', 'off'),
 			);
 
-			return rest_ensure_response( $settings );
+			return rest_ensure_response($settings);
 		}
 
-		public function get_lockouts() {
-			$logs = Helper::get_logs( 'lockout' );
+		public function get_lockouts()
+		{
+			$logs = Helper::get_logs('lockout');
 
-			$logs = array_slice( $logs, 0, 5 );
+			$logs = array_slice($logs, 0, 5);
 
 			$logs = array_map(
-				function( $log ) {
-					$log['time'] = date( 'F j, Y, g:i a', $log['time'] );
+				function ($log) {
+					$log['time'] = date('F j, Y, g:i a', $log['time']);
 					return $log;
 				},
 				$logs
 			);
 
-			return rest_ensure_response( $logs );
+			return rest_ensure_response($logs);
 		}
 
-		public function get_failed_logins() {
-			$logs = Helper::get_logs( 'failed' );
+		public function get_failed_logins()
+		{
+			$logs = Helper::get_logs('failed');
 
-			$logs = array_slice( $logs, 0, 5 );
+			$logs = array_slice($logs, 0, 5);
 
 			$logs = array_map(
-				function( $log ) {
-					$log['time'] = date( 'F j, Y, g:i a', $log['time'] );
+				function ($log) {
+					$log['time'] = date('F j, Y, g:i a', $log['time']);
 					return $log;
 				},
 				$logs
 			);
 
-			return rest_ensure_response( $logs );
+			return rest_ensure_response($logs);
 		}
 
-		public function get_counts( $request ) {
-			$type     = 'success';
+		public function get_counts($request)
+		{
+			$type = 'success';
 			$duration = 'today';
 
-			if ( isset( $request['type'] ) && ! empty( $request['type'] ) ) {
-				$type = sanitize_text_field( wp_unslash( $request['type'] ) );
+			if (isset($request['type']) && !empty($request['type'])) {
+				$type = sanitize_text_field(wp_unslash($request['type']));
 			}
 
-			if ( isset( $request['duration'] ) && ! empty( $request['duration'] ) ) {
-				$duration = sanitize_text_field( wp_unslash( $request['duration'] ) );
+			if (isset($request['duration']) && !empty($request['duration'])) {
+				$duration = sanitize_text_field(wp_unslash($request['duration']));
 			}
 
-			if ( 'lockouts' === $type ) {
-				$count = Failed_Logins::get_lockout_attempts_count( $duration );
+			if ('lockouts' === $type) {
+				$count = Failed_Logins::get_lockout_attempts_count($duration);
 			} else {
-				$count = Failed_Logins::get_attempts_count( $type, $duration );
+				$count = Failed_Logins::get_attempts_count($type, $duration);
 			}
 
-			return rest_ensure_response( array( 'count' => absint( $count ) ) );
+			return rest_ensure_response(array('count' => absint($count)));
 		}
 
-		public function update_limit_login_attempts( $request ) {
+		public function update_limit_login_attempts($request)
+		{
 			$params = $request->get_params();
 
-			if ( isset( $params['value'] ) ) {
-				$value = sanitize_text_field( wp_unslash( $params['value'] ) );
+			if (isset($params['value'])) {
+				$value = sanitize_text_field(wp_unslash($params['value']));
 				$value = 'on' === $value ? 'on' : 'off';
 
-				update_option( 'aio_login_limit_attempts_enable', $value );
+				update_option('aio_login_limit_attempts_enable', $value);
 
 				return rest_ensure_response(
 					array(
 						'status' => 'success',
-						'message' => __( 'Limit login attempts updated successfully', 'change-wp-admin-login' ),
+						'message' => __('Limit login attempts updated successfully', 'change-wp-admin-login'),
 					)
 				);
 			}
 
 			return new \WP_Error(
 				'invalid_value',
-				__( 'Invalid value', 'change-wp-admin-login' ),
-				array( 'status' => 400 )
+				__('Invalid value', 'change-wp-admin-login'),
+				array('status' => 400)
 			);
 		}
 
-		public function update_two_factor_authentication( $request ) {
+		public function update_two_factor_authentication($request)
+		{
 			$params = $request->get_params();
 
-			if ( isset( $params['value'] ) ) {
-				$value = sanitize_text_field( wp_unslash( $params['value'] ) );
+			if (isset($params['value'])) {
+				$value = sanitize_text_field(wp_unslash($params['value']));
 				$value = 'on' === $value ? 'on' : 'off';
 
-				update_option( 'aio_login_pro__two_factor_auth_enable', $value );
+				update_option('aio_login_pro__two_factor_auth_enable', $value);
 
 				return rest_ensure_response(
 					array(
 						'status' => 'success',
-						'message' => __( 'Two factor authentication updated successfully', 'change-wp-admin-login' ),
+						'message' => __('Two factor authentication updated successfully', 'change-wp-admin-login'),
 					)
 				);
 			}
 
 			return new \WP_Error(
 				'invalid_value',
-				__( 'Invalid value', 'change-wp-admin-login' ),
-				array( 'status' => 400 )
+				__('Invalid value', 'change-wp-admin-login'),
+				array('status' => 400)
 			);
 		}
 
-		public function update_block_ip_address( $request ) {
+		public function update_block_ip_address($request)
+		{
 			$params = $request->get_params();
 
-			if ( isset( $params['value'] ) ) {
-				$value = sanitize_text_field( wp_unslash( $params['value'] ) );
+			if (isset($params['value'])) {
+				$value = sanitize_text_field(wp_unslash($params['value']));
 				$value = 'on' === $value ? 'on' : 'off';
 
-				update_option( 'aio_login_block_ip_address_enable', $value );
+				update_option('aio_login_block_ip_address_enable', $value);
 
 				return rest_ensure_response(
 					array(
 						'status' => 'success',
-						'message' => __( 'Block ip address updated successfully', 'change-wp-admin-login' ),
+						'message' => __('Block IP address updated successfully', 'change-wp-admin-login'),
 					)
 				);
 			}
 
 			return new \WP_Error(
 				'invalid_value',
-				__( 'Invalid value', 'change-wp-admin-login' ),
-				array( 'status' => 400 )
+				__('Invalid value', 'change-wp-admin-login'),
+				array('status' => 400)
 			);
+		}
+
+		/**
+		 * Get user enumeration protection settings
+		 */
+		public function get_user_enumeration_settings()
+		{
+			// Direct check for pro plugin
+			$has_pro = false;
+
+			// Check if pro plugin is active
+			if (function_exists('is_plugin_active')) {
+				$has_pro = is_plugin_active('aio-login-pro/aio-login-pro.php');
+			}
+
+			// If not found via is_plugin_active, check if class exists
+			if (!$has_pro && class_exists('AIO_Login_Pro\\AIO_Login_Pro')) {
+				$has_pro = true;
+			}
+
+			// Also check the filter
+			if (!$has_pro) {
+				$has_pro = apply_filters('aio_login_has_pro', false);
+			}
+
+			$log_duration = get_option('aio_login_user_enumeration_duration', 30);
+			error_log('AIO Login: get_user_enumeration_settings - log_duration from DB: ' . $log_duration);
+
+			$settings = array(
+				'enable_protection' => get_option('aio_login_user_enumeration_enable', 'off'),
+				'stop_oembed_calls' => get_option('aio_login_user_enumeration_oembed', 'off'),
+				'disable_author_sitemaps' => get_option('aio_login_user_enumeration_sitemaps', 'off'),
+				'remove_comment_numbers' => get_option('aio_login_user_enumeration_comments', 'off'),
+				'protect_rest_api' => get_option('aio_login_user_enumeration_rest_api', 'off'),
+				'login_registration_errors' => get_option('aio_login_user_enumeration_login_registration', 'off'),
+				'log_attempts' => get_option('aio_login_user_enumeration_log', 'off'),
+				'log_duration' => $log_duration,
+				'has_pro' => $has_pro ? 'true' : 'false',
+			);
+
+			return rest_ensure_response(array('success' => true, 'data' => $settings));
+		}
+
+		/**
+		 * Update user enumeration protection settings
+		 */
+		public function update_user_enumeration_settings($request)
+		{
+			$params = $request->get_params();
+			$settings = isset($params['settings']) ? $params['settings'] : array();
+
+			// Update settings
+			$enable_protection = isset($settings['enable_protection']) && ($settings['enable_protection'] === true || $settings['enable_protection'] === 'on') ? 'on' : 'off';
+			$stop_oembed_calls = isset($settings['stop_oembed_calls']) && ($settings['stop_oembed_calls'] === true || $settings['stop_oembed_calls'] === 'on') ? 'on' : 'off';
+			$disable_author_sitemaps = isset($settings['disable_author_sitemaps']) && ($settings['disable_author_sitemaps'] === true || $settings['disable_author_sitemaps'] === 'on') ? 'on' : 'off';
+			$remove_comment_numbers = isset($settings['remove_comment_numbers']) && ($settings['remove_comment_numbers'] === true || $settings['remove_comment_numbers'] === 'on') ? 'on' : 'off';
+			$protect_rest_api = isset($settings['protect_rest_api']) && ($settings['protect_rest_api'] === true || $settings['protect_rest_api'] === 'on') ? 'on' : 'off';
+			$login_registration_errors = isset($settings['login_registration_errors']) && ($settings['login_registration_errors'] === true || $settings['login_registration_errors'] === 'on') ? 'on' : 'off';
+			// Only update log settings if they are provided, otherwise preserve existing values
+			$log_attempts = isset($settings['log_attempts']) ?
+				(($settings['log_attempts'] === true || $settings['log_attempts'] === 'on') ? 'on' : 'off') :
+				get_option('aio_login_user_enumeration_log', 'off');
+			$log_duration = isset($settings['log_duration']) ?
+				intval($settings['log_duration']) :
+				get_option('aio_login_user_enumeration_duration', 30);
+			error_log('AIO Login: update_user_enumeration_settings - log_duration to save: ' . $log_duration);
+
+			update_option('aio_login_user_enumeration_enable', $enable_protection);
+			update_option('aio_login_user_enumeration_oembed', $stop_oembed_calls);
+			update_option('aio_login_user_enumeration_sitemaps', $disable_author_sitemaps);
+			update_option('aio_login_user_enumeration_comments', $remove_comment_numbers);
+			update_option('aio_login_user_enumeration_rest_api', $protect_rest_api);
+			update_option('aio_login_user_enumeration_login_registration', $login_registration_errors);
+			update_option('aio_login_user_enumeration_log', $log_attempts);
+			update_option('aio_login_user_enumeration_duration', $log_duration);
+			error_log('AIO Login: update_user_enumeration_settings - log_duration saved to DB');
+
+			return rest_ensure_response(array('success' => true));
+		}
+
+		/**
+		 * Get activity log settings
+		 */
+		public function get_activity_log_settings()
+		{
+			$settings = array(
+				'log_enumeration_attempts' => get_option('aio_login_user_enumeration_log', 'off'),
+				'log_enumeration_duration' => get_option('aio_login_user_enumeration_duration', 30),
+			);
+
+			$response = array(
+				'success' => true,
+				'data' => $settings,
+				'nonce' => wp_create_nonce('aio_login_activity_log_settings'),
+			);
+
+			return rest_ensure_response($response);
+		}
+
+		/**
+		 * Update activity log settings
+		 */
+		public function update_activity_log_settings($request)
+		{
+			$params = $request->get_params();
+			$settings = isset($params['settings']) ? $params['settings'] : array();
+
+			// Update settings
+			$log_enumeration_attempts = isset($settings['log_enumeration_attempts']) && ($settings['log_enumeration_attempts'] === true || $settings['log_enumeration_attempts'] === 'on') ? 'on' : 'off';
+			$log_enumeration_duration = isset($settings['log_enumeration_duration']) ? intval($settings['log_enumeration_duration']) : 30;
+
+			update_option('aio_login_user_enumeration_log', $log_enumeration_attempts);
+			update_option('aio_login_user_enumeration_duration', $log_enumeration_duration);
+
+			return rest_ensure_response(array('success' => true));
 		}
 
 		/**
@@ -507,10 +698,11 @@ if ( ! class_exists( 'AIO_Login\Admin\Admin' ) ) {
 		 *
 		 * @return Admin
 		 */
-		public static function get_instance() {
+		public static function get_instance()
+		{
 			static $instance = null;
 
-			if ( is_null( $instance ) ) {
+			if (is_null($instance)) {
 				$instance = new self();
 			}
 

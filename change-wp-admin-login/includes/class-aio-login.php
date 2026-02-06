@@ -43,6 +43,7 @@ if ( ! class_exists( 'AIO_Login\\AIO_Login' ) ) {
 			self::class_loader( Login_Controller::class );
 			self::class_loader( Login_Customization::class );
 			self::class_loader( Login_Customization_Output::class );
+			self::class_loader( \AIO_Login\User_Enumeration_Protection\User_Enumeration_Protection::class );
 
 			$this->init();
 
@@ -61,6 +62,8 @@ if ( ! class_exists( 'AIO_Login\\AIO_Login' ) ) {
 			require_once AIO_LOGIN__DIR_PATH . 'includes/login-controller/class-failed-logins.php';
 			require_once AIO_LOGIN__DIR_PATH . 'includes/login-customization/class-login-customization.php';
 			require_once AIO_LOGIN__DIR_PATH . 'includes/login-customization/class-login-customization-output.php';
+			require_once AIO_LOGIN__DIR_PATH . 'includes/user-enumeration-protection/class-user-enumeration-protection.php';
+			require_once AIO_LOGIN__DIR_PATH . 'includes/user-enumeration-protection/class-user-enumeration-activator.php';
 		}
 
 		/**
@@ -102,6 +105,13 @@ if ( ! class_exists( 'AIO_Login\\AIO_Login' ) ) {
 		 * @return bool
 		 */
 		public static function has_pro() {
+			// Check if pro plugin is active via filter (set by pro plugin)
+			$has_pro = apply_filters( 'aio_login_has_pro', false );
+			
+			if ( $has_pro ) {
+				return true;
+			}
+
 			if ( function_exists( 'is_plugin_active' ) ) {
 				if ( is_plugin_active( 'aio-login-pro/aio-login-pro.php' ) ) {
 					return true;
@@ -116,7 +126,7 @@ if ( ! class_exists( 'AIO_Login\\AIO_Login' ) ) {
 		}
 
 		/**
-		 * Activate AIO Login plugin.
+		 * Activate plugin.
 		 */
 		public function activate_plugin() {
 			Helper::create_table(
@@ -145,6 +155,25 @@ if ( ! class_exists( 'AIO_Login\\AIO_Login' ) ) {
 			if ( ! get_option( 'aio_login__version' ) ) {
 				update_option( 'aio_login__version', AIO_LOGIN__VERSION );
 			}
+
+			// Create database tables
+			\AIO_Login\User_Enumeration_Protection\User_Enumeration_Activator::create_table();
+
+			// Set default options
+			if ( ! get_option( 'aio_login_limit_attempts_enable' ) ) {
+				update_option( 'aio_login_limit_attempts_enable', 'off' );
+			}
+
+			if ( ! get_option( 'aio_login_change_login_url_enable' ) ) {
+				update_option( 'aio_login_change_login_url_enable', 'off' );
+			}
+
+			if ( ! get_option( 'aio_login_user_enumeration_enable' ) ) {
+				update_option( 'aio_login_user_enumeration_enable', 'off' );
+			}
+
+			// Flush rewrite rules
+			flush_rewrite_rules();
 		}
 
 		/**
@@ -153,6 +182,7 @@ if ( ! class_exists( 'AIO_Login\\AIO_Login' ) ) {
 		public static function uninstall_plugin() {
 			\AIO_Login\Helper\Helper::drop_table( 'login_attempts' );
 			\AIO_Login\Helper\Helper::drop_table( 'login_lockouts' );
+			\AIO_Login\Helper\Helper::drop_table( 'aio_login_enumeration_logs' );
 
 			global $wpdb;
 			$sql = "DELETE FROM %i WHERE option_name LIKE 'aio_login%'";
@@ -200,11 +230,16 @@ if ( ! class_exists( 'AIO_Login\\AIO_Login' ) ) {
 					)
 				);
 
+				\AIO_Login\User_Enumeration_Protection\User_Enumeration_Activator::create_table();
+
 				update_option( 'aio_login__update', 'true' );
 			}
 
 			if ( ! get_option( 'aio_login__version' ) ) {
-				update_option( 'aio_login__cwpal_enable', 'on' );
+				// Only set default if the option doesn't exist
+				if ( ! get_option( 'aio_login__cwpal_enable' ) ) {
+					update_option( 'aio_login__cwpal_enable', 'on' );
+				}
 			}
 
 		}

@@ -711,7 +711,10 @@ if ( ! class_exists( 'AIO_Login\\Change_WP_Admin_Login\\Change_WP_Admin_Login' )
 				'nonce'        => wp_create_nonce( 'change-wp-admin-login' ),
 			);
 
-			return rest_ensure_response( $settings );
+			return rest_ensure_response( array(
+				'success' => true,
+				'data' => $settings,
+			) );
 		}
 
 		public function save_settings( \WP_REST_Request $request ) {
@@ -721,6 +724,7 @@ if ( ! class_exists( 'AIO_Login\\Change_WP_Admin_Login\\Change_WP_Admin_Login' )
 				$enable       = 'off';
 				$login_url    = sanitize_text_field( $params['login_url'] );
 				$redirect_url = sanitize_text_field( $params['redirect_url'] );
+				
 				if ( isset( $params['enabled'] ) && true === $params['enabled'] ) {
 					$enable = 'on';
 

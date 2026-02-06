@@ -1,0 +1,354 @@
+@import "figtree.css";
+
+@import "datatables.css";
+
+#aio-login__app * {
+	font-family: Figtree;
+}
+
+#aio-login__app .float-left {
+	float: left;
+}
+
+#aio-login__app .float-right {
+	float: right;
+}
+
+#aio-login__app .text-center {
+	text-align: center;
+}
+
+#aio-login__app .text-left {
+	text-align: left;
+}
+
+#aio-login__app .text-right {
+	text-align: right;
+}
+
+#aio-login__app .clearfix::after {
+	content: "";
+	clear: both;
+	display: table;
+}
+
+#aio-login__app .container {
+	padding: 0 25px;
+}
+
+#aio-login__app .mb-25 {
+	margin-bottom: 25px;
+}
+
+#aio-login__app .mt-25 {
+	margin-top: 25px;
+}
+
+#aio-login__app .m-5 {
+	margin: 5px;
+}
+
+#wpcontent {
+	padding-left: 0 !important;
+}
+
+
+.dt-layout-cell.dt-layout-start {
+	float: left;
+}
+
+.dt-layout-cell.dt-layout-end {
+	float: right;
+}
+
+.dt-layout-row::after {
+	clear: both;
+	content: '';
+	display: table;
+}
+
+.dt-layout-row {
+	background: #FBF5FF;
+	padding: 15px;
+}
+
+.dt-layout-row.dt-layout-table {
+	background: #fff;
+	padding: 0;
+}
+
+#DataTables_Table_0 thead th,
+#DataTables_Table_0 tfoot th {
+	background: #e8e5e8;
+}
+
+.dt-paging-button {
+	background: #e8e5e8;
+	border: 1px solid #e8e5e8;
+	color: #000;
+	padding: 15px;
+	font-size: 14px;
+	cursor: pointer;
+}
+
+.dt-paging-button.disabled {
+	background: #f5f5f5;
+	border: 1px solid #f5f5f5;
+	color: #ccc;
+	cursor: not-allowed;
+}
+
+select.dt-input {
+	width: 60px !important;
+}
+
+
+div.dt-container div.dt-layout-row {
+	margin: 0 !important;
+}
+
+.mt-40 {
+	margin-top: 40px;
+}
+
+#aio-login__app a:focus,
+#aio-login__app a:active {
+	box-shadow: none;
+}
+
+/* Ensure disabled inputs are properly styled */
+.aio-login-pro-overlay input:disabled,
+.aio-login-pro-overlay select:disabled,
+.aio-login-pro-overlay textarea:disabled {
+	opacity: 0.6;
+	cursor: not-allowed;
+}
+
+/* Pro Feature Overlay */
+.aio-login-pro-feature {
+	position: relative;
+}
+
+.aio-login-pro-overlay {
+	position: relative;
+	cursor: pointer;
+	filter: blur(1px);
+	transition: all 0.3s ease;
+}
+
+.aio-login-pro-overlay::before {
+	content: '';
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	z-index: 10;
+	pointer-events: auto;
+	cursor: pointer;
+}
+
+.aio-login-pro-label {
+	color: #667eea !important;
+	font-weight: 600;
+}
+
+.aio-login-pro-desc {
+	color: #667eea !important;
+	opacity: 0.8;
+}
+
+.aio-login-pro-overlay input:disabled,
+.aio-login-pro-overlay select:disabled,
+.aio-login-pro-overlay button:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
+/* Prevent table interactions */
+.aio-login-pro-overlay table,
+.aio-login-pro-overlay .dataTables_wrapper,
+.aio-login-pro-overlay .dataTables_filter,
+.aio-login-pro-overlay .dataTables_length,
+.aio-login-pro-overlay .dataTables_paginate {
+	pointer-events: none;
+}
+
+/* Prevent form interactions in pro overlay */
+.aio-login-pro-overlay .aio-login-toggle,
+.aio-login-pro-overlay .aio-login-text,
+.aio-login-pro-overlay input,
+.aio-login-pro-overlay select,
+.aio-login-pro-overlay button {
+	pointer-events: none;
+}
+
+/* Action Buttons with Theme Colors */
+.action-btn {
+	display: inline-block;
+	padding: 6px 12px;
+	border: none;
+	border-radius: 4px;
+	font-size: 12px;
+	font-weight: 500;
+	cursor: pointer;
+	margin-right: 8px;
+	text-decoration: none;
+	color: white;
+	transition: all 0.2s ease;
+	background: #9416de;
+	vertical-align: middle;
+	white-space: nowrap;
+}
+
+.action-btn.unblock {
+	background: #9416de;
+}
+
+.action-btn.unblock:hover {
+	background: #9516df;
+}
+
+.action-btn.block {
+	background: #9416de;
+}
+
+.action-btn.block:hover {
+	background: #9516df;
+}
+
+.action-btn.delete {
+	background: #dc3545;
+}
+
+.action-btn.delete:hover {
+	background: #c82333;
+}
+
+.action-btn:last-child {
+	margin-right: 0;
+}
+
+/* Ensure buttons stay inline */
+.action-btn:not(:last-child)::after {
+	content: '';
+	margin: 0;
+}
+
+/* Force inline display for action buttons container */
+td:last-child {
+	white-space: nowrap;
+}
+
+/* Note Section Styling */
+.aio-login__note-section {
+	margin-top: 30px;
+}
+
+.aio-login__note {
+	background: #fff;
+	border-left: 4px solid #9416de;
+	padding: 15px 20px;
+	border-radius: 4px;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.aio-login__note p {
+	margin: 0;
+	color: #333;
+	font-size: 14px;
+	line-height: 1.5;
+}
+
+.aio-login__note strong {
+	color: #9416de;
+	font-weight: 600;
+}
+
+/* Global styles for AIO Login Pro components */
+.aio-login-pro__inline-form {
+	display: flex;
+	gap: 20px;
+	margin-top: 10px;
+}
+
+.aio-login-pro__form-group {
+	display: flex;
+	flex-direction: column;
+	flex: 1;
+}
+
+.aio-login-pro__form-label {
+	font-size: 14px;
+	margin-bottom: 5px;
+	font-weight: 600;
+}
+
+.aio-login-pro__form-input {
+	padding: 10px 35px 10px 10px;
+	font-size: 14px;
+	border-radius: 4px;
+	transition: border-color 0.2s ease-in-out;
+	border: 1px solid #EBE8EB !important;
+	background: #FFF;
+	height: 40px;
+	width: 100%;
+	box-sizing: border-box;
+}
+
+.aio-login-pro__form-input[type='text'],
+.aio-login-pro__form-input[type='password'] {
+	padding: 10px 35px 10px 10px;
+}
+
+.aio-login-pro__form-input:focus {
+	outline: none;
+	border-color: #9516df;
+}
+
+.aio-login-pro__required {
+	color: #ff0000;
+}
+
+.aio-login-pro__error {
+	border-color: #ff0000 !important;
+}
+
+.aio-login-pro__error-message {
+	color: #ff0000;
+	font-size: 12px;
+	margin-top: 5px;
+}
+
+.input-with-delete {
+	position: relative;
+	width: 100%;
+}
+
+.clear-btn {
+	position: absolute;
+	right: 8px;
+	top: 50%;
+	transform: translateY(-50%);
+	background: transparent;
+	color: #999;
+	border: none;
+	width: 24px;
+	height: 24px;
+	cursor: pointer;
+	font-size: 18px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	z-index: 10;
+	pointer-events: auto;
+}
+
+.clear-btn:hover {
+	color: #666;
+}
+
+/* Spacing for WooCommerce Social Login vs Captcha */
+.aio-login-social-login-buttons-wrapper.woocommerce-social-login {
+	margin-bottom: 20px !important;
+}
