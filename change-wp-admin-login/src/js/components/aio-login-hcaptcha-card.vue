@@ -1,7 +1,7 @@
 <template>
 	<div v-if="page_loaded" class="aio-login-pro__social-login__card">
 			<!-- Pro Tag -->
-			<span v-if="!hasPro" class="aio-login__pro-tag">PRO</span>
+			<span v-if="showProMarketingBadge" class="aio-login__pro-tab">PRO</span>
 			
 			<!-- Configured Tag -->
 			<div 
@@ -15,7 +15,9 @@
 			<!-- Top Section -->
 			<div class="aio-login-pro__social-login__card__top">
 				<img :src="getSrc('hcaptcha')" :alt="'hCaptcha'" />
-				<p>hCaptcha</p>
+				<p>
+					<span>hCaptcha</span>
+				</p>
 			</div>
 			<!-- Bottom Section -->
 			<div class="aio-login-pro__social-login__card__bottom">
@@ -54,6 +56,8 @@
 </template>
 
 <script>
+import tooltipContent from '../tooltip-content.js';
+
 export default {
 	name: 'aio-login-hcaptcha-card',
 
@@ -73,6 +77,7 @@ export default {
 	},
 
 	data: ( vm ) => ( {
+		tooltipContent,
 		assetsUrl: aio_login__app_object.assets_url,
 		page_loaded: false,
 		showPopup: false,
@@ -81,6 +86,13 @@ export default {
 	} ),
 
 	computed: {
+		proPluginActive() {
+			const o = typeof window !== 'undefined' ? window.aio_login__app_object : null;
+			return !!( o && ( o.has_pro === 'true' || o.has_pro === true ) );
+		},
+		showProMarketingBadge() {
+			return ! this.hasPro && ! this.proPluginActive;
+		},
 		statusBadge() {
 			if (this.enabled && this.hasValidKeys()) {
 				return 'green';
@@ -214,25 +226,29 @@ export default {
 	background: rgba(255, 255, 255, 0.3);
 }
 
-.aio-login__pro-tag {
+.aio-login__pro-tab {
 	position: absolute;
 	top: 8px;
 	left: 8px;
 	display: inline-flex;
-	width: 40px;
-	justify-content: center;
-	background: linear-gradient(180deg, #6E16DF 0%, #510C79 121.05%);
-	border-radius: 2px;
-	text-align: center;
-	color: #ffce50;
-	font-family: Figtree;
-	font-size: 12.88px;
-	font-weight: 600;
-	text-transform: uppercase;
-	height: 20px;
-	align-items: center;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    min-width: 34px;
+    padding: 5px 6px;
+    margin: 0;
+    background: #9516DF;
+    border-radius: 3px;
+    color: #FFFFFF;
+    font-family: Figtree, sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    /* height: 18px; */
+    flex-shrink: 0;
 	z-index: 101;
-	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .configured-tag {

@@ -1,6 +1,13 @@
 <template>
 	<div>
-		<h1>Lockouts</h1>
+		<h1>
+			<span>Lockouts</span>
+			<aio-login-tooltip
+				:content="tooltipContent.loginAttemptLogs.content"
+				:title="tooltipContent.loginAttemptLogs.title"
+				placement="bottom"
+			/>
+		</h1>
 
 		<aio-login-datatable
 			:headers="headers"
@@ -10,11 +17,13 @@
 </template>
 
 <script>
+import tooltipContent from '../tooltip-content.js';
 
 export default {
 	name: 'lockouts',
 
 	data: ( vm ) => ( {
+		tooltipContent,
 		namespace: 'aio-login/logs/lockouts',
 
 		headers: [

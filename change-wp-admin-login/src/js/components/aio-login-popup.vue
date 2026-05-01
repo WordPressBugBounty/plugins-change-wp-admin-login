@@ -1,6 +1,6 @@
 <template>
 	<div class="aio-login__popup-wrapper">
-		<div class="aio-login__popup-container" :style="container_style">
+		<div class="aio-login__popup-container" :class="containerClass" :style="container_style">
 			<span class="aio-login__popup-close">
 				<button :style="'color: ' + ( 'nocontent' === content ? '#ffffff' : '#000000' ) + ';' " @click="e => $emit( 'close-popup' )">&times;</button>
 			</span>
@@ -51,7 +51,13 @@ export default {
 		style: {
 			type: Object,
 			default: () => {}
-		}
+		},
+
+		/** Extra class on the modal box (e.g. per-screen styling from Pro). */
+		containerClass: {
+			type: String,
+			default: '',
+		},
 	},
 
 	computed: {
@@ -98,10 +104,11 @@ export default {
 
 .aio-login__popup-close button {
 	background: none;
-	border: none;
-	font-size: 24px;
-	color: #333;
-	cursor: pointer;
+    border: none;
+    font-size: 30px;
+    font-weight: 700;
+    color: #6e16df !important;
+    cursor: pointer;
 }
 
 .aio-login__popup-title {

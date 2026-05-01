@@ -2,8 +2,12 @@
 
 @import "datatables.css";
 
-#aio-login__app * {
+#aio-login__app *:not(.dashicons) {
 	font-family: Figtree;
+}
+
+#aio-login__app .dashicons {
+	font-family: dashicons !important;
 }
 
 #aio-login__app .float-left {
@@ -235,8 +239,8 @@ div.dt-container div.dt-layout-row {
 	margin: 0;
 }
 
-/* Force inline display for action buttons container */
-td:last-child {
+/* Keep action buttons inline only in datatables */
+table.dataTable td:last-child {
 	white-space: nowrap;
 }
 
@@ -351,4 +355,135 @@ td:last-child {
 /* Spacing for WooCommerce Social Login vs Captcha */
 .aio-login-social-login-buttons-wrapper.woocommerce-social-login {
 	margin-bottom: 20px !important;
+}
+
+/* 2FA Authentication Methods — structure aligned with aio-login-pro (free preview when Pro JS/CSS not loaded) */
+.aio-login-2fa-methods {
+	position: relative;
+}
+
+.aio-login-2fa-methods__list {
+	padding: 8px 0;
+}
+
+.aio-login-2fa-methods__item {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 14px 16px;
+	border: 1px solid #eceff3;
+	border-radius: 8px;
+	background: #fff;
+	margin-top: 12px;
+	box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+.aio-login-2fa-methods__item:first-child {
+	margin-top: 0;
+}
+
+.aio-login-2fa-methods__method-note {
+	margin: 0 0 12px;
+	font-size: 13px;
+	color: #6b7280;
+	line-height: 1.45;
+	font-weight: 500;
+}
+
+.aio-login-2fa-methods__content {
+	padding-right: 14px;
+}
+
+.aio-login-2fa-methods__controls {
+	display: inline-flex;
+	align-items: center;
+	gap: 10px;
+}
+
+.aio-login-2fa-methods__expand-btn {
+	border: 1px solid #dbe2ea;
+	background: #fff;
+	border-radius: 6px;
+	width: 28px;
+	height: 28px;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	cursor: pointer;
+	padding: 0;
+}
+
+.aio-login-2fa-methods__expand-btn:hover {
+	border-color: #9516df;
+}
+
+.aio-login-2fa-methods__expand-btn:focus {
+	outline: none;
+	box-shadow: 0 0 0 1px rgba(149, 22, 223, 0.24);
+	border-color: #9516df;
+}
+
+.aio-login-2fa-methods__chevron {
+	width: 8px;
+	height: 8px;
+	border-right: 2px solid #6b7280;
+	border-bottom: 2px solid #6b7280;
+	transform: rotate(45deg);
+	margin-top: -2px;
+	transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.aio-login-2fa-methods__title {
+	margin: 0;
+	font-weight: 600;
+	color: #1f2937;
+	font-size: 17px;
+	line-height: 1.3;
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+}
+
+.aio-login-2fa-methods__desc {
+	font-size: 14px;
+	color: #6b7280;
+	margin-top: 4px;
+	line-height: 1.45;
+}
+
+.aio-login-2fa-policies__list {
+	padding: 8px 0;
+}
+
+.aio-login-2fa-policies__card {
+	flex-direction: column;
+	align-items: stretch !important;
+}
+
+.aio-login-2fa-policies__card-header {
+	display: flex;
+	align-items: center;
+	gap: 14px;
+	width: 100%;
+}
+
+.aio-login-2fa-policies__card-header .aio-login-2fa-methods__content {
+	flex: 1;
+	min-width: 0;
+}
+
+.aio-login-2fa-policies__icon {
+	flex-shrink: 0;
+	width: 44px;
+	height: 44px;
+	border-radius: 8px;
+	background: #f5f0ff;
+	color: #9416de;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.aio-login-2fa-methods__actions {
+	margin-top: 16px;
 }

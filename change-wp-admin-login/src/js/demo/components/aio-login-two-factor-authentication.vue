@@ -1,36 +1,97 @@
 <template>
-	<div v-if="page_loaded" style="position: relative;" @click="iWasTriggered">
-		<aio-login-form action="nonce" v-on:handle-submit="handleSubmit">
-			<template v-slot:title>
-				Two Factor Authentication
-			</template>
-			
-			<template v-slot:form-fields>
-				<tr>
-					<th>
-						<label for="enable">Enable Two Factor Authentication</label>
-					</th>
-					<td>
-						<aio-login-toggle id="enable" name="enable" v-on:toggle-input="toggleInput" :enabled="enable" />
-					</td>
-				</tr>
-			</template>
-		</aio-login-form>
+	<div class="aio-login-2fa-methods">
+		<p class="aio-login-2fa-methods__method-note">
+			Only one site-wide method can be active: turn on either Email OTP or Authenticator App, not both.
+		</p>
 
+		<div class="aio-login-2fa-methods__list">
+			<div class="aio-login-2fa-methods__item aio-login-2fa-policies__card">
+				<div class="aio-login-2fa-policies__card-header">
+					<span class="aio-login-2fa-policies__icon" aria-hidden="true">
+						<svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+							<path d="M4 6.5h16c.83 0 1.5.67 1.5 1.5v8c0 .83-.67 1.5-1.5 1.5H4A1.5 1.5 0 012.5 16V8c0-.83.67-1.5 1.5-1.5z" stroke="currentColor" stroke-width="1.75" stroke-linejoin="round"/>
+							<path d="M3 7.5l8.65 5.77a1.5 1.5 0 001.7 0L22 7.5" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+						</svg>
+					</span>
+					<div class="aio-login-2fa-methods__content">
+						<h2 class="aio-login-2fa-methods__title">
+							Email One-Time Code
+							<aio-login-tooltip :content="tooltipContent.twoFactorEmailOtp.content" />
+						</h2>
+						<div class="aio-login-2fa-methods__desc">Send a one-time verification code to users via email during login.</div>
+					</div>
+					<div class="aio-login-2fa-methods__controls">
+						<button type="button" class="aio-login-2fa-methods__expand-btn" disabled tabindex="-1" aria-hidden="true">
+							<span class="aio-login-2fa-methods__chevron" />
+						</button>
+						<aio-login-toggle id="demo_email_otp" name="demo_email_otp" :enabled="false" />
+					</div>
+				</div>
+			</div>
 
+			<div class="aio-login-2fa-methods__item aio-login-2fa-policies__card">
+				<div class="aio-login-2fa-policies__card-header">
+					<span class="aio-login-2fa-policies__icon" aria-hidden="true">
+						<svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+							<rect x="7" y="3" width="10" height="18" rx="2.25" stroke="currentColor" stroke-width="1.75"/>
+							<path d="M10 6.5h4" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/>
+							<circle cx="12" cy="17.25" r="1.1" fill="currentColor"/>
+						</svg>
+					</span>
+					<div class="aio-login-2fa-methods__content">
+						<h2 class="aio-login-2fa-methods__title">
+							Authenticator App (TOTP)
+							<aio-login-tooltip :content="tooltipContent.twoFactorTotp.content" />
+						</h2>
+						<div class="aio-login-2fa-methods__desc">Allow users to verify login using an authenticator app such as Google Authenticator.</div>
+					</div>
+					<div class="aio-login-2fa-methods__controls">
+						<button type="button" class="aio-login-2fa-methods__expand-btn" disabled tabindex="-1" aria-hidden="true">
+							<span class="aio-login-2fa-methods__chevron" />
+						</button>
+						<aio-login-toggle id="demo_totp" name="demo_totp" :enabled="false" />
+					</div>
+				</div>
+			</div>
 
-		<div style="position:absolute;top:0;left:0;width: 100%;height: 100%;backdrop-filter: blur(1px)" v-if="! hasPro">
+			<div class="aio-login-2fa-methods__item aio-login-2fa-policies__card">
+				<div class="aio-login-2fa-policies__card-header">
+					<span class="aio-login-2fa-policies__icon" aria-hidden="true">
+						<svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+							<path d="M12 2.75a7.25 7.25 0 017.25 7.25v2.1l1.28 2.2c.38.66-.1 1.48-.86 1.48H4.33c-.76 0-1.24-.82-.86-1.48l1.28-2.2V10A7.25 7.25 0 0112 2.75z" stroke="currentColor" stroke-width="1.75" stroke-linejoin="round"/>
+							<path d="M9.5 18.25a2.5 2.5 0 005 0" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/>
+						</svg>
+					</span>
+					<div class="aio-login-2fa-methods__content">
+						<h2 class="aio-login-2fa-methods__title">
+							Remember Device
+							<aio-login-tooltip :content="tooltipContent.twoFactorRememberDevice.content" />
+						</h2>
+						<div class="aio-login-2fa-methods__desc">Skip OTP verification on trusted browsers for a specific duration.</div>
+					</div>
+					<div class="aio-login-2fa-methods__controls">
+						<button type="button" class="aio-login-2fa-methods__expand-btn" disabled tabindex="-1" aria-hidden="true">
+							<span class="aio-login-2fa-methods__chevron" />
+						</button>
+						<aio-login-toggle id="demo_remember" name="demo_remember" :enabled="false" />
+					</div>
+				</div>
+			</div>
+		</div>
 
+		<div class="aio-login-2fa-methods__actions">
+			<aio-login-submit-button v-on:button-click="noopDemoSave" />
 		</div>
 	</div>
 </template>
 
 <script>
+import tooltipContent from '../../tooltip-content.js';
 
 export default {
 	name: 'aio-login-two-factor-authentication',
 
-	slug: '2fa',
+	slug: 'authentication-methods',
 
 	props: {
 		hasPro: {
@@ -39,165 +100,20 @@ export default {
 		},
 	},
 
-	data: ( vm ) => ( {
-		page_loaded: false,
-		enable: false,
-		modal: false,
-		screen_1: false,
-		screen_2: false,
-
-		value_changed: false,
-
-		qrcode: '',
-		secret: '',
-		user_enabled: false,
-
-		nonce: '',
-
-		form_data: {
-			enabled: vm.enable,
-			otp: '',
-			secret: vm.secret,
-			user_id: '',
-		}
+	data: () => ( {
+		tooltipContent,
 	} ),
 
-	watch: {
-		enable( value ) {
-			if ( value ) {
-				this.modal = true;
-			}
-
-			this.value_changed = true;
-			this.form_data.enabled = value;
-		},
-
-		modal( value ) {
-			if ( value ) {
-				this.screen_1 = true;
-			} else {
-				this.screen_1 = false;
-				this.screen_2 = false;
-			}
-		},
-
-		secret( v ) {
-			this.form_data.secret = v;
-		}
-	},
-
 	methods: {
-		iWasTriggered() {
-
-			this.$parent.$parent.$parent.popup = true;
-		},
-		loadComponent() {
-			this.$nextTick( () => {
-				axios.get( 'aio-login-pro/tfa/get-settings' )
-					.then( response => {
-						this.page_loaded = true;
-
-						this.enable = response.data.enabled;
-						this.qrcode = response.data.qrcode_url;
-						this.secret = response.data.base32;
-						this.user_enabled = response.data.user_enabled;
-						this.form_data.user_id = response.data.user_id;
-
-						this.nonce = response.data.enable_nonce;
-					} );
-			} );
-
-		},
-
-		toggleInput( e ) {
-			this.enable = e;
-		},
-
-		closePopup() {
-			this.modal = false;
-			this.enable = false;
-		},
-
-		verifyTOTP( e ) {
-			e.preventDefault();
-
-			axios.post( 'aio-login-pro/tfa/verify', this.form_data )
-				.then()
-				.catch( error => {
-				} );
-		},
-
-		handleSubmit( e ) {
-			let allow = true;
-			if ( ! this.form_data.enabled && this.value_changed ) {
-				allow = confirm( 'Are you sure you want to disable Two Factor Authentication? It will be disabled for all users' );
-			}
-
-			if ( allow ) {
-				this.form_data['_wpnonce'] = this.nonce;
-
-				axios.post( 'aio-login-pro/tfa/save-settings', this.form_data )
-					.then( response => {
-						this.value_changed = false;
-					} );
-			} else {
-				this.enable = true;
-			}
-		}
+		noopDemoSave() {},
 	},
-
-	mounted() {
-		if ( ! this.hasPro ) {
-			this.page_loaded = true;
-		} else {
-			this.loadComponent();
-		}
-	}
 }
 </script>
 
 <style scoped>
-.aio-login__screen {
-	width: 100%;
-	height: 400px;
-}
-
-/*
-slide-fade-new-screen
-slide-fade-prev-screen
-*/
-
-.slide-fade-new-screen-enter-active {
-	transition: all 0.3s ease;
-}
-
-.slide-fade-new-screen-leave-active {
-	transition: all 0.8s cubic-bezier(1, 0.5, 0.8, 1);
-}
-
-.slide-fade-new-screen-enter-from,
-.slide-fade-new-screen-leave-to {
-	transform: translateX(20px);
-	opacity: 0;
-}
-
-.slide-fade-prev-screen-enter-active {
-	transition: all 0.3s ease;
-}
-
-.slide-fade-prev-screen-leave-active {
-	transition: all 0.8s cubic-bezier(1, 0.5, 0.8, 1);
-}
-
-.slide-fade-prev-screen-enter-from,
-.slide-fade-prev-screen-leave-to {
-	transform: translateX(20px);
-	opacity: 0;
-}
-
-.aio-login__clearfix::after {
-	clear: both;
-	display: table;
-	content: '';
+.aio-login-2fa-methods__expand-btn[disabled] {
+	opacity: 0.6;
+	cursor: default;
+	pointer-events: none;
 }
 </style>

@@ -2,8 +2,14 @@
 	<div>
 		<div class="aio-login-t-wrapper">
 			<div>
-				<h3>Captcha Settings</h3>
-				<div v-if="(form_data.enabled || hcaptcha_form_data.enabled) && !noteDismissed" class="captcha-note">
+				<h3>
+					<span>Captcha Settings</span>
+					<aio-login-tooltip
+						:content="tooltipContent.captcha.content"
+						placement="bottom"
+					/>
+				</h3>
+				<div v-if="showSingleCaptchaNotice && anyCaptchaEnabled && !noteDismissed" class="captcha-note">
 					<span>Note: You can only enable one captcha at a time.</span>
 					<button type="button" class="dismiss-btn" @click="dismissNote" aria-label="Dismiss">×</button>
 				</div>
@@ -18,13 +24,22 @@
 					@save-settings="handleSaveSettings"
 				/>
 
-				<!-- hCaptcha Card -->
+				<!-- hCaptcha Card (Business+; reCAPTCHA card uses has_pro only) -->
 				<aio-login-hcaptcha-card
-					:has-pro="has_pro"
+					:has-pro="hcaptchaUnlocked"
 					:enabled="hcaptcha_form_data.enabled"
 					:config-data="hcaptchaConfigData"
 					@toggle-captcha="handleToggleHCaptcha"
 					@save-settings="handleSaveHCaptchaSettings"
+				/>
+
+				<!-- Cloudflare Turnstile Card (Business+) -->
+				<aio-login-turnstile-card
+					:has-pro="turnstileUnlocked"
+					:enabled="turnstile_form_data.enabled"
+					:config-data="turnstileConfigData"
+					@toggle-captcha="handleToggleTurnstile"
+					@save-settings="handleSaveTurnstileSettings"
 				/>
 			</div>
 		</div>
@@ -39,12 +54,14 @@
 </template>
 
 <script>
+import tooltipContent from '../tooltip-content.js';
+import resolveParentCurrentIsPro from '../resolve-parent-current-is-pro.js';
 
 export default {
 	name: 'grecaptcha',
 
 	data: () => ( {
-		has_pro: 'true' === aio_login__app_object.has_pro,
+		tooltipContent,
 		nonce: '',
 		namespace: 'aio-login/grecaptcha',
 		form_data: {
@@ -67,15 +84,43 @@ export default {
 			size: 'normal',
 			language: 'en',
 		},
+		turnstile_namespace: 'aio-login/turnstile',
+		turnstile_nonce: '',
+		turnstile_form_data: {
+			enabled: false,
+			site_key: '',
+			secret_key: '',
+			theme: 'auto',
+			size: 'normal',
+			language: 'auto',
+		},
 		snackbar: {
 			message: '',
 			duration: 3000,
 			show: false,
 		},
-		noteDismissed: false
+		noteDismissed: false,
+		showSingleCaptchaNotice: false
 	} ),
 
 	computed: {
+		has_pro() {
+			return resolveParentCurrentIsPro(this);
+		},
+		hcaptchaPlanAllowed() {
+			const o = typeof window !== 'undefined' ? window.aio_login__app_object : null;
+			return o && ( o.captcha_hcaptcha_plan_unlocked === 'true' || o.captcha_hcaptcha_plan_unlocked === true );
+		},
+		turnstilePlanAllowed() {
+			const o = typeof window !== 'undefined' ? window.aio_login__app_object : null;
+			return o && ( o.captcha_turnstile_plan_unlocked === 'true' || o.captcha_turnstile_plan_unlocked === true );
+		},
+		hcaptchaUnlocked() {
+			return this.has_pro && this.hcaptchaPlanAllowed;
+		},
+		turnstileUnlocked() {
+			return this.has_pro && this.turnstilePlanAllowed;
+		},
 		configData() {
 			return {
 				version: this.form_data.version,
@@ -93,18 +138,61 @@ export default {
 				size: this.hcaptcha_form_data.size,
 				language: this.hcaptcha_form_data.language
 			};
+		},
+		turnstileConfigData() {
+			return {
+				siteKey: this.turnstile_form_data.site_key,
+				secretKey: this.turnstile_form_data.secret_key,
+				theme: this.turnstile_form_data.theme,
+				size: this.turnstile_form_data.size,
+				language: this.turnstile_form_data.language
+			};
+		},
+		anyCaptchaEnabled() {
+			return !!(this.form_data.enabled || this.hcaptcha_form_data.enabled || this.turnstile_form_data.enabled);
 		}
 	},
 
 	methods: {
+		hasAnotherCaptchaEnabled(currentCaptcha) {
+			const recaptchaEnabled = !!this.form_data.enabled;
+			const hcaptchaEnabled = !!this.hcaptcha_form_data.enabled;
+			const turnstileEnabled = !!this.turnstile_form_data.enabled;
+
+			if (currentCaptcha === 'recaptcha') {
+				return hcaptchaEnabled || turnstileEnabled;
+			}
+			if (currentCaptcha === 'hcaptcha') {
+				return recaptchaEnabled || turnstileEnabled;
+			}
+			if (currentCaptcha === 'turnstile') {
+				return recaptchaEnabled || hcaptchaEnabled;
+			}
+
+			return false;
+		},
+
+		maybeShowSingleCaptchaNotice(currentCaptcha, enabled) {
+			if (!enabled) {
+				return;
+			}
+			if (this.hasAnotherCaptchaEnabled(currentCaptcha)) {
+				this.showSingleCaptchaNotice = true;
+				this.noteDismissed = false;
+			}
+		},
+
 		handleToggleCaptcha(enabled) {
+			this.maybeShowSingleCaptchaNotice('recaptcha', enabled);
 			this.form_data.enabled = enabled;
 			
 			// If enabling reCAPTCHA, disable hCaptcha
 			if (enabled) {
 				this.hcaptcha_form_data.enabled = false;
+				this.turnstile_form_data.enabled = false;
 				// Save hCaptcha disabled state
 				this.saveHCaptchaSettings();
+				this.saveTurnstileSettings();
 			}
 			
 			this.saveSettings();
@@ -148,13 +236,19 @@ export default {
 		},
 
 		handleToggleHCaptcha(enabled) {
+			if ( enabled && ! this.hcaptchaUnlocked ) {
+				return;
+			}
+			this.maybeShowSingleCaptchaNotice('hcaptcha', enabled);
 			this.hcaptcha_form_data.enabled = enabled;
 			
 			// If enabling hCaptcha, disable reCAPTCHA
 			if (enabled) {
 				this.form_data.enabled = false;
+				this.turnstile_form_data.enabled = false;
 				// Save reCAPTCHA disabled state
 				this.saveSettings();
+				this.saveTurnstileSettings();
 			}
 			
 			this.saveHCaptchaSettings();
@@ -181,6 +275,45 @@ export default {
 				});
 		},
 
+		handleToggleTurnstile(enabled) {
+			if ( enabled && ! this.turnstileUnlocked ) {
+				return;
+			}
+			this.maybeShowSingleCaptchaNotice('turnstile', enabled);
+			this.turnstile_form_data.enabled = enabled;
+
+			// If enabling Turnstile, disable reCAPTCHA and hCaptcha.
+			if (enabled) {
+				this.form_data.enabled = false;
+				this.hcaptcha_form_data.enabled = false;
+				this.saveSettings();
+				this.saveHCaptchaSettings();
+			}
+
+			this.saveTurnstileSettings();
+		},
+
+		handleSaveTurnstileSettings(data) {
+			this.turnstile_form_data.theme = data.theme;
+			this.turnstile_form_data.size = data.size;
+			this.turnstile_form_data.language = data.language;
+			this.turnstile_form_data.site_key = data.siteKey;
+			this.turnstile_form_data.secret_key = data.secretKey;
+			this.saveTurnstileSettings();
+		},
+
+		saveTurnstileSettings() {
+			this.turnstile_form_data._wpnonce = this.turnstile_nonce;
+			axios.post(this.turnstile_namespace + '/save-settings', this.turnstile_form_data)
+				.then(response => {
+					this.snackbar.message = response.data.message;
+					this.snackbar.show = true;
+				})
+				.catch(error => {
+					console.error('Error saving Turnstile settings:', error);
+				});
+		},
+
 
 		loadHCaptchaSettings() {
 			axios.get(this.hcaptcha_namespace + '/get-settings')
@@ -195,6 +328,22 @@ export default {
 				})
 				.catch(error => {
 					console.error('Error loading hCaptcha settings:', error);
+				});
+		},
+
+		loadTurnstileSettings() {
+			axios.get(this.turnstile_namespace + '/get-settings')
+				.then(response => {
+					this.turnstile_form_data.enabled = response.data.enabled;
+					this.turnstile_form_data.site_key = response.data.site_key || '';
+					this.turnstile_form_data.secret_key = response.data.secret_key || '';
+					this.turnstile_form_data.theme = response.data.theme || 'auto';
+					this.turnstile_form_data.size = response.data.size || 'normal';
+					this.turnstile_form_data.language = response.data.language || 'auto';
+					this.turnstile_nonce = response.data.nonce;
+				})
+				.catch(error => {
+					console.error('Error loading Turnstile settings:', error);
 				});
 		}
 	},
@@ -219,6 +368,8 @@ export default {
 
 		// Load hCaptcha settings
 		this.loadHCaptchaSettings();
+		// Load Turnstile settings
+		this.loadTurnstileSettings();
 	}
 }
 </script>

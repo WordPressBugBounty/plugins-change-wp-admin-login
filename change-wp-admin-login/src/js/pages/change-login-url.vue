@@ -5,7 +5,11 @@
 			v-on:handle-submit="submitHandler"
 		>
 			<template v-slot:title>
-				Change wp-admin login
+				<span>Change wp-admin login</span>
+				<aio-login-tooltip
+					:content="tooltipContent.changeLoginUrl.content"
+					placement="bottom"
+				/>
 			</template>
 
 			<template v-slot:form-fields>
@@ -23,7 +27,7 @@
 
 						<p class="desc">
 							<strong>
-								Enable this option to change the login page URL.
+								Enable to customize your admin login URL.
 							</strong>
 						</p>
 					</td>
@@ -93,11 +97,13 @@
 </template>
 
 <script>
+import tooltipContent from '../tooltip-content.js';
 
 export default {
 	name: 'change-login-url',
 
 	data: ( vm ) => ( {
+		tooltipContent,
 		namespace: 'aio-login/change-wp-admin-login',
 
 		page_loaded: false,

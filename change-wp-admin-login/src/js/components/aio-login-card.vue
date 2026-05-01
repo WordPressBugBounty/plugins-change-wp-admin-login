@@ -8,12 +8,14 @@
 					WP Login
 				</p>
 				<p class="mt-40">
-					<a :href="adminURL + '&tab=customization'">Lets Go</a>
+					<a :href="adminURL">Lets Go</a>
 				</p>
 			</div>
 		</div>
 		<div v-else>
-			<h3 style="margin-bottom: 0px;">{{ title }}</h3>
+			<h3 style="margin-bottom: 0px;">
+				{{ title }}
+			</h3>
 			<aio-login-days-selector
 				:type="type"
 				v-on:update-days="updateDays"
@@ -41,7 +43,9 @@ export default {
 	data: () => ( {
 		count: 0,
 
-		adminURL: aio_login__app_object.admin_url,
+		adminURL: ( typeof aio_login__app_object.login_customizer_url === 'string' && aio_login__app_object.login_customizer_url )
+			? aio_login__app_object.login_customizer_url
+			: aio_login__app_object.admin_url,
 	} ),
 
 	computed: {

@@ -1,6 +1,13 @@
 <template>
 	<div>
-		<h1>Failed Logins</h1>
+		<h1>
+			<span>Failed Logins</span>
+			<aio-login-tooltip
+				:content="tooltipContent.failedLoginAttempts.content"
+				:title="tooltipContent.failedLoginAttempts.title"
+				placement="bottom"
+			/>
+		</h1>
 
 		<aio-login-datatable
 			:headers="headers"
@@ -10,11 +17,13 @@
 </template>
 
 <script>
+import tooltipContent from '../tooltip-content.js';
 
 export default {
 	name: 'failed-logins',
 
 	data: ( vm ) => ( {
+		tooltipContent,
 		namespace: 'aio-login/logs/failed-login',
 
 		headers: [

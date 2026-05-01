@@ -16,10 +16,18 @@
 			<aio-login-metadata
 				title="Limit Login Attempts"
 				description="Limit the number of times a user IP can attempt to log in to your wp-admin with incorrect credentials. Once the login attempt limit is reached, the IP from which the attempts have originated will be blocked for default period of time."
+				@click="iWasTriggered"
 			>
 				<template v-slot:configuration>
 					<div class="aio-login__configuration-switch">
-						<select class="aio-login__configuration-select" v-model="limit_login_attempts" @change="limitLoginAttempts">
+						<select
+							class="aio-login__configuration-select"
+							:class="{ 'aio-login__configuration-select--locked': !has_pro }"
+							v-model="limit_login_attempts"
+							@change="limitLoginAttempts"
+							@mousedown="handleLimitLoginSelectInteraction"
+							@click="handleLimitLoginSelectInteraction"
+						>
 							<option value="on">On</option>
 							<option value="off">Off</option>
 						</select>
@@ -31,7 +39,7 @@
 			<aio-login-metadata
 				title="Two Factor Authentication"
 				description="Two-factor authentication forces admin users to login only after providing a token, generated from the Authenticator applications. When you enable this option, all admin users will be asked to configure their two-factor authentication in the Authenticator app on their next login."
-				@click="iWasTriggered"
+				@click="handleTwoFactorCardClick"
 			>
 				<template v-slot:configuration>
 					<div class="aio-login__configuration-switch">
@@ -39,7 +47,7 @@
 							<aio-login-toggle
 								id="toggle-tfa"
 								name="toggle-tfa"
-								:disabled="! has_pro"
+								:disabled="!has_pro || !two_factor_allowed"
 								v-on:toggle-input="twoFactorAuthenticationSettings"
 								:enabled="two_factor_auth"
 							/>
@@ -89,6 +97,7 @@ export default {
 		adminURL: aio_login__app_object.admin_url,
 
 		has_pro: 'true' === aio_login__app_object.has_pro,
+		two_factor_allowed: 'true' === aio_login__app_object['2fa_authenticator_allowed'],
 
 		limit_login_attempts: 'off',
 
@@ -113,7 +122,17 @@ export default {
 			}
 		},
 
+		handleTwoFactorCardClick() {
+			if ( ! this.has_pro || ! this.two_factor_allowed ) {
+				this.$parent.$parent.popup = true;
+			}
+		},
+
 		limitLoginAttempts() {
+			if ( ! this.has_pro ) {
+				this.iWasTriggered();
+				return;
+			}
 			axios.post( 'aio-login/dashboard/update/limit-login-attempts', {
 				value: this.limit_login_attempts,
 			} )
@@ -137,6 +156,10 @@ export default {
 		},
 
 		twoFactorAuthenticationSettings( i ) {
+			if ( ! this.has_pro || ! this.two_factor_allowed ) {
+				this.handleTwoFactorCardClick();
+				return;
+			}
 			var value = i ? 'on' : 'off';
 
 			axios.post( 'aio-login/dashboard/update/two-factor-authentication', {
@@ -145,7 +168,7 @@ export default {
 				.then( response => {
 					if ( 'success' === response.data.status	) {
 						if ( i ) {
-							window.location.href = aio_login__app_object.admin_url + '&tab=security#/2fa';
+							window.location.href = aio_login__app_object.admin_url + '&tab=2fa#/authentication-methods';
 						}
 					}
 
@@ -155,6 +178,17 @@ export default {
 				.catch( error => {
 
 				}  );
+		},
+
+		handleLimitLoginSelectInteraction( event ) {
+			if ( this.has_pro ) {
+				return;
+			}
+			if ( event ) {
+				event.preventDefault();
+				event.stopPropagation();
+			}
+			this.iWasTriggered();
 		},
 
 		blockIPAddressSettings( i ) {
@@ -222,6 +256,11 @@ export default {
 	font-weight: 600 !important;
 	color: #9516DF !important;
 	border: 1px solid #9516DF !important;
+}
+
+.aio-login__configuration-select--locked {
+	opacity: 0.6;
+	cursor: not-allowed;
 }
 
 .aio-login__configuration-switch {

@@ -7,7 +7,12 @@
 				v-on:handle-submit="handleSubmit"
 			>
 				<template v-slot:title>
-					Block IP Address
+					<span>Block IP Address</span>
+					<aio-login-tooltip
+						:content="tooltipContent.blockIpAddresses.content"
+						:title="tooltipContent.blockIpAddresses.title"
+						placement="bottom"
+					/>
 				</template>
 
 				<template v-slot:form-fields>
@@ -22,6 +27,11 @@
 								:enabled="form_data.enabled"
 								v-on:toggle-input="toggleInput"
 							></aio-login-toggle>
+							<p class="desc">
+								<strong>
+									Enable to control access using whitelist or blacklist.
+								</strong>
+							</p>
 						</td>
 					</tr>
 
@@ -90,6 +100,8 @@
 </template>
 
 <script>
+import tooltipContent from '../../tooltip-content.js';
+
 export default {
 	name: 'aio-login-block-ip-address',
 
@@ -103,6 +115,7 @@ export default {
 	},
 
 	data: ( vm ) => ( {
+		tooltipContent,
 		nonce: '',
 
 		form_data: {

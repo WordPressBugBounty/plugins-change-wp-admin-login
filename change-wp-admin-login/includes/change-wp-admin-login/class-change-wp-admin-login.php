@@ -396,7 +396,7 @@ if ( ! class_exists( 'AIO_Login\\Change_WP_Admin_Login\\Change_WP_Admin_Login' )
 
 			echo '<p class="description">
 				<strong>'
-					. esc_attr__( 'Enable this option to change the login page URL.', 'change-wp-admin-login' )
+					. esc_attr__( 'Enable to customize your admin login URL.', 'change-wp-admin-login' )
 				. '</strong>
 			</p>';
 		}

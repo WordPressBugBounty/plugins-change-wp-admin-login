@@ -268,6 +268,49 @@
 								</div>
 							</div>
 						</div>
+
+						<!-- Apple -->
+						<div class="provider-item">
+							<div class="provider-header">
+								<img :src="getProviderIcon('apple')" alt="Apple" class="provider-icon" />
+								<span class="provider-name">Apple</span>
+							</div>
+							<div class="provider-options">
+								<div class="option-item">
+									<span>Login</span>
+									<label class="toggle-switch">
+										<aio-login-toggle
+											id="apple-login"
+											name="apple-login"
+											v-on:toggle-input="(val) => updateSocialProviderOption('apple', 'login', val)"
+											:enabled="formData.socialProviders.apple.login"
+										/>
+									</label>
+								</div>
+								<div class="option-item">
+									<span>Registration</span>
+									<label class="toggle-switch">
+										<aio-login-toggle
+											id="apple-registration"
+											name="apple-registration"
+											v-on:toggle-input="(val) => updateSocialProviderOption('apple', 'registration', val)"
+											:enabled="formData.socialProviders.apple.registration"
+										/>
+									</label>
+								</div>
+								<div class="option-item">
+									<span>Checkout</span>
+									<label class="toggle-switch">
+										<aio-login-toggle
+											id="apple-checkout"
+											name="apple-checkout"
+											v-on:toggle-input="(val) => updateSocialProviderOption('apple', 'checkout', val)"
+											:enabled="formData.socialProviders.apple.checkout"
+										/>
+									</label>
+								</div>
+							</div>
+						</div>
 					</div>
 				</div>
 			</div>
@@ -324,6 +367,11 @@ export default {
 						checkout: false
 					},
 					facebook: {
+						login: false,
+						registration: false,
+						checkout: false
+					},
+					apple: {
 						login: false,
 						registration: false,
 						checkout: false

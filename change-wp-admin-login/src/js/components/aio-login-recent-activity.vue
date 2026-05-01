@@ -1,7 +1,14 @@
 <template>
 	<div>
 		<div class="aio-login__recent-activity-wrapper">
-			<h2>Recent Activity</h2>
+			<h2>
+				<span>Recent Activity</span>
+				<aio-login-tooltip
+					:content="tooltipContent.recentActivity.content"
+					:title="tooltipContent.recentActivity.title"
+					placement="bottom"
+				/>
+			</h2>
 
 			<div class="aio-login__table-wrapper">
 				<div class="aio-login-table-nav">
@@ -73,10 +80,13 @@
 </template>
 
 <script>
+import tooltipContent from '../tooltip-content.js';
+
 export default {
 	name: 'aio-login-recent-activity',
 
 	data: () => ( {
+		tooltipContent,
 		view_all_activity_logs: aio_login__app_object.admin_url + '&tab=activity-log',
 
 		tabs: [

@@ -1,11 +1,16 @@
 <template>
-	<div v-if="page_loaded">
+	<div v-if="page_loaded" class="aio-login-lla-wrapper">
+		<div>
 		<aio-login-form
 			:action="nonce"
 			v-on:handle-submit="handleSubmit"
 		>
 			<template v-slot:title>
-				Limit Login Attempts
+				<span>Limit Login Attempts</span>
+				<aio-login-tooltip
+					:content="tooltipContent.limitLoginAttempts.content"
+					placement="bottom"
+				/>
 			</template>
 
 			<template v-slot:form-fields>
@@ -24,7 +29,7 @@
 
 						<p class="desc">
 							<strong>
-								Enable this option to limit login attempts.
+								Enable to restrict repeated login attempts per IP.
 							</strong>
 						</p>
 					</td>
@@ -49,7 +54,7 @@
 
 				<tr v-if="form_data.enabled">
 					<th scope="row">
-						<label for="timeout">Timeout</label>
+						<label for="timeout">Timeout (min)</label>
 					</th>
 
 					<td>
@@ -87,15 +92,32 @@
 			:duration="snackbar.timeout"
 			v-on:close="handleSnackbarClose"
 		/>
+		</div>
+
+		<div
+			v-if="!has_pro"
+			class="aio-login-lla-content-overflow"
+			role="presentation"
+			@click="openParentProPopup"
+		></div>
 	</div>
 </template>
 
 <script>
+import tooltipContent from '../tooltip-content.js';
+import resolveParentCurrentIsPro from '../resolve-parent-current-is-pro.js';
 
 export default {
 	name: 'limit-login-attempts',
 
+	computed: {
+		has_pro() {
+			return resolveParentCurrentIsPro( this );
+		},
+	},
+
 	data: ( vm ) => ( {
+		tooltipContent,
 		page_loaded: false,
 
 		nonce: '',
@@ -117,11 +139,25 @@ export default {
 	} ),
 
 	methods: {
+		openParentProPopup() {
+			let p = this.$parent;
+			while ( p ) {
+				if ( typeof p.openProPopup === 'function' ) {
+					p.openProPopup();
+					return;
+				}
+				p = p.$parent;
+			}
+		},
+
 		handleValue( value ) {
 			this.form_data.enabled = value;
 		},
 
 		handleSubmit( e ) {
+			if ( ! this.has_pro ) {
+				return;
+			}
 
 			axios.post( this.namespace + '/save-settings', {
 				enabled: this.form_data.enabled,
@@ -144,25 +180,50 @@ export default {
 		handleSnackbarClose() {
 			this.snackbar.show = false;
 		},
+
+		loadSettings() {
+			axios.get( this.namespace + '/get-settings' )
+				.then( response => {
+					this.form_data.enabled          = response.data.enabled;
+					this.form_data.maximum_attempts = response.data.maximum_attempts;
+					this.form_data.timeout          = response.data.timeout;
+					this.form_data.lockout_message  = response.data.lockout_message;
+					this.nonce                      = response.data.nonce;
+					this.page_loaded                = true;
+				} )
+				.catch( error => {
+					this.page_loaded = true;
+				} );
+		},
 	},
 
 	mounted() {
-		axios.get( this.namespace + '/get-settings' )
-			.then( response => {
-				this.form_data.enabled          = response.data.enabled;
-				this.form_data.maximum_attempts = response.data.maximum_attempts;
-				this.form_data.timeout          = response.data.timeout;
-				this.form_data.lockout_message  = response.data.lockout_message;
-				this.nonce 			    		= response.data.nonce;
-				this.page_loaded                = true;
-			} )
-			.catch( error => {
+		this.$nextTick( () => {
+			if ( this.has_pro ) {
+				this.loadSettings();
+			} else {
 				this.page_loaded = true;
-			} );
-	}
+			}
+		} );
+	},
 }
 </script>
 
 <style scoped>
+.aio-login-lla-wrapper {
+	position: relative;
+}
 
+.aio-login-lla-content-overflow {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	min-height: 220px;
+	z-index: 10;
+	cursor: pointer;
+	background: rgba( 255, 255, 255, 0.38 );
+	backdrop-filter: blur( 1px );
+}
 </style>

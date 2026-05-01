@@ -12,7 +12,9 @@
 				<!-- Top Section -->
 				<div class="aio-login-pro__social-login__card__top">
 					<img :src="getSrc('grecaptcha')" :alt="'Google reCAPTCHA'" />
-					<p>Google reCAPTCHA</p>
+					<p>
+						<span>Google reCAPTCHA</span>
+					</p>
 					<span class="version-badge">v2 & v3</span>
 				</div>
 				<!-- Bottom Section -->
@@ -48,6 +50,8 @@
 </template>
 
 <script>
+import tooltipContent from '../../tooltip-content.js';
+
 export default {
 	name: 'aio-login-captcha',
 
@@ -69,6 +73,7 @@ export default {
 	},
 
 	data: ( vm ) => ( {
+		tooltipContent,
 		assetsUrl: aio_login__app_object.assets_url,
 		page_loaded: false,
 		showPopup: false,

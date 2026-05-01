@@ -10,7 +10,12 @@
 			v-on:handle-submit="handleSubmit"
 		>
 			<template v-slot:title>
-				Temporary Access
+				<span>Temporary Access</span>
+				<aio-login-tooltip
+					:content="tooltipContent.temporaryAccess.content"
+					:title="tooltipContent.temporaryAccess.title"
+					placement="bottom"
+				/>
 			</template>
 
 			<template v-slot:description>
@@ -35,7 +40,11 @@
 
 							v-on:toggle-input="e => form_fields.enabled = e"
 						/>
-
+						<p class="desc">
+							<strong>
+								Enable to allow users temporary admin access securely.
+							</strong>
+						</p>
 					</td>
 				</tr>
 			</template>
@@ -61,6 +70,7 @@
 </template>
 
 <script>
+import tooltipContent from '../../tooltip-content.js';
 
 export default {
 	name: 'aio-login-temporary-access',
@@ -75,6 +85,7 @@ export default {
 	},
 
 	data: ( vm ) => ( {
+		tooltipContent,
 		nonce: '',
 		page_loaded: false,
 

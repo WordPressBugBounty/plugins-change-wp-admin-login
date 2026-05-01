@@ -4,8 +4,11 @@
 			<div class="float-left">
 				<slot name="logo"></slot>
 			</div>
-			<div class="float-right">
+			<div class="float-right" style="margin-left: 20px;">
 				<slot name="version"></slot>
+			</div>
+			<div class="float-right">
+				<slot name="actions"></slot>
 			</div>
 		</div>
 	</div>

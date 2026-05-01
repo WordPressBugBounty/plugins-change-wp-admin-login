@@ -5,7 +5,12 @@
 			v-on:handle-submit="handleSubmit"
 		>
 			<template v-slot:title>
-				User Enumeration Protection
+				<span>User Enumeration Protection</span>
+				<aio-login-tooltip
+					:content="tooltipContent.userEnumerationProtection.content"
+					:title="tooltipContent.userEnumerationProtection.title"
+					placement="bottom"
+				/>
 			</template>
 		
 			<template v-slot:form-fields>
@@ -20,7 +25,11 @@
 							:enabled="form_data.enable_protection"
 							v-on:toggle-input="handleEnableProtection"
 						/>
-						<p class="description">Enable this feature to prevent bots and malicious users from discovering valid usernames on your site.</p>
+						<p class="desc">
+							<strong>
+								Enable to hide usernames to strengthen site security.
+							</strong>
+						</p>
 					</td>
 				</tr>
 
@@ -119,10 +128,13 @@
 </template>
 
 <script>
+import tooltipContent from '../tooltip-content.js';
+
 export default {
 	name: 'user-enumeration-protection',
 
 	data: () => ({
+		tooltipContent,
 		nonce: '',
 		form_data: {
 			enable_protection: false,

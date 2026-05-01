@@ -36,7 +36,9 @@ export default {
 
 	watch: {
 		rows() {
-			this.datatable.destroy();
+			if ( this.datatable ) {
+				this.datatable.destroy();
+			}
 			this.datatable = this.createDatatableInstance();
 		}
 	},
@@ -59,11 +61,17 @@ export default {
 		},
 
 		createDatatableInstance() {
+			const timeColumnIndex = this.headers.findIndex(
+				header => header && header.key === 'time'
+			);
 
 			var kf = {
 				columns: this.getColumns(),
 				data: this.rows,
 				responsive: true,
+			}
+			if ( timeColumnIndex >= 0 ) {
+				kf.order = [ [ timeColumnIndex, 'desc' ] ];
 			}
 			return new Datatable.default(
 				this.$el,

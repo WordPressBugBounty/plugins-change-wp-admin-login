@@ -4,7 +4,14 @@
 			:action="nonce"
 			v-on:handle-submit="submitHandler"
 		>
-			<template v-slot:title>Custom CSS</template>
+			<template v-slot:title>
+				<span>Custom CSS</span>
+				<aio-login-tooltip
+					:content="tooltipContent.customCss.content"
+					:title="tooltipContent.customCss.title"
+					placement="bottom"
+				/>
+			</template>
 
 			<template v-slot:form-fields>
 				<tr>
@@ -33,11 +40,13 @@
 </template>
 
 <script>
+import tooltipContent from '../tooltip-content.js';
 
 export default {
 	name: 'custom-css',
 
 	data: () => ( {
+		tooltipContent,
 		page_loaded: false,
 
 		namespace: 'aio-login/custom-css',

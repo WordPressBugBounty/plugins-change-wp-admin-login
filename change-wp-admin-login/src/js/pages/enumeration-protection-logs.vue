@@ -2,7 +2,14 @@
 	<div>
 		<!-- Logging Settings Section -->
 		<div class="aio-login-settings-section" style="margin-bottom: 30px;">
-			<h3 style="margin-bottom: 20px; color: #333; font-size: 18px; font-weight: 600;">Logging Settings</h3>
+			<h3 style="margin-bottom: 20px; color: #333; font-size: 18px; font-weight: 600;">
+				<span>Logging Settings</span>
+				<aio-login-tooltip
+					:content="tooltipContent.loggingSettings.content"
+					:title="tooltipContent.loggingSettings.title"
+					placement="bottom"
+				/>
+			</h3>
 			
 			<div :class="{ 'aio-login-pro-feature': !has_pro }">
 				<div :class="{ 'aio-login-pro-overlay': !has_pro }" @click="!has_pro ? handleProFeatureClick() : null">
@@ -18,7 +25,7 @@
 									:enabled="form_data.log_enumeration_attempts"
 									v-on:toggle-input="handleLogEnumerationAttempts"
 								/>
-								<p class="description" style="margin: 8px 0 0 0; color: #666; font-size: 13px;">Logs user enumeration attempts to AIO Login Activity Logs for monitoring and Fail2Ban integration.</p>
+								<p class="description" style="margin: 8px 0 0 0; color: #666; font-size: 14px; font-weight: 600">Enable to monitor username discovery attempts securely.</p>
 							</td>
 						</tr>
 
@@ -47,7 +54,14 @@
 
 		<!-- Logs Display Section -->
 		<div class="aio-login-logs-section">
-			<h3 style="margin-bottom: 20px; color: #333; font-size: 18px; font-weight: 600;">Enumeration Attempts Logs</h3>
+			<h3 style="margin-bottom: 20px; color: #333; font-size: 18px; font-weight: 600;">
+				<span>Enumeration Attempts Logs</span>
+				<aio-login-tooltip
+					:content="tooltipContent.userEnumerationLogs.content"
+					:title="tooltipContent.userEnumerationLogs.title"
+					placement="bottom"
+				/>
+			</h3>
 			
 			<div :class="{ 'aio-login-pro-feature': !has_pro }">
 				<div :class="{ 'aio-login-pro-overlay': !has_pro }" @click="!has_pro ? handleProFeatureClick() : null">
@@ -133,11 +147,14 @@
 </template>
 
 <script>
+import tooltipContent from '../tooltip-content.js';
+import resolveParentCurrentIsPro from '../resolve-parent-current-is-pro.js';
+
 export default {
 	name: 'enumeration-protection-logs',
 
 	data: () => ({
-		has_pro: false,
+		tooltipContent,
 		showDeletePopup: false,
 		showSuccessMessage: false,
 		successMessage: '',
@@ -205,8 +222,16 @@ export default {
 		],
 	}),
 
+	computed: {
+		has_pro() {
+			return resolveParentCurrentIsPro(this);
+		},
+	},
+
 	mounted() {
-		this.loadProStatus();
+		if (this.has_pro) {
+			this.loadRealLogs();
+		}
 		this.loadLoggingSettings();
 		
 		// Add event delegation for button clicks
@@ -295,25 +320,6 @@ export default {
 
 		handleSnackbarClose() {
 			this.snackbar.show = false;
-		},
-
-		loadProStatus() {
-			// Check if pro plugin is active by checking the user enumeration settings
-			axios.get('aio-login/dashboard/user-enumeration-settings')
-				.then(response => {
-					if (response.data.success) {
-						const data = response.data.data;
-						this.has_pro = data.has_pro === 'true';
-						
-						// If pro plugin is active, load real logs data
-						if (this.has_pro) {
-							this.loadRealLogs();
-						}
-					}
-				})
-				.catch(error => {
-					console.error('Error loading pro status:', error);
-				});
 		},
 
 		loadRealLogs() {
@@ -536,7 +542,14 @@ export default {
 		},
 
 		handleProFeatureClick() {
-			this.$parent.$parent.popup = true;
+			let p = this.$parent;
+			while (p) {
+				if ('popup' in p && typeof p.popup === 'boolean') {
+					p.popup = true;
+					return;
+				}
+				p = p.$parent;
+			}
 		}
 	}
 }

@@ -80,11 +80,18 @@ if (!class_exists('AIO_Login\\Helper\\Helper')) {
 		}
 
 		/**
-		 * Getting the location of the user by IP
+		 * Getting the location of the user by IP.
+		 *
+		 * Uses ipapi (https://ipapi.co) for IP geolocation and normalizes
+		 * the response to a simple associative array containing at least
+		 * 'country' and 'city' keys for use across the plugin.
 		 *
 		 * @param string $ip The IP address of the user.
 		 *
-		 * @return array
+		 * @return array {
+		 *     @type string $country Country name (if available).
+		 *     @type string $city    City name (if available).
+		 * }
 		 */
 		public static function get_location($ip = '')
 		{
@@ -92,11 +99,66 @@ if (!class_exists('AIO_Login\\Helper\\Helper')) {
 				$ip = self::get_ip();
 			}
 
-			$url = 'https://ipapi.co/' . $ip . '/json/';
-			$response = wp_remote_get($url);
-			$body = wp_remote_retrieve_body($response);
+			// If we still don't have a valid IP, bail early.
+			if (empty($ip) || 'UNKNOWN' === $ip) {
+				return array(
+					'country' => '',
+					'city'    => '',
+				);
+			}
 
-			return json_decode($body, true);
+			// Cache lookups per IP to avoid repeated external requests.
+			$cache_key = 'aio_login_ip_location_' . md5($ip);
+			$cached    = get_transient($cache_key);
+			if (false !== $cached && is_array($cached)) {
+				return $cached;
+			}
+
+			// Use ipapi.co JSON API – no key required for basic data.
+			$url      = sprintf('https://ipapi.co/%s/json/', rawurlencode($ip));
+			$response = wp_remote_get(
+				$url,
+				array(
+					'timeout'   => 5,
+					'sslverify' => true,
+				)
+			);
+
+			if (is_wp_error($response)) {
+				return array(
+					'country' => '',
+					'city'    => '',
+				);
+			}
+
+			$code = wp_remote_retrieve_response_code($response);
+			if (200 !== $code) {
+				return array(
+					'country' => '',
+					'city'    => '',
+				);
+			}
+
+			$body = wp_remote_retrieve_body($response);
+			$data = json_decode($body, true);
+
+			if (!is_array($data)) {
+				return array(
+					'country' => '',
+					'city'    => '',
+				);
+			}
+
+			// ipapi returns 'country_name' and 'city'. Normalize to 'country' and 'city'.
+			$location = array(
+				'country' => isset($data['country_name']) ? sanitize_text_field($data['country_name']) : '',
+				'city'    => isset($data['city']) ? sanitize_text_field($data['city']) : '',
+			);
+
+			// Cache for 1 day to balance freshness and performance.
+			set_transient($cache_key, $location, DAY_IN_SECONDS);
+
+			return $location;
 		}
 
 		/**
@@ -360,17 +422,49 @@ if (!class_exists('AIO_Login\\Helper\\Helper')) {
 				}
 			}
 
-			// 3. Check Social Providers
+			// 3. Check Cloudflare Turnstile
+			if (
+				$get_opt('aio_login_turnstile_enable') === 'on' &&
+				!empty($get_opt('aio_login_turnstile_site_key')) &&
+				!empty($get_opt('aio_login_turnstile_secret_key'))
+			) {
+				$snapshot['captcha'][] = 'turnstile';
+			}
+
+			// 4. Check Social Providers
 			// Note: These options might be managed by the PRO plugin, but we can access the options table from here.
-			$social_providers = array('google', 'microsoft', 'facebook', 'line');
+			$social_providers = array('google', 'microsoft', 'facebook', 'line', 'github', 'discord', 'apple');
+			$plan_allows_social = true;
+			if (class_exists('\AIO_Login_Pro\Plan\Plan_Features')) {
+				$plan_allows_social = \AIO_Login_Pro\Plan\Plan_Features::can('social_login');
+			}
 			foreach ($social_providers as $provider) {
-				// Social Login Pro usually stores '1' for enabled
-				if (
-					$get_opt('aio_' . $provider . '_enabled') === '1' &&
-					!empty($get_opt('aio_' . $provider . '_client_id')) &&
-					!empty($get_opt('aio_' . $provider . '_client_secret'))
-				) {
-					$snapshot['social'][] = $provider;
+				if (!$plan_allows_social) {
+					continue;
+				}
+				// Social Login Pro usually stores '1' for enabled.
+				if ($get_opt('aio_' . $provider . '_enabled') !== '1') {
+					continue;
+				}
+
+				if ('apple' === $provider) {
+					// Apple is configured when Service ID, Key ID, Team ID and Private Key are present.
+					if (
+						!empty($get_opt('aio_apple_service_id')) &&
+						!empty($get_opt('aio_apple_key_id')) &&
+						!empty($get_opt('aio_apple_team_id')) &&
+						!empty($get_opt('aio_apple_private_key')) &&
+						$get_opt('aio_apple_verified', '0') === '1'
+					) {
+						$snapshot['social'][] = $provider;
+					}
+				} else {
+					if (
+						!empty($get_opt('aio_' . $provider . '_client_id')) &&
+						!empty($get_opt('aio_' . $provider . '_client_secret'))
+					) {
+						$snapshot['social'][] = $provider;
+					}
 				}
 			}
 

@@ -1,5 +1,5 @@
 <template>
-		<input :id="id" :type="type" v-model="value" />
+	<input type="text" :value="modelValue" @input="$emit('update:modelValue', $event.target.value)" />
 </template>
 
 <script>
@@ -7,46 +7,43 @@ export default {
 	name: 'aio-login-color-picker',
 
 	props: {
-		defaultValue: {
+		modelValue: {
 			type: String,
 			default: '',
-		},
-
-		id: {
-			type: String,
-			required: true,
 		}
 	},
 
-	data: ( vm ) => ( {
-		value: vm.defaultValue,
-	} ),
+	emits: ['update:modelValue'],
 
 	watch: {
-		value( newValue ) {
-			this.$emit( 'color-changed', newValue );
-		},
-	},
-
-	computed: {
-		type() {
-			if ( jQuery ) {
-				return 'text';
-			} else {
-				return 'color';
+		modelValue(newVal) {
+			if (jQuery(this.$el).data('wp-wpColorPicker')) {
+				if (jQuery(this.$el).wpColorPicker('color') !== newVal) {
+					jQuery(this.$el).wpColorPicker('color', newVal);
+				}
 			}
 		}
 	},
 
 	mounted() {
-		if ( jQuery ) {
-			jQuery( this.$el ).wpColorPicker( {
-				change: ( event, ui ) => {
-					this.value = ui.color.toString();
+		if (jQuery) {
+			jQuery(this.$el).wpColorPicker({
+				change: (event, ui) => {
+					const color = ui.color.toString();
+					this.$emit('update:modelValue', color);
 				},
-			} );
+				clear: () => {
+					this.$emit('update:modelValue', '');
+				}
+			});
 		}
 	},
+
+	beforeUnmount() {
+		if (jQuery(this.$el).data('wp-wpColorPicker')) {
+			jQuery(this.$el).wpColorPicker('destroy');
+		}
+	}
 }
 </script>
 

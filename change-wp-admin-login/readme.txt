@@ -4,7 +4,7 @@ Tags: login url, login, wp admin, wp login, custom login
 Requires at least: 4.6
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 2.1.1
+Stable tag: 2.2.0
 License: GPLv2 or later
 
 Do you want to secure and customize the WordPress login page? Download the All in One Login plugin for login page security and customization.
@@ -314,7 +314,15 @@ Please report security bugs found in the source code of the Change wp-admin logi
 
 
 == Changelog ==
-= 2.1.1 – Jan 22, 2026 = 
+= 2.2.0 – May 01, 2026 = 
+* New – Added Tootips for all the features. 
+* New – Added pro screen of discord and GitHub in Social Login.
+* New – Added Live Preview button in the Customization tab.
+* Tweak – Added the Minutes unit in Limit Login Attempts.
+* Improvement – Updated Geolocation Library For Better IP Addresses.
+* Improvement – Updated Freemius SDK to latest version.
+
+= 2.1.1 – Jan 21, 2026 = 
 * Tweak – Added new tab of Integration and WooCommerce integration pro screen.
 * Tweak – Added the hCaptcha Pro screen in the Captcha tab.
 

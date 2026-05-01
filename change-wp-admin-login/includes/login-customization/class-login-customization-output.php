@@ -15,13 +15,6 @@ if ( ! class_exists( 'AIO_Login\\Login_Customization\\Login_Customization_Output
 	 */
 	class Login_Customization_Output {
 		/**
-		 * Custom CSS.
-		 *
-		 * @var string Custom CSS.
-		 */
-		private $custom_css;
-
-		/**
 		 * Logo.
 		 *
 		 * @var int $logo Logo.
@@ -87,10 +80,11 @@ if ( ! class_exists( 'AIO_Login\\Login_Customization\\Login_Customization_Output
 			$this->logo             = Login_Customization::file_exists( $this->logo, true );
 			$this->background_image = Login_Customization::file_exists( $this->background_image );
 
-			$this->custom_css = get_option( 'aio_login_custom-css', '' );
-
 			add_action( 'login_enqueue_scripts', array( $this, 'login_output' ), 15 );
+			// After template CSS is registered so Additional CSS prints last and overrides template !important rules.
+			add_action( 'login_enqueue_scripts', array( $this, 'output_additional_login_css_last' ), 999 );
 			add_filter( 'login_headerurl', array( $this, 'login_header_url' ) );
+			add_filter( 'login_headertext', array( $this, 'login_header_text' ) );
 		}
 
 		/**
@@ -99,7 +93,10 @@ if ( ! class_exists( 'AIO_Login\\Login_Customization\\Login_Customization_Output
 		public function login_output() {
 			$custom_css = '';
 
-			if ( ! empty( $this->logo ) ) {
+			$disable_logo = get_option( 'aio_login_disable_logo', false );
+			$logo_hidden  = ( true === $disable_logo || 1 === $disable_logo || '1' === $disable_logo || 'on' === strtolower( (string) $disable_logo ) );
+
+			if ( ! $logo_hidden && ! empty( $this->logo ) ) {
 				$custom_css .= '
 					.login .wp-login-logo a {
 						background-image: url(' . esc_url( $this->logo ) . ');
@@ -108,7 +105,7 @@ if ( ! class_exists( 'AIO_Login\\Login_Customization\\Login_Customization_Output
 				';
 			}
 
-			if ( ! empty( $this->logo_width ) ) {
+			if ( ! $logo_hidden && ! empty( $this->logo_width ) ) {
 				$custom_css .= '
 					.login .wp-login-logo a {
 						width: ' . esc_attr( $this->logo_width ) . 'px;
@@ -116,7 +113,7 @@ if ( ! class_exists( 'AIO_Login\\Login_Customization\\Login_Customization_Output
 				';
 			}
 
-			if ( ! empty( $this->logo_height ) ) {
+			if ( ! $logo_hidden && ! empty( $this->logo_height ) ) {
 				$custom_css .= '
 					.login .wp-login-logo a {
 						height: ' . esc_attr( $this->logo_height ) . 'px;
@@ -124,7 +121,7 @@ if ( ! class_exists( 'AIO_Login\\Login_Customization\\Login_Customization_Output
 				';
 			}
 
-			if ( ! empty( $this->logo_margin_bottom ) ) {
+			if ( ! $logo_hidden && ! empty( $this->logo_margin_bottom ) ) {
 				$custom_css .= '
 					.login .wp-login-logo a {
 						margin-bottom: ' . esc_attr( $this->logo_margin_bottom ) . 'px;
@@ -132,7 +129,13 @@ if ( ! class_exists( 'AIO_Login\\Login_Customization\\Login_Customization_Output
 				';
 			}
 
-			if ( ! empty( $this->background_color ) ) {
+			// Skip default gray only when selected template uses a dark body (option slugs for template-02/05/08).
+			$dark_template_slugs = array( 'template-2', 'template-4', 'template-7' );
+			$tpl_key             = get_option( 'aio_login__customization_templates', 'default' );
+			$is_dark_body        = in_array( (string) $tpl_key, $dark_template_slugs, true );
+			$bg_trim             = trim( (string) $this->background_color );
+			$is_default_wp_gray  = ( '' !== $bg_trim && 0 === strcasecmp( $bg_trim, '#f1f1f1' ) );
+			if ( ! empty( $this->background_color ) && ( ! $is_default_wp_gray || ! $is_dark_body ) ) {
 				$custom_css .= '
 					body.login {
 						background-color: ' . esc_attr( $this->background_color ) . ';
@@ -152,15 +155,64 @@ if ( ! class_exists( 'AIO_Login\\Login_Customization\\Login_Customization_Output
 				';
 			}
 
-			if ( ! empty( $this->custom_css ) ) {
-				$custom_css .= $this->custom_css;
-			}
-
 			$custom_css = apply_filters( 'aio_login__custom_css', $custom_css );
 
 			if ( ! empty( $custom_css ) ) {
-				wp_add_inline_style( 'login', $custom_css );
+				// Print on the AIO template handle when present so rules win over template .css (e.g. template-09
+				// logo 100px !important). Inline on `login` loads before aio-login-*-template and was overridden.
+				$handle = 'login';
+				if ( wp_style_is( 'aio-login-pro-template', 'enqueued' ) ) {
+					$handle = 'aio-login-pro-template';
+				} elseif ( wp_style_is( 'aio-login-free-template', 'enqueued' ) ) {
+					$handle = 'aio-login-free-template';
+				}
+				/**
+				 * Style handle for merged login customization CSS (free base + aio_login__custom_css filter).
+				 *
+				 * @param string $handle      Registered style handle.
+				 * @param string $custom_css  Full CSS string about to be printed.
+				 */
+				$handle = apply_filters( 'aio_login__custom_css_style_handle', $handle, $custom_css );
+				if ( is_string( $handle ) && '' !== $handle ) {
+					wp_add_inline_style( $handle, $custom_css );
+				}
 			}
+		}
+
+		/**
+		 * Output "Additional CSS" on the last AIO template stylesheet handle so it always wins over template files.
+		 *
+		 * When rules were inlined on `login`, the template file (`aio-login-*-template`) loaded after `login`
+		 * and could override the same specificity / !important as user rules.
+		 *
+		 * @return void
+		 */
+		public function output_additional_login_css_last() {
+			$css = get_option( 'aio_login_custom-css', '' );
+			if ( ! is_string( $css ) || '' === trim( $css ) ) {
+				return;
+			}
+
+			$handle = 'login';
+			if ( wp_style_is( 'aio-login-pro-template', 'enqueued' ) ) {
+				$handle = 'aio-login-pro-template';
+			} elseif ( wp_style_is( 'aio-login-free-template', 'enqueued' ) ) {
+				$handle = 'aio-login-free-template';
+			}
+
+			/**
+			 * Which style handle Additional CSS is printed on (default: template handle, else `login`).
+			 *
+			 * @param string $handle Style handle.
+			 * @param string $css    Raw Additional CSS.
+			 */
+			$handle = apply_filters( 'aio_login_additional_css_style_handle', $handle, $css );
+
+			if ( ! is_string( $handle ) || '' === $handle ) {
+				return;
+			}
+
+			wp_add_inline_style( $handle, trim( $css ) );
 		}
 
 		/**
@@ -175,6 +227,17 @@ if ( ! class_exists( 'AIO_Login\\Login_Customization\\Login_Customization_Output
 				$url = $this->logo_url;
 			}
 			return $url;
+		}
+
+		/**
+		 * Login logo link text (core prints this inside the anchor; also used for accessibility).
+		 *
+		 * @param string $text Default text from core.
+		 * @return string
+		 */
+		public function login_header_text( $text ) {
+			$custom = get_option( 'aio_login_logo_title', '' );
+			return ! empty( $custom ) ? sanitize_text_field( $custom ) : $text;
 		}
 
 		/**

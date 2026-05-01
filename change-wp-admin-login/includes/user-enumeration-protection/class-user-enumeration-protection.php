@@ -160,14 +160,9 @@ class User_Enumeration_Protection {
 	 * Remove users sitemap provider from main sitemap index
 	 */
 	public function remove_users_sitemap_provider( $providers ) {
-		// Debug: Log that filter is being called
-		error_log( 'AIO Login: remove_users_sitemap_provider called' );
-		error_log( 'AIO Login: is_author_sitemaps_disabled: ' . ( $this->is_author_sitemaps_disabled() ? 'YES' : 'NO' ) );
-		
 		if ( $this->is_author_sitemaps_disabled() ) {
 			// Remove the users sitemap provider
 			unset( $providers['users'] );
-			error_log( 'AIO Login: users sitemap provider removed' );
 		}
 		return $providers;
 	}
@@ -176,11 +171,7 @@ class User_Enumeration_Protection {
 	 * Filter sitemap index entries to remove users sitemap
 	 */
 	public function filter_sitemap_index_entry( $entry, $subtype ) {
-		// Debug: Log that filter is being called
-		error_log( 'AIO Login: filter_sitemap_index_entry called with subtype: ' . $subtype );
-		
 		if ( $this->is_author_sitemaps_disabled() && $subtype === 'users' ) {
-			error_log( 'AIO Login: Removing users sitemap entry' );
 			return false; // Remove this entry
 		}
 		
@@ -191,15 +182,9 @@ class User_Enumeration_Protection {
 	 * Filter oEmbed response to remove author information
 	 */
 	public function filter_oembed_response( $data, $post, $width, $height ) {
-		// Debug: Log that filter is being called
-		error_log( 'AIO Login: oEmbed filter called for post ID: ' . $post->ID );
-		
 		// Remove author information from oEmbed response
 		unset( $data['author_name'] );
 		unset( $data['author_url'] );
-		
-		// Debug: Log what was removed
-		error_log( 'AIO Login: oEmbed author info removed' );
 		
 		return $data;
 	}
@@ -227,18 +212,13 @@ class User_Enumeration_Protection {
 	 * Obfuscate author name
 	 */
 	public function obfuscate_author_name( $name ) {
-		// Debug: Log that filter is being called
-		error_log( 'AIO Login: obfuscate_author_name called with: ' . $name );
-		
 		// Allow admin users and authors to see real names
 		if ( current_user_can( 'manage_options' ) ) {
-			error_log( 'AIO Login: Admin user - showing real name: ' . $name );
 			return $name;
 		}
 		
 		// Allow authors to see their own names
 		if ( is_user_logged_in() && $GLOBALS['current_user']->user_login === $name ) {
-			error_log( 'AIO Login: Author viewing own name - showing real name: ' . $name );
 			return $name;
 		}
 		
@@ -246,7 +226,6 @@ class User_Enumeration_Protection {
 		$salt = 'aio_login_protection';
 		$hash = md5( $name . $salt );
 		$obfuscated = 'Protected_User_' . substr( $hash, 0, 8 );
-		error_log( 'AIO Login: obfuscated name: ' . $obfuscated );
 		return $obfuscated;
 	}
 
@@ -262,16 +241,12 @@ class User_Enumeration_Protection {
 	 * Obfuscate author in content
 	 */
 	public function obfuscate_author_in_content( $content ) {
-		// Debug: Log that content filter is being called
-		error_log( 'AIO Login: obfuscate_author_in_content called' );
-		
 		// Replace "Written by admin" with obfuscated version
 		$content = preg_replace_callback(
 			'/Written by\s+(\w+)/i',
 			function( $matches ) {
 				$author = $matches[1];
 				$obfuscated = $this->obfuscate_author_name( $author );
-				error_log( 'AIO Login: Replacing "Written by ' . $author . '" with "Written by ' . $obfuscated . '"' );
 				return 'Written by ' . $obfuscated;
 			},
 			$content
@@ -441,6 +416,8 @@ class User_Enumeration_Protection {
 			// Create new log
 			$this->create_enumeration_log( $ip_address, $type, $username, $user_agent, $blocked_until );
 		}
+
+		do_action( 'aio_login_enumeration_logged', $type, $username, $ip_address );
 	}
 
 	/**
@@ -523,7 +500,6 @@ class User_Enumeration_Protection {
 	 */
 	private function is_author_sitemaps_disabled() {
 		$enabled = get_option( 'aio_login_user_enumeration_sitemaps', 'off' ) === 'on';
-		error_log( 'AIO Login: is_author_sitemaps_disabled check - option value: ' . get_option( 'aio_login_user_enumeration_sitemaps', 'off' ) . ', result: ' . ( $enabled ? 'YES' : 'NO' ) );
 		return $enabled;
 	}
 
@@ -532,7 +508,6 @@ class User_Enumeration_Protection {
 	 */
 	private function is_oembed_protection_enabled() {
 		$enabled = get_option( 'aio_login_user_enumeration_oembed', 'off' ) === 'on';
-		error_log( 'AIO Login: oEmbed protection enabled: ' . ( $enabled ? 'YES' : 'NO' ) );
 		return $enabled;
 	}
 

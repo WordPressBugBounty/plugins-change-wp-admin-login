@@ -1,8 +1,6 @@
 <template>
 	<div v-if="page_loaded" class="aio-login-t-wrapper" @click="iWasTriggered">
-		<div>
-			<h3>Social Login Settings</h3>
-		</div>
+		<h3>Social Login Settings</h3>
             <div class="aio-login-pro__social-login">
                 <div v-for="provider in providers" :key="provider.id" class="aio-login-pro__social-login__card">
                 <!-- Top Section -->
@@ -51,6 +49,9 @@ export default {
                 { id: "microsoft", name: "Microsoft", enabled: false },
                 { id: "facebook", name: "Facebook", enabled: false },
                 { id: "line", name: "Line", enabled: false },
+                { id: "github", name: "GitHub", enabled: false },
+                { id: "discord", name: "Discord", enabled: false },
+                { id: "apple", name: "Apple", enabled: false },
             ],
         },
 	},

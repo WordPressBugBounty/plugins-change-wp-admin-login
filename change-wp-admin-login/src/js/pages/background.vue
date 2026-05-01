@@ -3,7 +3,12 @@
 
 		<aio-login-form :action="nonce" v-on:handle-submit="submitHandler">
 			<template v-slot:title>
-				Background Customization
+				<span>Background</span>
+				<aio-login-tooltip
+					:content="tooltipContent.background.content"
+					:title="tooltipContent.background.title"
+					placement="bottom"
+				/>
 			</template>
 			<template v-slot:form-fields>
 				<tr>
@@ -11,7 +16,7 @@
 						<label for="bg_color">Background Color</label>
 					</th>
 					<td>
-						<aio-login-color-picker id="bg_color" :default-value="form_data.bg_color" v-on:color-changed="colorChanged" />
+						<aio-login-color-picker id="bg_color" v-model="form_data.bg_color" />
 					</td>
 				</tr>
 
@@ -44,12 +49,13 @@
 </template>
 
 <script>
+import tooltipContent from '../tooltip-content.js';
 
 export default {
 	name: 'background',
 
-
 	data: ( vm ) => ( {
+		tooltipContent,
 		page_loaded: false,
 
 		namespace: 'aio-login/background',
@@ -71,10 +77,6 @@ export default {
 	} ),
 
 	methods: {
-		colorChanged( newColor ) {
-			this.form_data.bg_color = newColor;
-		},
-
 		imageUpdated( attachment ) {
 			this.form_data.bg_image = attachment.id;
 		},

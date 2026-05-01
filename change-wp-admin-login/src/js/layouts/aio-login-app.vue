@@ -5,7 +5,19 @@
 				<img class="aio-login-header-img" :src="assets_url + 'images/dashboard-logo.png'" alt="logo">
 			</template>
 			<template v-slot:version>
-				<span class="aio-login-header-version">Version: {{ version }}</span>
+				<div class="aio-login-header-version">
+					<span class="aio-login-header-version__badge aio-login-header-version__badge--free">
+						Free v{{ version }}
+					</span>
+					<span
+						v-if="show_pro_version"
+						class="aio-login-header-version__badge aio-login-header-version__badge--pro"
+					>
+						Pro v{{ pro_version }}
+					</span>
+				</div>
+			</template>
+			<template v-slot:actions>
 			</template>
 		</aio-login-header>
 
@@ -16,13 +28,24 @@
 				:tabs="tabs"
 			></aio-login-tabs>
 
-			<div class="aio-login__container" :class="is_pro_class" :style="backgroundColor">
+			<div class="aio-login__container">
 
 				<div v-if="hasSubTabs()">
 
-					<aio-login-sub-tabs
-						:sub-tabs="sub_tabs"
-					></aio-login-sub-tabs>
+					<div
+						class="aio-login-pro-feature"
+						:class="{
+							'aio-login-pro-overlay': is_two_factor_locked,
+							'aio-login-subtabs-locked': is_two_factor_locked
+						}"
+						@click="is_two_factor_locked ? openProPopup() : null"
+					>
+						<aio-login-sub-tabs
+							:sub-tabs="sub_tabs"
+							:class="{ 'aio-login-sub-tabs--locked': is_two_factor_locked }"
+						>
+						</aio-login-sub-tabs>
+					</div>
 
 				</div>
 
@@ -32,6 +55,8 @@
 					</div>
 
 					<div v-else>
+						<router-view v-if="isTwoFactor()"></router-view>
+
 						<aio-login-dashboard
 							v-if="isDashboard()"
 						></aio-login-dashboard>
@@ -59,6 +84,7 @@
 
 			<div v-if="! hasSubTabs() && isDashboard()" class="container">
 				<aio-login-recent-activity class="mt-25"></aio-login-recent-activity>
+				<aio-login-dashboard-docs></aio-login-dashboard-docs>
 			</div>
 
 		</div>
@@ -74,37 +100,87 @@ export default {
 
 	data: () => ( {
 		version: window.aio_login__app_object.version,
+		pro_version: window.aio_login__app_object.pro_version || '',
 		assets_url: window.aio_login__app_object.assets_url,
 		tabs: [],
 		sub_tabs: [],
 		popup: false,
-		current_is_pro: false,
+		current_is_pro: window.aio_login__app_object.has_pro === 'true' || window.aio_login__app_object.has_pro === true,
 	} ),
 
 	computed: {
-		backgroundColor() {
-			if ( this.isGetPro() ) {
-				return {
-					backgroundImage: 'radial-gradient(128.97% 130.43% at 126.02% 137.76%, #B480F8 0%, #141B34 100%)',
-          position: 'relative',
-				};
-			} else {
-				return {
-					backgroundImage: '#ffffff',
-				};
-			}
+		show_pro_version() {
+			return this.has_pro_enabled && !!this.pro_version;
 		},
 
-    is_pro_class() {
-      return {
-        'aio-login__pro-container': this.isGetPro(),
-      };
-    }
+		has_pro_enabled() {
+			return window.aio_login__app_object.has_pro === 'true' || window.aio_login__app_object.has_pro === true;
+		},
+
+		is_two_factor_locked() {
+			return this.getActiveTab() === '2fa' && ! this.has_pro_enabled;
+		},
+	},
+
+	watch: {
+		$route() {
+			this.syncCurrentTabAccess();
+		},
 	},
 
 	methods: {
+		/**
+		 * Active router path is /{sub-tab-slug} for tabbed sections (e.g. /password-strenght-checker).
+		 */
+		getActiveSubTabSlug() {
+			if ( typeof this.$route === 'undefined' || ! this.$route.path ) {
+				return '';
+			}
+			return String( this.$route.path ).replace( /^\/+|\/+$/g, '' );
+		},
+
+		getActiveSubTabConfig() {
+			if ( ! this.sub_tabs.length ) {
+				return null;
+			}
+			let slug = this.getActiveSubTabSlug();
+			if ( ! slug && this.sub_tabs[0] && this.sub_tabs[0].slug ) {
+				slug = this.sub_tabs[0].slug;
+			}
+			if ( ! slug ) {
+				return null;
+			}
+			return this.sub_tabs.find( ( st ) => st.slug === slug ) || null;
+		},
+
+		/**
+		 * "Unlocked" content uses current_is_pro === true. Plan-locked main tab or sub-tab => false (blur overlay).
+		 */
+		syncCurrentTabAccess() {
+			const activeTab = this.getActiveTabConfig();
+			if ( activeTab && activeTab['is-pro'] === true ) {
+				this.current_is_pro = false;
+				return;
+			}
+			if ( this.hasSubTabs() ) {
+				const sub = this.getActiveSubTabConfig();
+				if ( sub && sub['is-pro'] === true ) {
+					this.current_is_pro = false;
+					return;
+				}
+			}
+			this.current_is_pro = true;
+		},
+
+		getActiveTabConfig() {
+			const activeSlug = this.getActiveTab();
+			return this.tabs.find((tab) => tab.slug === activeSlug) || null;
+		},
+
 		getTabs() {
 			this.tabs = Object.values( window.aio_login__object.tabs );
+			this.getSubTabs();
+			this.syncCurrentTabAccess();
 		},
 
 		getSubTabs() {
@@ -149,15 +225,21 @@ export default {
 			return this.getActiveTab() === 'getpro';
 		},
 
+		isTwoFactor() {
+			return this.getActiveTab() === '2fa';
+		},
+
 		closePopup() {
 			this.popup = false;
-		}
+		},
+
+		openProPopup() {
+			this.popup = true;
+		},
 	},
 
 	mounted() {
 		this.getTabs();
-
-		this.getSubTabs();
 
 		document.body.addEventListener( 'click', function ( e ) {
 			if ( e.target.closest( '.aio-login__popup-wrapper' ) && ! e.target.closest( '.aio-login__popup-container' ) ) {
@@ -174,9 +256,33 @@ export default {
 }
 
 .aio-login-header-version {
-	line-height: 100px;
-	font-weight: 400;
-	font-size: 14px;
+	min-height: 100px;
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.aio-login-header-version__badge {
+	display: inline-flex;
+	align-items: center;
+	padding: 6px 10px;
+	border-radius: 999px;
+	font-size: 12px;
+	font-weight: 700;
+	line-height: 1;
+	letter-spacing: 0.01em;
+}
+
+.aio-login-header-version__badge--free {
+	color: #4a5568;
+	background: #edf2f7;
+	border: 1px solid #d5dee9;
+}
+
+.aio-login-header-version__badge--pro {
+	color: #ffffff;
+	background: linear-gradient(180deg, #9516df 0%, #510c79 100%);
+	border: 1px solid #7a27bf;
 }
 
 .aio-login__container {
@@ -188,19 +294,23 @@ export default {
 	padding: 25px;
 }
 
-.aio-login__pro-container::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  right: 0;
-  width: 100%;
-  height: 100%;
-  background: url(../../images/aoibg.svg);
-  z-index: 1;
+.aio-login-subtabs-locked {
+	position: relative;
 }
 
-.aio-login__pro-container .aio-login__content-wrapper {
-  position: relative;
-  z-index: 2;
+.aio-login-subtabs-locked::after {
+	content: '';
+	position: absolute;
+	inset: 0;
+	background: rgba(255, 255, 255, 0.38);
+	backdrop-filter: blur(1px);
+	z-index: 20;
+	cursor: pointer;
 }
+
+.aio-login-sub-tabs--locked {
+	pointer-events: none;
+	opacity: 0.45;
+}
+
 </style>

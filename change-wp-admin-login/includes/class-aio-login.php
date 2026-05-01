@@ -43,6 +43,20 @@ if ( ! class_exists( 'AIO_Login\\AIO_Login' ) ) {
 			self::class_loader( Login_Controller::class );
 			self::class_loader( Login_Customization::class );
 			self::class_loader( Login_Customization_Output::class );
+			/*
+			 * Pro loads after free; class_exists() here is too early and boots Pro_Fallback while Pro is active,
+			 * duplicating template-09 footer markup and hooks.
+			 */
+			add_action(
+				'plugins_loaded',
+				static function () {
+					if ( ! class_exists( 'AIO_Login_Pro\\Login_Customization\\Login_Customization_Output' ) ) {
+						\AIO_Login\Login_Customization\Login_Customization_Output_Pro_Fallback::get_instance();
+					}
+				},
+				20
+			);
+			self::class_loader( \AIO_Login_Pro\Login_Customization\Login_Customizer::class );
 			self::class_loader( \AIO_Login\User_Enumeration_Protection\User_Enumeration_Protection::class );
 
 			$this->init();
@@ -62,6 +76,8 @@ if ( ! class_exists( 'AIO_Login\\AIO_Login' ) ) {
 			require_once AIO_LOGIN__DIR_PATH . 'includes/login-controller/class-failed-logins.php';
 			require_once AIO_LOGIN__DIR_PATH . 'includes/login-customization/class-login-customization.php';
 			require_once AIO_LOGIN__DIR_PATH . 'includes/login-customization/class-login-customization-output.php';
+			require_once AIO_LOGIN__DIR_PATH . 'includes/login-customization/class-login-customization-output-pro-fallback.php';
+			require_once AIO_LOGIN__DIR_PATH . 'includes/login-customization/class-login-customizer.php';
 			require_once AIO_LOGIN__DIR_PATH . 'includes/user-enumeration-protection/class-user-enumeration-protection.php';
 			require_once AIO_LOGIN__DIR_PATH . 'includes/user-enumeration-protection/class-user-enumeration-activator.php';
 		}

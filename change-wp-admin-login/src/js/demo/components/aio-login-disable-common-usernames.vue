@@ -6,7 +6,12 @@
 				v-on:handle-submit="handleSubmit"
 			>
 				<template v-slot:title>
-					Disable Common Usernames
+					<span>Disable Common Usernames</span>
+					<aio-login-tooltip
+						:content="tooltipContent.disableCommonUsernames.content"
+						:title="tooltipContent.disableCommonUsernames.title"
+						placement="bottom"
+					/>
 				</template>
 
 				<template v-slot:form-fields>
@@ -21,6 +26,11 @@
 								:enabled="form_data.enabled"
 								v-on:toggle-input="toggleInput"
 							/>
+							<p class="desc">
+								<strong>
+									Enable to prevent use of common usernames.
+								</strong>
+							</p>
 						</td>
 					</tr>
 
@@ -43,6 +53,7 @@
 </template>
 
 <script>
+import tooltipContent from '../../tooltip-content.js';
 
 export default {
 	name: 'aio-login-disable-common-usernames',
@@ -57,6 +68,7 @@ export default {
 	},
 
 	data: ( vm ) => ( {
+		tooltipContent,
 		nonce: '',
 		form_data: {
 			enabled: false,

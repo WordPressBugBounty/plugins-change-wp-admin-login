@@ -6,6 +6,8 @@
 			:name="name"
 			:value="modelValue"
 			:type="type"
+			:placeholder="placeholder"
+			:readonly="readonly"
 			:disabled="disabled"
 			@input="$emit( 'update:modelValue', $event.target.value ); $emit( 'input', $event.target.value )"
 		>
@@ -15,6 +17,8 @@
 			class="regular-text"
 			:id="id"
 			:name="name"
+			:placeholder="placeholder"
+			:readonly="readonly"
 			:disabled="disabled"
 		>{{ modelValue }}</textarea>
 </template>
@@ -40,9 +44,17 @@ export default {
 			type: [String, Number],
 			default: '',
 		},
+		readonly: {
+			type: Boolean,
+			default: false,
+		},
 		disabled: {
 			type: Boolean,
 			default: false,
+		},
+		placeholder: {
+			type: String,
+			default: '',
 		},
 	},
 }

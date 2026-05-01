@@ -22,7 +22,9 @@
 			<!-- Show Card View -->
 			<div v-if="!showSettings">
 				<div>
-					<h3>Integrations</h3>
+					<h3>
+						<span>Integrations</span>
+					</h3>
 				</div>
 				<div class="aio-login-pro__social-login">
 					<!-- WooCommerce Card -->
@@ -51,7 +53,9 @@
 					<div class="settings-section">
 						<div class="section-header">
 							<div class="section-title-row">
-								<h3>WooCommerce Integration</h3>
+								<h3>
+									<span>WooCommerce Integration</span>
+								</h3>
 								<label class="toggle-switch" :class="{ 'disabled': !woocommerceActive }">
 									<aio-login-toggle
 										id="woocommerce-integration"
@@ -73,7 +77,9 @@
 					<div class="settings-section">
 						<div class="section-header">
 							<div class="section-title-row">
-								<h3>Captcha</h3>
+								<h3>
+									<span>Captcha</span>
+								</h3>
 								<label class="toggle-switch">
 									<aio-login-toggle
 										id="captcha-settings"
@@ -90,10 +96,22 @@
 						</div>
 						
 					<div v-if="settingsData.captchaEnabled" class="captcha-providers">
-						<div v-if="configuredProviders.captcha.length === 0" class="no-providers-message">
+						<div v-if="providersLoading.captcha || !providersLoaded.captcha" class="providers-skeleton">
+							<div class="providers-skeleton__row">
+								<div class="providers-skeleton__cell providers-skeleton__cell--provider"></div>
+								<div class="providers-skeleton__cell providers-skeleton__cell--toggle"></div>
+								<div class="providers-skeleton__cell providers-skeleton__cell--toggle"></div>
+							</div>
+							<div class="providers-skeleton__row">
+								<div class="providers-skeleton__cell providers-skeleton__cell--provider"></div>
+								<div class="providers-skeleton__cell providers-skeleton__cell--toggle"></div>
+								<div class="providers-skeleton__cell providers-skeleton__cell--toggle"></div>
+							</div>
+						</div>
+						<div v-if="providersLoaded.captcha && !providersLoading.captcha && configuredProviders.captcha.length === 0" class="no-providers-message">
 							<p>No Captcha providers are configured. Please configure a Captcha provider first by going to the <a href="#" class="link-text" @click.prevent="goToCaptcha">Captcha settings</a>.</p>
 						</div>
-						<table v-else class="settings-table">
+						<table v-else-if="providersLoaded.captcha && !providersLoading.captcha" class="settings-table">
 							<thead>
 								<tr>
 									<th>Provider</th>
@@ -170,6 +188,39 @@
 										</label>
 									</td>
 								</tr>
+								<tr v-if="isCaptchaProviderConfigured('turnstile')">
+									<td>
+										<div class="provider-cell">
+											<img 
+												:src="getProviderIcon('turnstile')" 
+												alt="Cloudflare Turnstile" 
+												class="provider-icon" 
+												@error="handleIconError($event, 'turnstile')"
+											/>
+											<span class="provider-name">Turnstile</span>
+										</div>
+									</td>
+									<td>
+										<label class="toggle-switch">
+											<aio-login-toggle
+												id="turnstile-login"
+												name="turnstile-login"
+												v-on:toggle-input="(val) => updateProviderOption('turnstile', 'login', val)"
+												:enabled="settingsData.providers.turnstile.login"
+											/>
+										</label>
+									</td>
+									<td>
+										<label class="toggle-switch">
+											<aio-login-toggle
+												id="turnstile-registration"
+												name="turnstile-registration"
+												v-on:toggle-input="(val) => updateProviderOption('turnstile', 'registration', val)"
+												:enabled="settingsData.providers.turnstile.registration"
+											/>
+										</label>
+									</td>
+								</tr>
 							</tbody>
 						</table>
 					</div>
@@ -179,7 +230,9 @@
 					<div class="settings-section">
 						<div class="section-header">
 							<div class="section-title-row">
-								<h3>Social Login</h3>
+								<h3>
+									<span>Social Login</span>
+								</h3>
 								<label class="toggle-switch">
 									<aio-login-toggle
 										id="social-login-options"
@@ -196,10 +249,24 @@
 						</div>
 						
 					<div v-if="settingsData.socialLoginEnabled" class="social-providers">
-						<div v-if="configuredProviders.social.length === 0" class="no-providers-message">
+						<div v-if="providersLoading.social || !providersLoaded.social" class="providers-skeleton">
+							<div class="providers-skeleton__row">
+								<div class="providers-skeleton__cell providers-skeleton__cell--provider"></div>
+								<div class="providers-skeleton__cell providers-skeleton__cell--toggle"></div>
+								<div class="providers-skeleton__cell providers-skeleton__cell--toggle"></div>
+								<div class="providers-skeleton__cell providers-skeleton__cell--toggle"></div>
+							</div>
+							<div class="providers-skeleton__row">
+								<div class="providers-skeleton__cell providers-skeleton__cell--provider"></div>
+								<div class="providers-skeleton__cell providers-skeleton__cell--toggle"></div>
+								<div class="providers-skeleton__cell providers-skeleton__cell--toggle"></div>
+								<div class="providers-skeleton__cell providers-skeleton__cell--toggle"></div>
+							</div>
+						</div>
+						<div v-if="providersLoaded.social && !providersLoading.social && configuredProviders.social.length === 0" class="no-providers-message">
 							<p>No Social Login providers are configured. Please configure a Social Login provider first by going to the <a href="#" class="link-text" @click.prevent="goToSocialLogin">Social Login settings</a>.</p>
 						</div>
-						<table v-else class="settings-table">
+						<table v-else-if="providersLoaded.social && !providersLoading.social" class="settings-table">
 							<thead>
 								<tr>
 									<th>Provider</th>
@@ -277,11 +344,14 @@
 </template>
 
 <script>
+import tooltipContent from '../tooltip-content.js';
+import resolveParentCurrentIsPro from '../resolve-parent-current-is-pro.js';
+
 export default {
 	name: 'integrations',
 
 	data: ( vm ) => ( {
-		has_pro: 'true' === aio_login__app_object.has_pro,
+		tooltipContent,
 		woocommerceEnabled: false,
 		woocommerceConfigData: {},
 		woocommerceActive: true, // Default to true, will be updated from API
@@ -298,6 +368,14 @@ export default {
 			captcha: [],
 			social: []
 		},
+		providersLoading: {
+			captcha: false,
+			social: false,
+		},
+		providersLoaded: {
+			captcha: false,
+			social: false,
+		},
 		settingsData: {
 			woocommerceEnabled: false,
 			captchaEnabled: false,
@@ -308,6 +386,10 @@ export default {
 					registration: false
 				},
 				hcaptcha: {
+					login: false,
+					registration: false
+				},
+				turnstile: {
 					login: false,
 					registration: false
 				}
@@ -332,19 +414,41 @@ export default {
 					login: false,
 					registration: false,
 					checkout: false
+				},
+				github: {
+					login: false,
+					registration: false,
+					checkout: false
+				},
+				discord: {
+					login: false,
+					registration: false,
+					checkout: false
+				},
+				apple: {
+					login: false,
+					registration: false,
+					checkout: false
 				}
 			}
 		}
 	} ),
 
 	computed: {
+		has_pro() {
+			return resolveParentCurrentIsPro(this);
+		},
+
 		availableSocialProviders() {
 			// Return all available social providers with their display names
 			return [
 				{ key: 'google', name: 'Google' },
 				{ key: 'microsoft', name: 'Microsoft' },
 				{ key: 'facebook', name: 'Facebook' },
-				{ key: 'line', name: 'LINE' }
+				{ key: 'line', name: 'LINE' },
+				{ key: 'github', name: 'GitHub' },
+				{ key: 'discord', name: 'Discord' },
+				{ key: 'apple', name: 'Apple' }
 			];
 		}
 	},
@@ -384,6 +488,14 @@ export default {
 	},
 
 	methods: {
+		resetProvidersLoadingState() {
+			// Always mark as not loaded first; sections that become enabled
+			// must wait for fresh provider response before showing empty/table states.
+			this.providersLoaded.captcha = false;
+			this.providersLoaded.social = false;
+			this.providersLoading.captcha = !!this.settingsData.captchaEnabled;
+			this.providersLoading.social = !!this.settingsData.socialLoginEnabled;
+		},
 		loadCachedSettings() {
 			// Load cached settings from localStorage for instant display
 			try {
@@ -417,120 +529,29 @@ export default {
 			}
 		},
 		async loadConfiguredProviders(forceRefresh = false) {
-			// Check cache first (5 minute cache) unless force refresh is requested
-			const cacheKey = 'aio_login_configured_providers';
-			const cacheExpiry = 5 * 60 * 1000; // 5 minutes
-			if (!forceRefresh) {
-				try {
-					const cached = localStorage.getItem(cacheKey);
-					if (cached) {
-						const cachedData = JSON.parse(cached);
-						if (cachedData.timestamp && (Date.now() - cachedData.timestamp) < cacheExpiry) {
-							this.configuredProviders = cachedData.providers;
-							return; // Use cached data
-						}
-					}
-				} catch (error) {
-					// Ignore cache errors
-				}
+			// If we already have configuredProviders data from loadWooCommerceSettings, use it
+			if (!forceRefresh && this.woocommerceConfigData && this.woocommerceConfigData.configuredProviders) {
+				this.configuredProviders = JSON.parse(JSON.stringify(this.woocommerceConfigData.configuredProviders));
+				return;
 			}
 
-			// Reset configured providers
-			this.configuredProviders.captcha = [];
-			this.configuredProviders.social = [];
-
-			// Load all providers in parallel for better performance
+			// If we need to refresh, call loadWooCommerceSettings which fetches all needed info in one request
 			try {
-				// Load captcha providers in parallel
-				const [grecaptchaResponse, hcaptchaResponse] = await Promise.all([
-					axios.get('aio-login/grecaptcha/get-settings').catch(() => null),
-					axios.get('aio-login/hcaptcha/get-settings').catch(() => null)
-				]);
-
-				// Check reCAPTCHA
-				if (grecaptchaResponse && grecaptchaResponse.data) {
-					const grecaptchaData = grecaptchaResponse.data;
-					const hasV2Keys = grecaptchaData.v2_site_key && String(grecaptchaData.v2_site_key).trim().length > 0 && 
-									  grecaptchaData.v2_secret_key && String(grecaptchaData.v2_secret_key).trim().length > 0;
-					const hasV3Keys = grecaptchaData.v3_site_key && String(grecaptchaData.v3_site_key).trim().length > 0 && 
-									  grecaptchaData.v3_secret_key && String(grecaptchaData.v3_secret_key).trim().length > 0;
-					const isEnabled = grecaptchaData.enabled === true || grecaptchaData.enabled === 'on';
-					if ((hasV2Keys || hasV3Keys) && isEnabled) {
-						this.configuredProviders.captcha.push('recaptcha');
-					}
-				}
-
-				// Check hCaptcha
-				if (hcaptchaResponse && hcaptchaResponse.data) {
-					const hcaptchaData = hcaptchaResponse.data;
-					const hasSiteKey = hcaptchaData.site_key && String(hcaptchaData.site_key).trim().length > 0;
-					const hasSecretKey = hcaptchaData.secret_key && String(hcaptchaData.secret_key).trim().length > 0;
-					const isEnabled = hcaptchaData.enabled === true || hcaptchaData.enabled === 'on';
-					if (hasSiteKey && hasSecretKey && isEnabled) {
-						this.configuredProviders.captcha.push('hcaptcha');
-					}
+				this.providersLoading.captcha = !!this.settingsData.captchaEnabled;
+				this.providersLoading.social = !!this.settingsData.socialLoginEnabled;
+				this.providersLoaded.captcha = !this.settingsData.captchaEnabled;
+				this.providersLoaded.social = !this.settingsData.socialLoginEnabled;
+				await this.loadWooCommerceSettings();
+				if (this.woocommerceConfigData && this.woocommerceConfigData.configuredProviders) {
+					this.configuredProviders = JSON.parse(JSON.stringify(this.woocommerceConfigData.configuredProviders));
 				}
 			} catch (error) {
-				// Silently handle errors
-			}
-
-			// Load configured social login providers in parallel
-			try {
-				// Get enabled status for all providers and all provider settings in parallel
-				const [providersResponse, ...socialProviderResponses] = await Promise.all([
-					axios.get('aio-login-pro/social-login/get-providers').catch(() => ({ data: { success: false } })),
-					...['google', 'microsoft', 'facebook', 'line'].map(provider => 
-						axios.get(`aio-login-pro/social-login/get-settings?provider=${provider}`).catch(() => null)
-					)
-				]);
-
-				let enabledProviders = {};
-				if (providersResponse.data && providersResponse.data.success && providersResponse.data.providers) {
-					enabledProviders = providersResponse.data.providers;
-				}
-
-				// Process all social provider responses
-				const socialProviders = ['google', 'microsoft', 'facebook', 'line'];
-				socialProviderResponses.forEach((response, index) => {
-					if (!response || !response.data) return;
-					
-					const provider = socialProviders[index];
-					const responseData = response.data;
-					let providerData = null;
-					
-					// Handle nested response structure
-					if (responseData.success && responseData.data) {
-						if (responseData.data.data) {
-							providerData = responseData.data.data;
-						} else if (responseData.data.client_id) {
-							providerData = responseData.data;
-						}
-					} else if (responseData.client_id) {
-						providerData = responseData;
-					}
-
-					if (providerData) {
-						const hasClientId = providerData.client_id && String(providerData.client_id).trim().length > 0;
-						const hasClientSecret = providerData.client_secret && String(providerData.client_secret).trim().length > 0;
-						const isEnabled = enabledProviders[provider] === true || enabledProviders[provider] === '1';
-
-						if (hasClientId && hasClientSecret && isEnabled) {
-							this.configuredProviders.social.push(provider);
-						}
-					}
-				});
-				
-				// Cache the providers for 5 minutes
-				try {
-					localStorage.setItem(cacheKey, JSON.stringify({
-						providers: this.configuredProviders,
-						timestamp: Date.now()
-					}));
-				} catch (error) {
-					// Ignore cache errors
-				}
-			} catch (error) {
-				// Silently handle errors
+				console.error('Error refreshing configured providers:', error);
+			} finally {
+				this.providersLoading.captcha = false;
+				this.providersLoading.social = false;
+				this.providersLoaded.captcha = true;
+				this.providersLoaded.social = true;
 			}
 		},
 		isCaptchaProviderConfigured(provider) {
@@ -544,6 +565,7 @@ export default {
 			const hash = window.location.hash;
 			if (hash === '#/woocommerce-integrations') {
 				this.showSettings = true;
+				this.resetProvidersLoadingState();
 			} else {
 				this.showSettings = false;
 				// If hash is #/integrations or empty, remove it to keep URL clean
@@ -572,7 +594,7 @@ export default {
 			// Load WooCommerce settings from backend
 			try {
 				const response = await axios.get('aio-login-pro/woocommerce/get-settings', {
-					timeout: 3000 // 3 second timeout for faster failure
+					timeout: 15000 // 15 second timeout to accommodate slower servers
 				});
 				if (response.data && response.data.success && response.data.data) {
 					const settings = response.data.data;
@@ -654,6 +676,7 @@ export default {
 			
 			// Show settings UI immediately for better UX (don't wait for anything)
 			this.showSettings = true;
+			this.resetProvidersLoadingState();
 			// Update URL hash
 			this.updateUrlHash('#/woocommerce-integrations');
 			
@@ -699,7 +722,12 @@ export default {
 					this.settingsData.woocommerceEnabled = currentEnabledState;
 					this.woocommerceEnabled = currentEnabledState;
 				}
-			}).catch(() => {});
+			}).catch(() => {}).finally(() => {
+				this.providersLoading.captcha = false;
+				this.providersLoading.social = false;
+				this.providersLoaded.captcha = true;
+				this.providersLoaded.social = true;
+			});
 		},
 		
 		loadConfiguredProvidersLazy() {
@@ -712,6 +740,15 @@ export default {
 			}
 		},
 		goBack() {
+			// Keep card toggle in sync with settings view without requiring page reload.
+			this.woocommerceEnabled = !!this.settingsData.woocommerceEnabled;
+			this.woocommerceConfigData = {
+				...this.woocommerceConfigData,
+				...this.settingsData,
+				woocommerceEnabled: this.woocommerceEnabled,
+			};
+			localStorage.setItem('aio_login_woocommerce_settings', JSON.stringify(this.woocommerceConfigData));
+
 			this.showSettings = false;
 			// Update URL hash to remove the settings hash
 			const baseUrl = window.location.href.split('#')[0];
@@ -729,14 +766,21 @@ export default {
 			const iconMap = {
 				'grecaptcha': 'grecaptcha',
 				'hcaptcha': 'hcaptcha',
+				'turnstile': 'turnstile',
 				'microsoft': 'microsoft',
 				'google': 'google',
 				'facebook': 'facebook',
-				'line': 'line'
+				'line': 'line',
+				'github': 'github',
+				'discord': 'discord',
+				'apple': 'apple'
 			};
 			const iconName = iconMap[provider] || provider;
 			// For social providers, try SVG first, then PNG as fallback
-			if (['microsoft', 'google', 'facebook', 'line'].includes(iconName)) {
+			if (['microsoft', 'google', 'facebook', 'line', 'github', 'discord', 'apple'].includes(iconName)) {
+				return this.assetsUrl + `images/icons/${iconName}.svg`;
+			}
+			if (['hcaptcha', 'turnstile'].includes(iconName)) {
 				return this.assetsUrl + `images/icons/${iconName}.svg`;
 			}
 			// For captcha providers, use PNG
@@ -747,10 +791,14 @@ export default {
 			const iconMap = {
 				'grecaptcha': 'grecaptcha',
 				'hcaptcha': 'hcaptcha',
+				'turnstile': 'turnstile',
 				'microsoft': 'microsoft',
 				'google': 'google',
 				'facebook': 'facebook',
-				'line': 'line'
+				'line': 'line',
+				'github': 'github',
+				'discord': 'discord',
+				'apple': 'apple'
 			};
 			const iconName = iconMap[provider] || provider;
 			const currentSrc = event.target.src;
@@ -780,17 +828,34 @@ export default {
 					if (isConfigured) {
 						// Disable the other captcha provider
 						if (provider === 'hcaptcha') {
-							// Disable reCAPTCHA
+							// Disable reCAPTCHA and Turnstile.
 							if (this.settingsData.providers.recaptcha) {
 								this.settingsData.providers.recaptcha[option] = false;
 							}
 							if (this.settingsData.providers.grecaptcha) {
 								this.settingsData.providers.grecaptcha[option] = false;
 							}
-						} else if (provider === 'recaptcha' || provider === 'grecaptcha') {
-							// Disable hCaptcha
+							if (this.settingsData.providers.turnstile) {
+								this.settingsData.providers.turnstile[option] = false;
+							}
+						} else if (provider === 'turnstile') {
+							// Disable reCAPTCHA and hCaptcha.
+							if (this.settingsData.providers.recaptcha) {
+								this.settingsData.providers.recaptcha[option] = false;
+							}
+							if (this.settingsData.providers.grecaptcha) {
+								this.settingsData.providers.grecaptcha[option] = false;
+							}
 							if (this.settingsData.providers.hcaptcha) {
 								this.settingsData.providers.hcaptcha[option] = false;
+							}
+						} else if (provider === 'recaptcha' || provider === 'grecaptcha') {
+							// Disable hCaptcha and Turnstile.
+							if (this.settingsData.providers.hcaptcha) {
+								this.settingsData.providers.hcaptcha[option] = false;
+							}
+							if (this.settingsData.providers.turnstile) {
+								this.settingsData.providers.turnstile[option] = false;
 							}
 							// Also disable the other reCAPTCHA variant
 							if (provider === 'recaptcha' && this.settingsData.providers.grecaptcha) {
@@ -829,6 +894,9 @@ export default {
 						const response = await axios.post('aio-login-pro/woocommerce/save-settings', this.settingsData);
 
 						if (response.data && response.data.success) {
+							// Reflect saved state on the card immediately.
+							this.woocommerceEnabled = !!this.settingsData.woocommerceEnabled;
+
 							// Show success message
 							this.snackbar.message = response.data.message || 'Settings saved successfully';
 							this.snackbar.show = true;
@@ -844,6 +912,7 @@ export default {
 					} catch (error) {
 						console.error('Error saving WooCommerce settings:', error);
 						// Fallback to localStorage
+						this.woocommerceEnabled = !!this.settingsData.woocommerceEnabled;
 						localStorage.setItem('aio_login_woocommerce_settings', JSON.stringify(this.woocommerceConfigData));
 
 						// Show success message even if API fails (using localStorage)
@@ -1032,6 +1101,49 @@ export default {
 .captcha-providers,
 .social-providers {
 	margin-top: 20px;
+}
+
+.providers-skeleton {
+	display: grid;
+	gap: 12px;
+	width: 700px;
+	max-width: 100%;
+}
+
+.providers-skeleton__row {
+	display: grid;
+	grid-template-columns: minmax(260px, 1fr) 120px 120px;
+	gap: 16px;
+	padding: 14px 16px;
+	background: #fff;
+	border: 1px solid #ebe8eb;
+	border-radius: 8px;
+}
+
+.social-providers .providers-skeleton__row {
+	grid-template-columns: minmax(260px, 1fr) 90px 90px 90px;
+}
+
+.providers-skeleton__cell {
+	height: 20px;
+	border-radius: 999px;
+	background: linear-gradient(90deg, #f0edf4 25%, #e7e2ec 50%, #f0edf4 75%);
+	background-size: 200% 100%;
+	animation: providers-skeleton-shimmer 1.2s infinite;
+}
+
+.providers-skeleton__cell--provider {
+	width: 70%;
+}
+
+.providers-skeleton__cell--toggle {
+	width: 56px;
+	justify-self: center;
+}
+
+@keyframes providers-skeleton-shimmer {
+	0% { background-position: 200% 0; }
+	100% { background-position: -200% 0; }
 }
 
 .settings-table {

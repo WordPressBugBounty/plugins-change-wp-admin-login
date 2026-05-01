@@ -287,8 +287,12 @@ if ( ! class_exists( 'AIO_Login\\Login_Controller\\Login_Controller' ) ) {
         }
 
         public function get_settings() {
+			$enabled = $this->limit_attempts_enabled;
+			if ( class_exists( '\AIO_Login_Pro\Plan\Plan_Features' ) && ! \AIO_Login_Pro\Plan\Plan_Features::can( 'limit_login_attempts' ) ) {
+				$enabled = false;
+			}
             $settings = array(
-                'enabled'          => $this->limit_attempts_enabled,
+                'enabled'          => $enabled,
                 'maximum_attempts' => $this->limit_attempts_maximum_attempts,
                 'timeout'          => $this->limit_attempts_timeout,
                 'lockout_message'  => $this->lockout_message,
@@ -303,6 +307,14 @@ if ( ! class_exists( 'AIO_Login\\Login_Controller\\Login_Controller' ) ) {
             $max_attempts    = absint( $params['maximum_attempts'] );
             $timeout         = absint( $params['timeout'] );
             $lockout_message = sanitize_text_field( wp_unslash( $params['lockout_message'] ) );
+
+			if ( class_exists( '\AIO_Login_Pro\Plan\Plan_Features' ) && ! \AIO_Login_Pro\Plan\Plan_Features::can( 'limit_login_attempts' ) ) {
+				return new \WP_Error(
+					'plan_restricted',
+					__( 'Your plan does not include Limit Login Attempts.', 'change-wp-admin-login' ),
+					array( 'status' => 403 )
+				);
+			}
 
             if ( isset( $params['_wpnonce'] ) && wp_verify_nonce( $params['_wpnonce'], 'limit-login-attempts' ) ) {
                 $enabled = 'off';

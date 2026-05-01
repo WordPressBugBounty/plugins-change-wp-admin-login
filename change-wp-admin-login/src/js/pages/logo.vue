@@ -2,7 +2,12 @@
 	<div v-if="page_loaded">
 		<aio-login-form :action="nonce" v-on:handle-submit="handleSubmit">
 			<template v-slot:title>
-				Logo Customization
+				<span>Logo</span>
+				<aio-login-tooltip
+					:content="tooltipContent.logo.content"
+					:title="tooltipContent.logo.title"
+					placement="bottom"
+				/>
 			</template>
 
 			<template v-slot:form-fields>
@@ -75,10 +80,12 @@
 </template>
 
 <script>
+import tooltipContent from '../tooltip-content.js';
 
 export default {
 	name: 'logo',
 	data: ( vm ) => ( {
+		tooltipContent,
 		page_loaded: false,
 
 		namespace: 'aio-login/logo',

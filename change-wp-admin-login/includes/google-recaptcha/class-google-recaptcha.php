@@ -142,20 +142,35 @@ if (!class_exists('AIO_Login\\Google_Recaptcha\\Google_Recaptcha')) {
 				}
 
 				return new \WP_Error('invalid_g_recaptcha_response', __('Please verify that you are not a robot.', 'change-wp-admin-login'));
-			} elseif (isset($response['error-codes'][0])) {
-				switch ($response['error-codes'][0]) {
-					case 'missing-input-secret':
-						return new \WP_Error('cwpal_recaptcha_error', __('The secret parameter is missing.', 'change-wp-admin-login'));
-					case 'invalid-input-secret':
-						return new \WP_Error('cwpal_recaptcha_error', __('The secret parameter is invalid or malformed.', 'change-wp-admin-login'));
-					case 'missing-input-response':
-						return new \WP_Error('cwpal_recaptcha_error', __('The response parameter is missing.', 'change-wp-admin-login'));
-					case 'invalid-input-response':
-						return new \WP_Error('cwpal_recaptcha_error', __('The response parameter is invalid or malformed.', 'change-wp-admin-login'));
-					case 'bad-request':
-						return new \WP_Error('cwpal_recaptcha_error', __('The request is invalid or malformed.', 'change-wp-admin-login'));
-					case 'timeout-or-duplicate':
-						return new \WP_Error('cwpal_recaptcha_error', __('The response is no longer valid: either is too old or has been used previously.', 'change-wp-admin-login'));
+			} elseif (isset($response['error-codes']) && is_array($response['error-codes'])) {
+				$error_codes = array_map('sanitize_text_field', $response['error-codes']);
+
+				// Prioritize secret key issues for clearer admin diagnostics.
+				if (in_array('missing-input-secret', $error_codes, true)) {
+					return new \WP_Error('cwpal_recaptcha_error', __('Google reCAPTCHA secret key is missing. Please check plugin settings.', 'change-wp-admin-login'));
+				}
+				if (in_array('invalid-input-secret', $error_codes, true)) {
+					return new \WP_Error('cwpal_recaptcha_error', __('Google reCAPTCHA secret key is invalid. Please update it in plugin settings.', 'change-wp-admin-login'));
+				}
+				foreach ($error_codes as $error_code) {
+					if (false !== strpos($error_code, 'secret') || false !== strpos($error_code, 'key')) {
+						return new \WP_Error('cwpal_recaptcha_error', __('Google reCAPTCHA secret key is invalid. Please update it in plugin settings.', 'change-wp-admin-login'));
+					}
+				}
+
+				if (in_array('missing-input-response', $error_codes, true)) {
+					return new \WP_Error('cwpal_recaptcha_error', __('The response parameter is missing.', 'change-wp-admin-login'));
+				}
+				if (in_array('invalid-input-response', $error_codes, true)) {
+					// In real-world misconfigurations this often indicates site/secret mismatch.
+					// Keep UX consistent with other captcha providers by surfacing secret-key guidance.
+					return new \WP_Error('cwpal_recaptcha_error', __('Google reCAPTCHA secret key is invalid. Please update it in plugin settings.', 'change-wp-admin-login'));
+				}
+				if (in_array('bad-request', $error_codes, true)) {
+					return new \WP_Error('cwpal_recaptcha_error', __('The request is invalid or malformed.', 'change-wp-admin-login'));
+				}
+				if (in_array('timeout-or-duplicate', $error_codes, true)) {
+					return new \WP_Error('cwpal_recaptcha_error', __('The response is no longer valid: either is too old or has been used previously.', 'change-wp-admin-login'));
 				}
 			}
 			return $user;
@@ -300,9 +315,10 @@ if (!class_exists('AIO_Login\\Google_Recaptcha\\Google_Recaptcha')) {
 					update_option('aio_login_google_recaptcha_v3_threshold', $threshold);
 				}
 
-				// If enabling reCAPTCHA, disable hCaptcha
+				// If enabling reCAPTCHA, disable other captcha providers.
 				if ('on' === $enabled) {
 					update_option('aio_login_hcaptcha_enable', 'off');
+					update_option('aio_login_turnstile_enable', 'off');
 				}
 
 				// Update snapshot for WooCommerce integration

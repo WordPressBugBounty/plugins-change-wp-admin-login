@@ -34,7 +34,13 @@ if ( ! class_exists( 'AIO_Login\\Login_Controller\\Failed_Logins' ) ) {
 			global $wpdb;
 			$table_name = $wpdb->prefix . 'aio_login_login_attempts';
 
-			return $wpdb->insert( $table_name, $login_details ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
+			$result = $wpdb->insert( $table_name, $login_details ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
+
+			if ( false !== $result && isset( $login_details['status'] ) && 'failed' === $login_details['status'] ) {
+				do_action( 'aio_login_after_failed_login', $login_details );
+			}
+
+			return $result;
 		}
 
 		/**
@@ -219,7 +225,13 @@ if ( ! class_exists( 'AIO_Login\\Login_Controller\\Failed_Logins' ) ) {
 			global $wpdb;
 			$table_name = $wpdb->prefix . 'aio_login_login_lockouts';
 
-			return $wpdb->insert( $table_name, $data ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
+			$result = $wpdb->insert( $table_name, $data ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
+
+			if ( false !== $result ) {
+				do_action( 'aio_login_after_lockout', $data );
+			}
+
+			return $result;
 		}
 
 		/**

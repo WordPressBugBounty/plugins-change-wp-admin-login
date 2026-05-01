@@ -7,13 +7,16 @@
 </template>
 
 <script>
+import resolveParentCurrentIsPro from '../resolve-parent-current-is-pro.js';
 
 export default {
 	name: 'block-ip-addresses',
 
-	data: ( vm ) => ( {
-		has_pro: vm.$parent.current_is_pro,
-	} ),
+	computed: {
+		has_pro() {
+			return resolveParentCurrentIsPro( this );
+		},
+	},
 }
 </script>
 

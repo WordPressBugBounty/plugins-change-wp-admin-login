@@ -6,7 +6,12 @@
 				v-on:handle-submit="handleSubmit"
 			>
 				<template v-slot:title>
-					Password Strength Checker
+					<span>Password Strength Checker</span>
+					<aio-login-tooltip
+						:content="tooltipContent.passwordStrengthChecker.content"
+						:title="tooltipContent.passwordStrengthChecker.title"
+						placement="bottom"
+					/>
 				</template>
 
 				<template v-slot:form-fields>
@@ -21,6 +26,11 @@
 								:enabled="form_data.enabled"
 								v-on:toggle-input="toggleInput"
 							/>
+							<p class="desc">
+								<strong>
+									Enable to set rules to improve user password security.
+								</strong>
+							</p>
 						</td>
 					</tr>
 				</template>
@@ -31,6 +41,7 @@
 </template>
 
 <script>
+import tooltipContent from '../../tooltip-content.js';
 
 export default {
 	name: 'aio-login-password-strenght-checker',
@@ -45,6 +56,7 @@ export default {
 	},
 
 	data: ( vm ) => ( {
+		tooltipContent,
 		nonce: '',
 		form_data: {
 			enabled: false,

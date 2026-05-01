@@ -2,6 +2,14 @@
 	<div v-if="show" class="popup-overlay" @click="closePopup">
 		<div class="popup-content" @click.stop>
 			<div class="popup-header">
+				<div class="popup-header-title">
+					<img
+						:src="popupHeaderIcon"
+						alt="Google reCAPTCHA"
+						class="popup-header-title__icon"
+					/>
+					<h2 class="popup-header-title__text">Google reCAPTCHA Configuration</h2>
+				</div>
 				<button class="close-btn" @click="closePopup">&times;</button>
 			</div>
 
@@ -40,6 +48,7 @@
 				</div>
 			</div>
 
+			<div class="popup-modal-body">
 			<!-- Step 1: Getting Started -->
 			<div v-if="currentStep === 1" class="aio-login-pro__first-step">
 				<h4 class="aio-login-pro__first-step__title">Getting Started</h4>
@@ -152,6 +161,8 @@
 				</div>
 			</div>
 
+			</div>
+
 			<!-- Navigation buttons -->
 			<div class="popup-footer">
 				<button v-if="currentStep === 2" @click="prevStep" class="back-btn">Back</button>
@@ -183,6 +194,8 @@ export default {
 
 	data() {
 		return {
+			assetsUrl: aio_login__app_object.assets_url,
+			popupHeaderIcon: aio_login__app_object.assets_url + 'images/icons/grecaptcha.png',
 			currentStep: 1,
 			showValidationError: false,
 			formData: {
@@ -287,19 +300,53 @@ export default {
 }
 
 .popup-header {
-	text-align: right;
-	padding-bottom: 60px;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding-bottom: 14px;
+	margin-bottom: 14px;
+	border-bottom: 1px solid #e6e8ef;
+	width: 100%;
+	/* Keep close control on the visual right in RTL admin */
+	direction: ltr;
+}
+
+.popup-header-title {
+	display: inline-flex;
+	align-items: center;
+	gap: 10px;
+	min-width: 0;
+}
+
+.popup-header-title__icon {
+	width: 32px;
+	height: 32px;
+	object-fit: contain;
+	flex-shrink: 0;
+}
+
+.popup-header-title__text {
+	margin: 0;
+	color: #202939;
+	font-size: clamp(24px, 2.2vw, 32px);
+	font-weight: 600;
+	line-height: 1.15;
+	letter-spacing: -0.02em;
+	word-break: break-word;
 }
 
 .popup-steps {
 	display: flex;
-	justify-content: space-between;
-	margin-bottom: 20px;
-	width: 100%;
+	align-items: center;
+	justify-content: center;
+	margin: 0 auto 20px;
+	width: fit-content;
+	max-width: 100%;
+	gap: 0;
 }
 
 .step {
-	width: 40px;
+\twidth: 40px;
 	height: 40px;
 	border-radius: 50%;
 	display: flex;
@@ -362,29 +409,37 @@ export default {
 	cursor: pointer;
 	background: none;
 	border: 1px solid #7E869E40;
+	flex-shrink: 0;
 }
 
 .connector {
 	height: 2px;
-	width: 100%;
+	flex: 0 0 200px;
 	background-color: #C9D2E3;
-	margin-top: 20px;
+	margin: 0;
+	min-width: 200px;
 }
 
 .step-container {
+	flex: 0 0 40px;
 	display: flex;
-	flex-direction: column;
 	align-items: center;
-	width: 100px;
+	justify-content: center;
+	width: 40px;
 	position: relative;
+	padding-top: 26px;
 }
 
 .step-container h4 {
 	position: absolute;
-	top: -60px;
+	left: 50%;
+	bottom: calc(100% + 8px);
+	transform: translateX(-50%);
 	font-size: 13px;
 	font-weight: bold;
 	color: #9516DF;
+	margin: 0;
+	white-space: nowrap;
 }
 
 /* First Step Styling */
@@ -584,5 +639,104 @@ body.aio-login-modal-open {
 /* Ensure modal is always on top */
 .popup-overlay * {
 	box-sizing: border-box !important;
+}
+
+/* Social login popup parity overrides */
+.popup-content {
+	padding: 28px 50px 36px 50px;
+	max-height: min(90vh, calc(100vh - 32px));
+	display: flex;
+	flex-direction: column;
+	box-sizing: border-box;
+	overflow: hidden;
+	margin: auto;
+}
+
+.popup-header {
+	align-items: center;
+	justify-content: space-between;
+	padding-bottom: 16px;
+	margin-bottom: 50px;
+	border-bottom: 1px solid #e3e7ef;
+	flex-shrink: 0;
+}
+
+.popup-header-title__icon {
+	width: 36px;
+	height: 36px;
+	object-fit: contain;
+}
+
+.popup-header-title__text {
+	margin: 0 0 2px 10px;
+	color: #202939;
+	font-size: clamp(18px, 2.5vw, 30px);
+	font-weight: 600;
+	line-height: 1.35;
+	word-break: normal;
+}
+
+.popup-modal-body {
+	flex: 1 1 auto;
+	min-height: 0;
+	overflow-x: hidden;
+	overflow-y: auto;
+	-webkit-overflow-scrolling: touch;
+	overscroll-behavior: contain;
+	padding: 4px 8px 0 0;
+	box-sizing: border-box;
+	scrollbar-width: thin;
+	scrollbar-color: #c9d2e3 transparent;
+}
+
+.popup-steps {
+	padding: 0;
+	flex-shrink: 0;
+}
+
+.step {
+	width: 30px;
+	height: 30px;
+	font-size: 14px;
+}
+
+.connector {
+	flex: 0 0 210px;
+	min-width: 210px;
+}
+
+.step-container {
+	flex: 0 0 30px;
+	width: 30px;
+	padding-top: 0;
+}
+
+.step-container h4 {
+	font-size: 14px;
+	font-weight: 600;
+	line-height: 1.2;
+	text-align: center;
+}
+
+.popup-footer {
+	flex-shrink: 0;
+	margin-top: auto;
+	padding-top: 16px;
+	border-top: 1px solid #e3e7ef;
+}
+
+.popup-footer-left {
+	text-align: right;
+}
+
+.next-btn,
+.finish-btn,
+.back-btn {
+	padding: 14px 28px;
+	font-weight: 700;
+}
+
+.back-btn {
+	color: #404280;
 }
 </style>
