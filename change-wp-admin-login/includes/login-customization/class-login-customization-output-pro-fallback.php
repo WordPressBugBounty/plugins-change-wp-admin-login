@@ -39,7 +39,9 @@ if (!class_exists('AIO_Login\\Login_Customization\\Login_Customization_Output_Pr
 			add_action('login_enqueue_scripts', array($this, 'login_enqueue_scripts'));
 			add_filter('login_body_class', array($this, 'body_class'));
 			add_filter('aio_login__custom_css', array($this, 'custom_css'));
-			add_action('login_form', array($this, 'template_09_form_footer_links'), 99);
+			add_action( 'login_form', array( $this, 'template_09_form_footer_links' ), 99 );
+			add_action( 'lostpassword_form', array( $this, 'template_09_form_footer_links' ), 99 );
+			add_action( 'register_form', array( $this, 'template_09_form_footer_links' ), 99 );
 			add_action('login_footer', array($this, 'login_footer'));
 			add_filter( 'wp_login_errors', array( $this, 'filter_login_errors_in_customizer_preview' ), 999, 2 );
 			add_filter( 'login_headerurl', array( $this, 'filter_login_header_url' ) );
@@ -217,6 +219,64 @@ if (!class_exists('AIO_Login\\Login_Customization\\Login_Customization_Output_Pr
 			return new \WP_Error();
 		}
 
+		/**
+		 * Primary nav row for template-09 (Register | Lost password, etc.) — mirrors wp-login.php #nav.
+		 *
+		 * @return string
+		 */
+		private function get_template_09_primary_nav_markup() {
+			$action = '';
+			if ( isset( $_REQUEST['action'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+				$action = sanitize_text_field( wp_unslash( $_REQUEST['action'] ) );
+			}
+
+			$parts = array();
+			$sep   = apply_filters( 'login_link_separator', ' | ' );
+
+			if ( 'lostpassword' === $action ) {
+				$parts[] = sprintf(
+					'<a href="%1$s">%2$s</a>',
+					esc_url( wp_login_url() ),
+					esc_html__( 'Log in', 'default' )
+				);
+				if ( get_option( 'users_can_register' ) ) {
+					$parts[] = sprintf(
+						'<a class="wp-login-register" href="%1$s">%2$s</a>',
+						esc_url( wp_registration_url() ),
+						esc_html__( 'Register', 'default' )
+					);
+				}
+			} elseif ( 'register' === $action ) {
+				$parts[] = sprintf(
+					'<a href="%1$s">%2$s</a>',
+					esc_url( wp_login_url() ),
+					esc_html__( 'Log in', 'default' )
+				);
+			} else {
+				if ( get_option( 'users_can_register' ) ) {
+					$parts[] = sprintf(
+						'<a class="wp-login-register" href="%1$s">%2$s</a>',
+						esc_url( wp_registration_url() ),
+						esc_html__( 'Register', 'default' )
+					);
+				}
+				$parts[] = sprintf(
+					'<a class="wp-login-lost-password" href="%1$s">%2$s</a>',
+					esc_url( wp_lostpassword_url() ),
+					esc_html__( 'Lost your password?', 'default' )
+				);
+			}
+
+			if ( empty( $parts ) ) {
+				return '';
+			}
+
+			return implode(
+				'<span class="aio-login__template-09-nav-sep">' . esc_html( $sep ) . '</span>',
+				$parts
+			);
+		}
+
 		public function template_09_form_footer_links() {
 			if ( class_exists( '\\AIO_Login_Pro\\Login_Customization\\Login_Customization_Output' ) ) {
 				return;
@@ -226,9 +286,13 @@ if (!class_exists('AIO_Login\\Login_Customization\\Login_Customization_Output_Pr
 				return;
 			}
 
+			$nav_markup = $this->get_template_09_primary_nav_markup();
+
 			echo '<div class="aio-login__template-09-footer-links">';
-			echo '<div class="aio-login__template-09-footer-link aio-login__template-09-lost-password"><a class="wp-login-lost-password" href="' . esc_url(wp_lostpassword_url()) . '">' . esc_html__('Lost your password?') . '</a></div>';
-			echo '<div class="aio-login__template-09-footer-link aio-login__template-09-back-to-site"><a href="' . esc_url(home_url('/')) . '">' . esc_html(sprintf(_x('&larr; Go to %s', 'site'), get_bloginfo('title', 'display'))) . '</a></div>';
+			if ( '' !== $nav_markup ) {
+				echo '<div class="aio-login__template-09-footer-link aio-login__template-09-nav">' . $nav_markup . '</div>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+			}
+			echo '<div class="aio-login__template-09-footer-link aio-login__template-09-back-to-site"><a href="' . esc_url( home_url( '/' ) ) . '">' . esc_html( sprintf( _x( '&larr; Go to %s', 'site' ), get_bloginfo( 'title', 'display' ) ) ) . '</a></div>';
 			echo '</div>';
 		}
 
@@ -877,6 +941,59 @@ if (!class_exists('AIO_Login\\Login_Customization\\Login_Customization_Output_Pr
 			}
 			';
 
+			// Cross-template UI stability fixes (safe: layout only, no theme/color overrides).
+			// Exclude full-width / custom submit layouts (Deep Glass, Corporate Pro, Vibrant Duo, Elegant Frost, Future Tech).
+			$tpl_submit_compat = ':not(.aio-login__template-05):not(.aio-login__template-06):not(.aio-login__template-07):not(.aio-login__template-08):not(.aio-login__template-09)';
+			$css .= '
+			body.login[class*="aio-login__template-"] #login,
+			body.login[class*="aio-login__template-"] #login * {
+				box-sizing: border-box;
+			}
+			body.login[class*="aio-login__template-"] #login form input:not([type="checkbox"]):not([type="radio"]),
+			body.login[class*="aio-login__template-"] #login form select,
+			body.login[class*="aio-login__template-"] #login form textarea {
+				max-width: 100% !important;
+			}
+			body.login[class*="aio-login__template-"]' . $tpl_submit_compat . ' #login form p.submit {
+				display: flex !important;
+				align-items: center !important;
+				justify-content: flex-end !important;
+				gap: 10px !important;
+				flex-wrap: wrap !important;
+			}
+			body.login[class*="aio-login__template-"]' . $tpl_submit_compat . ' #login form p.submit input[type="submit"] {
+				float: none !important;
+				margin-left: auto !important;
+			}
+			body.login[class*="aio-login__template-"]' . $tpl_submit_compat . ' #login form p.forgetmenot {
+				display: inline-flex;
+				align-items: center;
+				gap: 6px;
+				margin: 0;
+			}
+			body.login[class*="aio-login__template-"]' . $tpl_submit_compat . ' #login form .button.wp-hide-pw {
+				min-height: 40px;
+			}
+			body.login[class*="aio-login__template-"] #login #login_error,
+			body.login[class*="aio-login__template-"] #login .message,
+			body.login[class*="aio-login__template-"] #login .success {
+				max-width: 100% !important;
+				overflow-wrap: break-word;
+			}
+			@media (max-width: 782px) {
+				body.login[class*="aio-login__template-"] #login {
+					width: calc(100vw - 32px) !important;
+					max-width: 420px !important;
+					margin-left: auto !important;
+					margin-right: auto !important;
+				}
+				body.login[class*="aio-login__template-"] #login form {
+					padding-left: 18px !important;
+					padding-right: 18px !important;
+				}
+			}
+			';
+
 			return $css;
 		}
 
@@ -893,15 +1010,30 @@ if (!class_exists('AIO_Login\\Login_Customization\\Login_Customization_Output_Pr
 			}
 
 			if ( 'aio-login__template-09' === $class ) {
-				$user_ph = wp_json_encode(__('Username or Email Address', 'default'));
-				$pass_ph = wp_json_encode(__('Password', 'default'));
-				echo '<script>document.addEventListener("DOMContentLoaded",function(){var u=document.getElementById("user_login"),p=document.getElementById("user_pass"),f=document.getElementById("loginform"),lf=document.getElementById("lostpasswordform");if(u&&!u.getAttribute("placeholder")){u.setAttribute("placeholder",' . $user_ph . ');}if(p&&!p.getAttribute("placeholder")){p.setAttribute("placeholder",' . $pass_ph . ');}if(lf){var om=document.querySelector("#login > .message");if(om&&om.parentNode!==lf){lf.insertBefore(om,lf.firstChild);}}if(f){var m=document.getElementById("login-message");if(m&&m.parentNode!==f){f.insertBefore(m,f.firstChild);}var e=document.getElementById("login_error");if(e){e.classList.add("aio-login__template-09-login-error");f.insertBefore(e,f.firstChild);}var lh=document.querySelector("#login > h1");if(lh&&lh.parentNode&&lh.parentNode.id==="login"){f.insertBefore(lh,f.firstChild);}var core=document.querySelectorAll("#login > #nav, #login > #backtoblog");for(var i=0;i<core.length;i++){core[i].remove();}var links=f.querySelector(".aio-login__template-09-footer-links");var submit=f.querySelector("p.submit");if(links&&submit&&submit.parentNode===f){submit.insertAdjacentElement("afterend",links);}var d=f.querySelectorAll(".aio-login__template-09-footer-links");for(var j=d.length-1;j>0;j--){d[j].remove();}}else if(lf){var lh2=document.querySelector("#login > h1");if(lh2&&lh2.parentNode&&lh2.parentNode.id==="login"){lf.insertBefore(lh2,lf.firstChild);}var core2=document.querySelectorAll("#login > #nav, #login > #backtoblog");for(var k=0;k<core2.length;k++){core2[k].remove();}}});</script>';
+				$user_ph  = wp_json_encode( __( 'Username or Email Address', 'default' ) );
+				$pass_ph  = wp_json_encode( __( 'Password', 'default' ) );
+				$email_ph = wp_json_encode( __( 'Email', 'default' ) );
+				echo '<script>document.addEventListener("DOMContentLoaded",function(){var u=document.getElementById("user_login"),p=document.getElementById("user_pass"),email=document.getElementById("user_email"),f=document.getElementById("loginform"),lf=document.getElementById("lostpasswordform"),rf=document.getElementById("registerform");if(u&&!u.getAttribute("placeholder")){u.setAttribute("placeholder",' . $user_ph . ');}if(p&&!p.getAttribute("placeholder")){p.setAttribute("placeholder",' . $pass_ph . ');}if(email&&!email.getAttribute("placeholder")){email.setAttribute("placeholder",' . $email_ph . ');}if(lf){var om=document.querySelector("#login > .message");if(om&&om.parentNode!==lf){lf.insertBefore(om,lf.firstChild);}}if(f){var m=document.getElementById("login-message");if(m&&m.parentNode!==f){f.insertBefore(m,f.firstChild);}var e=document.getElementById("login_error");if(e){e.classList.add("aio-login__template-09-login-error");f.insertBefore(e,f.firstChild);}var lh=document.querySelector("#login > h1");if(lh&&lh.parentNode&&lh.parentNode.id==="login"){f.insertBefore(lh,f.firstChild);}var core=document.querySelectorAll("#login > #nav, #login > #backtoblog");for(var i=0;i<core.length;i++){core[i].remove();}var links=f.querySelector(".aio-login__template-09-footer-links");var submit=f.querySelector("p.submit");if(links&&submit&&submit.parentNode===f){submit.insertAdjacentElement("afterend",links);}var d=f.querySelectorAll(".aio-login__template-09-footer-links");for(var j=d.length-1;j>0;j--){d[j].remove();}}else if(lf){var lh2=document.querySelector("#login > h1");if(lh2&&lh2.parentNode&&lh2.parentNode.id==="login"){lf.insertBefore(lh2,lf.firstChild);}var core2=document.querySelectorAll("#login > #nav, #login > #backtoblog");for(var k=0;k<core2.length;k++){core2[k].remove();}}else if(rf){var lh3=document.querySelector("#login > h1");if(lh3&&lh3.parentNode&&lh3.parentNode.id==="login"){rf.insertBefore(lh3,rf.firstChild);}var om2=document.querySelector("#login > .message");if(om2&&om2.parentNode!==rf){rf.insertBefore(om2,rf.firstChild);}var core3=document.querySelectorAll("#login > #nav, #login > #backtoblog");for(var m=0;m<core3.length;m++){core3[m].remove();}var links3=rf.querySelector(".aio-login__template-09-footer-links");var submit3=rf.querySelector("p.submit");if(links3&&submit3&&submit3.parentNode===rf){submit3.insertAdjacentElement("afterend",links3);}var d3=rf.querySelectorAll(".aio-login__template-09-footer-links");for(var n=d3.length-1;n>0;n--){d3[n].remove();}}});</script>';
 			}
 
-			// Global placeholders for all Pro templates (WP core doesn't set placeholders).
-			$user_ph = wp_json_encode(__('Username or Email Address', 'default'));
-			$pass_ph = wp_json_encode(__('Password', 'default'));
-			echo '<script>document.addEventListener("DOMContentLoaded",function(){var u=document.getElementById("user_login"),p=document.getElementById("user_pass");if(u&&!u.getAttribute("placeholder")){u.setAttribute("placeholder",' . $user_ph . ');}if(p&&!p.getAttribute("placeholder")){p.setAttribute("placeholder",' . $pass_ph . ');}});</script>';
+			if ( 'aio-login__template-06' === $class ) {
+				$script = 'document.addEventListener("DOMContentLoaded",function(){var login=document.getElementById("login");if(!login||login.querySelector(".aio-login__template-06-scroll"))return;var pane=document.createElement("div");pane.className="aio-login__template-06-scroll";Array.prototype.slice.call(login.children).forEach(function(n){pane.appendChild(n);});login.insertBefore(pane,login.firstChild);var ls=document.querySelector("body.login .language-switcher");if(ls&&!login.contains(ls)){pane.appendChild(ls);}});';
+				if ( function_exists( 'wp_print_inline_script_tag' ) ) {
+					wp_print_inline_script_tag( $script );
+				} else {
+					echo '<script>' . $script . '</script>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+				}
+			}
+
+			// Modern centered (default / template-03): match core login — labels only, no placeholders.
+			if ( 'aio-login__template-03' === $class ) {
+				echo '<script>document.addEventListener("DOMContentLoaded",function(){var u=document.getElementById("user_login"),p=document.getElementById("user_pass");if(u){u.removeAttribute("placeholder");}if(p){p.removeAttribute("placeholder");}});</script>';
+			} else {
+				// Other templates: optional placeholders (WP core doesn't set them).
+				$user_ph = wp_json_encode(__('Username or Email Address', 'default'));
+				$pass_ph = wp_json_encode(__('Password', 'default'));
+				echo '<script>document.addEventListener("DOMContentLoaded",function(){var u=document.getElementById("user_login"),p=document.getElementById("user_pass");if(u&&!u.getAttribute("placeholder")){u.setAttribute("placeholder",' . $user_ph . ');}if(p&&!p.getAttribute("placeholder")){p.setAttribute("placeholder",' . $pass_ph . ');}});</script>';
+			}
 		}
 
 		/**

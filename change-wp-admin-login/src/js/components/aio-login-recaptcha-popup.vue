@@ -489,7 +489,12 @@ export default {
 	font-weight: 400;
 }
 
-/* Step 2 Styling */
+/* Step 2 Styling (match aio-login-pro popup spacing when Pro CSS is not loaded) */
+.aio-login-pro__step2 {
+	margin-bottom: 50px;
+	width: 100%;
+}
+
 .aio-login-pro__step2__description {
 	color: #606C80;
 	font-size: 14px;
@@ -498,8 +503,9 @@ export default {
 
 .aio-login-pro__inline-form {
 	display: flex;
+	flex-wrap: wrap;
 	gap: 20px;
-	margin-top: 10px;
+	margin-top: 30px;
 }
 
 .aio-login-pro__form-group {

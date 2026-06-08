@@ -15,6 +15,12 @@ export default {
 		helpingText: 'Enable to restrict repeated login attempts per IP.',
 	},
 
+	// Login Redirection
+	loginRedirection: {
+		content: '<p>Define role-based or user-based destinations after login and logout to guide users to the right pages.</p>',
+		helpingText: 'Enable custom redirection rules for login and logout actions.',
+	},
+
 	// Block IP Addresses
 	blockIpAddresses: {
 		content: '<p>Control site access by blocking or allowing specific IP addresses using whitelist or blacklist mode.</p>',

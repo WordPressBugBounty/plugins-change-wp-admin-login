@@ -1,24 +1,25 @@
-=== All In One Login — WP Admin Login Page Security and Customization with Google reCAPTCHA, Social Login, Limit Login Attempt, 2FA, and more. ===
+=== All In One Login — Login Page Security and Customization for WordPress with Google reCAPTCHA, Social Login, Temporary Login, 2FA, and more. ===
 Contributors: wpexpertsio
 Tags: login url, login, wp admin, wp login, custom login
 Requires at least: 4.6
-Tested up to: 6.9
+Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 2.2.0
+Stable tag: 2.3.0
 License: GPLv2 or later
 
 Do you want to secure and customize the WordPress login page? Download the All in One Login plugin for login page security and customization.
 
 == Description ==
+[📢 A Pro version Lifetime Deal is available ⏰](https://aiologin.com/appsumo-lifetime-deal/?utm_source=wp_org&utm_medium=readme&utm_campaign=ltd)
 
-👑[Check Out Premium Version](https://aiologin.com/pricing/?utm_source=wp_org&utm_medium=readme&utm_campaign=check_out_premium_version) | 📘[Technical Documentation](https://aiologin.com/docs/?utm_source=wp_org&utm_medium=readme&utm_campaign=technical_documentation) | 🧰[See all Features](https://aiologin.com/features/?utm_source=wp_org&utm_medium=readme&utm_campaign=see_all_features)
+[Documentation](https://aiologin.com/docs/?utm_source=wp_org&utm_medium=readme&utm_campaign=technical_documentation) | [Features](https://aiologin.com/features/?utm_source=wp_org&utm_medium=readme&utm_campaign=see_all_features)
 
 https://youtu.be/kDWrQNvZO0s?si=OL1hbiZXC0AD0S3t
 
 Looking for a one-stop solution to protect and customize your WordPress login page (wp-admin)? If that’s what you need, then [Download All in One Login Plugin NOW](https://aiologin.com/)]
 
 
-Over **70,000 website owners** already use All in One Login for their WordPress login security and customization. 🎉
+Over **60,000 website owners** already use All in One Login for their WordPress login security and customization. 🎉
 
 And the reason for that is obvious! 👇
 
@@ -31,7 +32,6 @@ So, if you really want to level up your WordPress login security, then **AIO Log
 From changing the WP-Admin URL to integrating Google reCAPTCHA, **AIO Login provides everything you need** to secure and customize your WordPress login page.
 
 Isn’t that amazing? Wait until you see its features❕ 😃 🚀
-
 
 
 ==Key Features Our Users 🤍 About All In One Login ==
@@ -52,11 +52,17 @@ Secure your site by changing the default WP-Admin URL. Hide the WordPress login 
 
 Prevent brute-force attacks by limiting failed login attempts. Lock out users after multiple failures and safeguard your WP-Admin with this WordPress limit login attempts plugin.
 
+**✔️ Login Redirection [Free + Pro]**
 
-**✔️WordPress Login Customization [Free + Pro]**
+Control where users are redirected after login and logout by creating custom redirection rules for all users, user roles, or specific users.
 
-Create a branded, customized WordPress login page. Use templates, custom logos, background images, and CSS to personalize the WP-Admin experience for better user engagement.
+**✔️ Login Page Customizer**
 
+Transform your WordPress login page with live preview customization. Change logos, colors, backgrounds, and layouts without coding.
+
+**✔️ User Enumeration [Free + Pro]**
+
+Block attackers from discovering WordPress usernames through author or query string requests. This prevents exposure of valid usernames and strengthens login security against brute-force attacks.
 
 **✔️ Disable Common Usernames [Pro]**
 
@@ -78,9 +84,9 @@ Block unwanted users or IP addresses instantly. Restrict access to your WordPres
 Add two-factor authentication to WordPress login. Enhance security for WP-Admin and ensure only authorized users can access your site.
 
 
-**✔️ Temp Access URL [Pro]**
+**✔️ Temporary Login URLs (Passwordless Login) [Pro]**
 
-Generate temporary access URLs for specific users. Control the number of visits and expiration to grant a short-term login without compromising WordPress site security.
+Give passwordless login access to any specific user by generating temporary login URLs. Control the number of visits and expiration to grant a short-term login without compromising WordPress site security.
 
 **✔️ Whitelist IP Addresses [Pro]**
 
@@ -90,36 +96,77 @@ Allow only trusted IP addresses to access your WordPress login page. Restrict WP
 
 Enable users to log in with Google, Facebook, Microsoft, or LINE. Simplify WordPress and WooCommerce registration while improving security and user experience.
 
-**✔️ User Enumeration [Free + Pro]**
+**✔️ hCaptcha [Pro]**
 
-Block attackers from discovering WordPress usernames through author or query string requests. This prevents exposure of valid usernames and strengthens login security against brute-force attacks.
+Protect your WordPress login page from bots and spam with a privacy-first alternative. hCaptcha delivers robust, enterprise-grade bot protection while keeping user data secure (GDPR/CCPA compliant) and offering a faster, more human-friendly verification experience for real users
 
-**✔️ WooCommerce Login Integration [Coming Soon]**
+**✔️ Google Fonts Integration [Pro]**
 
-Allow customers to log in with social accounts on WooCommerce checkout and account pages. Enhance login security and user experience with Google, Facebook, LinkedIn, Microsoft, or LINE.
+Access 1,900+ Google Fonts to match your login page typography with your brand identity. Customize fonts across all login elements.
+
+**✔️ Email-Based 2FA [Pro]**
+
+Add an extra security layer with email one-time passwords (OTP). Users receive a 6-digit verification code via email during login, no authenticator app required.
+
+**✔️ 2FA Backup Codes & Grace Period [Pro]**
+
+Never get locked out! Generate one-time backup codes and set grace periods for smooth 2FA rollout across your user base.
+
+**✔️ Slack Security Notifications [Pro]**
+
+Get real-time WordPress security alerts directly in your Slack workspace. Monitor failed logins, IP lockouts, and suspicious activity instantly.
+
+**✔️ Webhook Notifications [Pro]**
+
+Integrate with Zapier, Make, n8n, or custom APIs. Send security events to any HTTPS endpoint for advanced automation and monitoring.
+
+
+**✔️ Login Templates [Free + Pro]**
+
+Choose from multiple professionally designed login page templates. Apply modern, minimalist, or professional designs instantly.
+
+**✔️ Google Fonts Integration [Pro]**
+
+Access 1,900+ Google Fonts to match your login page typography with your brand identity. Customize fonts across all login elements.
+
+**✔️ WooCommerce Login Integration [Pro]**
+
+Allow customers to log in with social accounts on WooCommerce checkout and account pages. Enhance login security and user experience with Google, Facebook, Apple, Discord, Microsoft, or LINE.
 
 
 ### Don’t Miss Out on Social Login Integrations
 
 All in One Login supports social integrations with leading platforms, making sign-in faster, easier, and more secure.
 
-* **Google Social Login**
+* **Google Social Login [Pro]**
 
 Let users log in with one of the most widely used authentication methods worldwide. By enabling Google login, you reduce friction for users, making registration easier.
 
-* **Facebook Social Login**
+* **Facebook Social Login [Pro]**
 
 With billions of users globally, Facebook login is a familiar and trusted option for social logins. Allowing users to sign in with Facebook means faster onboarding and less abandonment at registration.
 
-* **Microsoft Social Login**
+* **Microsoft Social Login [Pro]**
 
 Perfect for business and education-focused websites, Microsoft login provides secure authentication. It aligns with the tools professionals already use every day.
 
-* **LINE Social Login**
+* **GitHub Social Login [Pro]**
+
+Let developers and tech professionals log in instantly with their GitHub accounts. Perfect for developer communities and tech-focused websites.
+
+* **Apple Social Login [Pro]**
+
+Offer privacy-first authentication with Sign in with Apple. iOS and macOS users can protect their email privacy while enjoying seamless login experiences.
+
+* **Discord Social Login [Pro]**
+
+Enable 150+ million Discord users, gaming communities, and Discord servers to log in with one click. Ideal for community-driven websites and creator platforms.
+
+* **LINE Social Login [Pro]**
 
 LINE has around 184 monthly active users worldwide, which is a great option for websites targeting international audiences.
 
-### 8 Key Reasons to Choose All in One Login 😎
+### 10 Key Reasons to Choose All In One Login for WP Login Security and Customization 😎
 
 **⚡ Reason #1: Greater Security for Your WP-Admin**
 
@@ -136,20 +183,25 @@ AIO Login provides robust security features to protect your WP Admin page.
 * **Whitelist IP Addresses:** Restrict access to trusted IPs.
 
 
-**⚡ Reason #2: Intuitive Branding and User Engagement**
+**⚡ Reason #2: Complete Login Page Branding & Customization**
 
-Create a better user experience with a customized WordPress login page.
+Create a professional, branded login experience that matches your website identity.
 
-* **Custom Templates:** Choose from a variety of templates.
+* **Live Preview Customizer:** See changes in real-time without coding.
 
-* **Logo and Background:** Add your branding elements.
+* **9 Pre-Built Templates:** Choose from modern, dark, glass, and corporate designs (2 free + 7 pro).
 
-* **Color Customization:** Personalize color schemes.
+* **Logo & Branding:** Upload custom logos, set dimensions, and configure click behavior.
 
-* **Custom CSS:** Advanced customization for WP-Admin.
+* **Background Customization:** Set desktop and mobile backgrounds with full control.
 
-* **User Engagement:** Create a more engaging login page.
+* **Google Fonts Library:** Access 1,900+ fonts for perfect typography.
 
+* **Form Styling:** Customize colors, borders, shadows, spacing, and button designs
+
+* **Custom CSS:** Add advanced styling with built-in code editor
+
+* **Favicon & Tab Title:** Brand the browser tab for complete consistency
 
 **⚡ Reason #3: Brute Force Protection**
 
@@ -182,8 +234,6 @@ Prevent spam and unauthorized logins with Google reCAPTCHA integration.
 
 * **Enhanced Security:** Protect against automated attacks.
 
-
-
 **⚡ Reason #5: Comprehensive Activity Monitoring**
 
 Monitor all login activities for enhanced WordPress login security. See the username, IP address, date, time, lockout list, and more.
@@ -214,19 +264,23 @@ Block suspicious users instantly to prevent unauthorized access to your WordPres
 * **Security Audits:** Conduct thorough security audits.
 
 
-**⚡ Reason #7: Additional Layer of Security with Mobile-Based 2FA**
+**⚡ Reason #7: Advanced Two-Factor Authentication (2FA)**
 
-Add an extra layer of security with mobile-based 2FA.
+Add multiple layers of security with flexible 2FA options tailored to your needs.
 
-* **TOTP Apps Support:** Use Google Authenticator, FreeOTP, or Authy.
+* **Email OTP Authentication:** Send 6-digit verification codes via email—no app required
 
-* **Two-Factor Authentication:** Secure your login process.
+* **Authenticator App Support:** Compatible with Google Authenticator, Microsoft Authenticator, and Authy
 
-* **Improved Security:** Ensure only authorized access.
+* **Backup Codes:** Generate one-time use codes for emergency access
 
-* **Convenient Setup:** Easy to set up and use.
+* **Grace Period:** Give users time to configure 2FA before enforcement
 
-* **Enhanced Protection:** Strengthen your WP Admin security.
+* **Remember Trusted Devices:** Skip 2FA on recognized devices for 7-90 days
+
+* **Role-Based Enforcement:** Apply 2FA to specific user roles or all users
+
+* **Force Session Logout:** Terminate all active sessions when 2FA settings change
 
 **⚡ Reason #8: Simplified Access with Social Login**
 
@@ -242,9 +296,66 @@ Make logging in easier by allowing users to sign in with their existing social a
 
 * **Seamless Integration:** Works smoothly with your WordPress site.
 
+**⚡ Reason #9: Real-Time Security Notifications & Alerts**
+
+Stay informed about security events with instant notifications to your favorite tools.
+
+* **Slack Integration:** Get security alerts directly in your Slack workspace
+
+* **Webhook Support:**Send events to Zapier, Make, n8n, or custom APIs
+
+* **Failed Login Alerts:** Monitor every unsuccessful login attempt
+
+* **IP Lockout Notifications:** Get notified when IPs are blocked
+
+* **User Enumeration Detection:** Track username discovery attempts
+
+* **Custom Event Triggers:** Choose which events send notifications
+
+* **JSON Format:** Structured data for easy integration and automation
+
+**⚡ Reason #10: Create Personalized Login Experiences**
+
+Control where users are redirected after login or logout to deliver a more streamlined and personalized user experience.
+
+* **Login Redirects:** Send users to custom pages immediately after login.
+
+* **Logout Redirects:**Redirect users to specific destinations after logout.
+
+* **Role-Based Rules:** Create unique destinations for different user roles.
+
+* **User-Specific Redirects:** Configure redirects for individual users.
+
+* **Fallback Protection:** Ensure users always reach a valid destination, even if a target URL becomes unavailable.
+
+
+== Try Our Other Awesome WordPress Plugins ==
+
+* **[Gutena Forms](https://wordpress.org/plugins/gutena-forms/)**: Create modern, responsive contact forms directly in the Gutenberg block editor. Add advanced fields, protect against spam with reCAPTCHA and Cloudflare Turnstile, manage form entries, and more.
+
+* **[Password Protected](https://wordpress.org/plugins/password-protected/)**: Secure your WordPress site, posts, pages, and categories with simple password protection.
+
+* **[WP EasyPay](https://wordpress.org/plugins/wp-easypay/)**: Accept Square payments and donations easily on your WordPress site.
+
+* **[WC Shop Sync](https://wordpress.org/plugins/wc-shop-sync/)**: Add Square payments and sync WooCommerce products, customers, and orders with your Square POS.
+
+* **[Advanced File Manager](https://wordpress.org/plugins/file-manager-advanced/)**: Easily manage and organize your WordPress files directly from the dashboard.
+
+* **[Post SMTP](https://wordpress.org/plugins/post-smtp/)**: Easily configure and manage WordPress email delivery with reliable SMTP and detailed email logs directly from your dashboard.
+
+* **[CF7 Apps](https://wordpress.org/plugins/cf7-apps/)**: Add honeypot, hCaptcha, and database entries to Contact Form 7. New extensions are continuously added.
+
+* **[myCred](https://wordpress.org/plugins/mycred/)**: Add gamification, rewards, ranks, badges, and points management systems to your WordPress website.
+
+* **[New User Approve](https://wordpress.org/plugins/new-user-approve/)**: Control user registrations by manually approving or denying new signups.
+
+* **[Bookify](https://wordpress.org/plugins/bookify/)**: Your go-to online bookings and appointment scheduling plugin for WordPress.
+
+* **[WPExperts WooCommerce Store](https://store.wpexperts.io/woocommerce/)**: Explore premium WooCommerce plugins and professional solutions by WPExperts.== Requirements == 
+
 == Technical Documentation ==
 
-[Click here](https://aiologin.com/documentation) to access our detailed, step-by-step technical documentation for complete security of your WordPress login page (wp-admin).
+[Click here](https://aiologin.com/docs/) to access our detailed, step-by-step technical documentation for complete security of your WordPress login page (wp-admin).
 
 
 == Need Help? Get Expert Assistance ==
@@ -272,6 +383,27 @@ To install and activate this plugin...
 = Can I use the All in One Login plugin for free? =
 Yes, you can install the free version of AIO Login, which offers unique features such as the change of the WP-Admin URL, block login attempts, Google reCAPTCHA, detailed activity logs, and even custom login design for customizing and securing your WordPress login page.
 
+=Does All In One Login support Cloudflare Turnstile? =
+The plugin includes Cloudflare Turnstile integration, a privacy-friendly captcha alternative that protects against bots without frustrating puzzles or tracking cookies.
+
+= What 2FA methods does All In One Login support? =
+We offer multiple 2FA options: Email-based OTP (one-time passwords), Authenticator App support (Google Authenticator, Microsoft Authenticator, Authy), backup codes for emergency access, and trusted device recognition.
+
+=Can I redirect different users to different pages after login?=
+Yes. AIO Login allows you to create custom redirection rules based on All Users, User Roles, or Specific Users. This enables you to send customers, subscribers, members, administrators, or individual users to different pages after login or logout. You can also configure rule priorities to control which redirection rule is applied when multiple conditions match.
+
+= Can I customize my WordPress login page design? =
+Absolutely! All In One Login includes a visual customizer with live preview. You can choose from 9 pre-built templates, upload logos, change colors, customize backgrounds, select from 1,900+ Google Fonts, and add custom CSS, all without coding.
+
+= Can I receive security alerts in Slack? =
+Yes. All In One Login Pro integrates with Slack notifications to send real-time alerts for security events such as failed login attempts, IP lockouts, and user enumeration detection directly to your Slack workspace.
+
+= What are backup codes in 2FA? =
+Backup codes are one-time recovery codes used to access your account if you lose access to your primary 2FA method (email OTP or authenticator app). Admins can generate 1–20 backup codes per user for emergency login access.
+
+= Does All In One Login support webhooks? =
+Yes. All In One Login supports webhook integrations that allow you to send security events to any HTTPS endpoint. This makes it easy to connect with tools like Zapier, Make, n8n, or custom monitoring and automation systems.
+
 = Is AIO Login compatible with all WordPress themes? =
 Yes, you can easily customize the WordPress admin URL with AIO Login, enhancing security by making it harder for attackers to find your login page.
 
@@ -285,7 +417,7 @@ App-Based 2FA adds an extra layer of security by requiring a second form of auth
 AIO Login is generally compatible with all other security plugins, such as Jetpack, Wordfence Security, Security Ninja, etc.
 
 = Which social logins are supported by All in One Login? =
-AIO Login supports Gmail, Microsoft, and LINE social login. These social logins simplify registration, improve user experience, and reduce abandoned accounts.
+AIO Login supports Gmail, Microsoft, LINE, Discord, Apple, and GitHub social login. These social logins simplify registration, improve user experience, and reduce abandoned accounts.
 
 = Can I track login activity with AIO Login? =
 Yes, AIO Login allows you to track all login attempts and activity logs in real-time. You can monitor user activity, review IP addresses, and see details on failed login attempts.
@@ -314,13 +446,20 @@ Please report security bugs found in the source code of the Change wp-admin logi
 
 
 == Changelog ==
+
+= 1.6.0 - June 08, 2026 =
+* NEW – Introduced Login Redirection, allowing users to create personalized login and logout redirection rules.
+* FIX – Resolved a CSS issue affecting the WordPress login page.
+* FIX - Resolved a PHP warning related to the Template Grid customization control when rendering login customization templates.
+
 = 2.2.0 – May 01, 2026 = 
-* New – Added Tootips for all the features. 
-* New – Added pro screen of discord and GitHub in Social Login.
-* New – Added Live Preview button in the Customization tab.
-* Tweak – Added the Minutes unit in Limit Login Attempts.
-* Improvement – Updated Geolocation Library For Better IP Addresses.
-* Improvement – Updated Freemius SDK to latest version.
+* New – Introduced Real-Time Customizer for login form customization.
+* Tweak – Added the Pro screen of Discord and GitHub in Social Login.
+* Tweak – Added tooltip content for all plugin features. 
+* Tweak – Added 2FA tab in plugin navigation.  
+* Tweak –  Added backward compatibility for the old Customizer.  
+* Tweak – Added Notifications sub-tab in Activity Logs.  
+
 
 = 2.1.1 – Jan 21, 2026 = 
 * Tweak – Added new tab of Integration and WooCommerce integration pro screen.

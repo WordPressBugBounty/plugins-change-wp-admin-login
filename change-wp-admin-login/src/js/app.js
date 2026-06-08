@@ -97,6 +97,9 @@ if (window.aio_login__object.routes.length) {
 		if ('password-strenght-checker' === route.my_slug) {
 			window.aio_login__object.routes[i].component = require('./pages/password-strenght-checker.vue').default;
 		}
+		if ('login-redirection' === route.my_slug) {
+			window.aio_login__object.routes[i].component = require('./pages/login-redirection.vue').default;
+		}
 
 		if ('lockouts' === route.my_slug) {
 			window.aio_login__object.routes[i].component = require('./pages/lockouts.vue').default;

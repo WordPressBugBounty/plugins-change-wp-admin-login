@@ -83,8 +83,138 @@ if ( ! class_exists( 'AIO_Login\\Login_Customization\\Login_Customization_Output
 			add_action( 'login_enqueue_scripts', array( $this, 'login_output' ), 15 );
 			// After template CSS is registered so Additional CSS prints last and overrides template !important rules.
 			add_action( 'login_enqueue_scripts', array( $this, 'output_additional_login_css_last' ), 999 );
+			add_action( 'login_enqueue_scripts', array( $this, 'enqueue_login_language_switcher_layout' ), 1000 );
+			add_action( 'login_footer', array( $this, 'print_login_language_switcher_move_script' ), 999 );
 			add_filter( 'login_headerurl', array( $this, 'login_header_url' ) );
 			add_filter( 'login_headertext', array( $this, 'login_header_text' ) );
+		}
+
+		/**
+		 * Core prints the language switcher after #login closes. Move it into the login panel and keep one row (icon + select + button).
+		 *
+		 * @return void
+		 */
+		public function enqueue_login_language_switcher_layout() {
+			$css = '
+body.login:not(.interim-login) #login > .language-switcher,
+body.login:not(.interim-login) #loginform > .language-switcher,
+body.login:not(.interim-login) #lostpasswordform > .language-switcher,
+body.login:not(.interim-login) #registerform > .language-switcher {
+	margin: 0 auto !important;
+	padding: 12px 0 8px !important;
+	width: 100% !important;
+	max-width: 100% !important;
+	box-sizing: border-box !important;
+}
+body.login:not(.interim-login) #login > .language-switcher form#language-switcher,
+body.login:not(.interim-login) #loginform > .language-switcher form#language-switcher,
+body.login:not(.interim-login) #lostpasswordform > .language-switcher form#language-switcher,
+body.login:not(.interim-login) #registerform > .language-switcher form#language-switcher {
+	display: flex !important;
+	flex-direction: row !important;
+	flex-wrap: nowrap !important;
+	align-items: center !important;
+	justify-content: center !important;
+	gap: 8px !important;
+	margin: 0 auto !important;
+	width: 100% !important;
+	max-width: 100% !important;
+	box-sizing: border-box !important;
+}
+body.login:not(.interim-login) #login > .language-switcher label,
+body.login:not(.interim-login) #loginform > .language-switcher label,
+body.login:not(.interim-login) #lostpasswordform > .language-switcher label,
+body.login:not(.interim-login) #registerform > .language-switcher label {
+	display: inline-flex !important;
+	align-items: center !important;
+	margin: 0 !important;
+	flex: 0 0 auto !important;
+}
+body.login:not(.interim-login) form#language-switcher select,
+body.login:not(.interim-login) #login > .language-switcher select,
+body.login:not(.interim-login) #loginform > .language-switcher select,
+body.login:not(.interim-login) #lostpasswordform > .language-switcher select,
+body.login:not(.interim-login) #registerform > .language-switcher select {
+	line-height: 1.8 !important;
+	height: auto !important;
+	vertical-align: middle !important;
+	margin: 0 !important;
+	flex: 1 1 12rem !important;
+	min-width: 140px !important;
+	width: auto !important;
+	max-width: none !important;
+	align-self: center !important;
+	padding-right: 2.25rem !important;
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%2350575e%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpolyline points=%226,9 12,15 18,9%22/%3E%3C/svg%3E") !important;
+	background-repeat: no-repeat !important;
+	background-position: right 0.65rem center !important;
+	background-size: 1rem !important;
+	-webkit-appearance: none !important;
+	appearance: none !important;
+}
+body.login:not(.interim-login) form#language-switcher input[type="submit"].button,
+body.login:not(.interim-login) #login > .language-switcher .button,
+body.login:not(.interim-login) #loginform > .language-switcher .button,
+body.login:not(.interim-login) #lostpasswordform > .language-switcher .button,
+body.login:not(.interim-login) #registerform > .language-switcher .button {
+	width: auto !important;
+	min-width: 0 !important;
+	max-width: none !important;
+	height: auto !important;
+	min-height: 36px !important;
+	margin: 0 !important;
+	flex: 0 0 auto !important;
+	flex-grow: 0 !important;
+	align-self: center !important;
+	display: inline-block !important;
+	float: none !important;
+	white-space: nowrap !important;
+	padding: 0 14px !important;
+	font-size: 13px !important;
+	line-height: 2.15384615 !important;
+	box-sizing: border-box !important;
+	box-shadow: none !important;
+	text-shadow: none !important;
+}
+@media screen and (max-width: 480px) {
+	body.login:not(.interim-login) #login > .language-switcher form#language-switcher,
+	body.login:not(.interim-login) #loginform > .language-switcher form#language-switcher,
+	body.login:not(.interim-login) #lostpasswordform > .language-switcher form#language-switcher,
+	body.login:not(.interim-login) #registerform > .language-switcher form#language-switcher {
+		flex-wrap: wrap !important;
+		justify-content: center !important;
+	}
+}
+';
+			wp_add_inline_style( 'login', $css );
+		}
+
+		/**
+		 * Relocate .language-switcher into the login UI (after footer links, or inside the form for template-09 grid).
+		 *
+		 * @return void
+		 */
+		public function print_login_language_switcher_move_script() {
+			if ( ! empty( $GLOBALS['interim_login'] ) ) {
+				return;
+			}
+			$script = $this->get_login_language_switcher_move_script();
+			if ( function_exists( 'wp_print_inline_script_tag' ) ) {
+				wp_print_inline_script_tag( $script );
+			} else {
+				echo '<script>' . $script . '</script>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+			}
+		}
+
+		/**
+		 * Inline script: move language switcher node once DOM is ready.
+		 *
+		 * @return string
+		 */
+		private function get_login_language_switcher_move_script() {
+			return <<<JS
+document.addEventListener('DOMContentLoaded',function(){var login=document.getElementById('login');if(!login){return;}var ls=document.querySelector('body.login .language-switcher');var moveLs=!!ls&&!login.contains(ls);if(document.body.classList.contains('aio-login__template-01')){if(moveLs){var f01=document.getElementById('loginform')||document.getElementById('lostpasswordform')||document.getElementById('registerform');if(f01){var n01=document.getElementById('nav');var b01=document.getElementById('backtoblog');if(n01&&n01.parentNode===login){f01.appendChild(n01);}if(b01&&b01.parentNode===login){f01.appendChild(b01);}f01.appendChild(ls);}else{login.appendChild(ls);}}if(!login.querySelector('.aio-login__template-01-scroll')){var pane=document.createElement('div');pane.className='aio-login__template-01-scroll';Array.prototype.slice.call(login.children).forEach(function(n){pane.appendChild(n);});login.insertBefore(pane,login.firstChild);}return;}if(!moveLs){return;}if(document.body.classList.contains('aio-login__template-09')){var pf=document.getElementById('loginform')||document.getElementById('lostpasswordform')||document.getElementById('registerform');if(pf){pf.appendChild(ls);}else{login.appendChild(ls);}return;}var bb=document.getElementById('backtoblog');var nav=document.getElementById('nav');var anchor=(bb&&bb.parentNode===login)?bb:((nav&&nav.parentNode===login)?nav:null);if(anchor){if(anchor.nextSibling){anchor.parentNode.insertBefore(ls,anchor.nextSibling);}else{anchor.parentNode.appendChild(ls);}}else{login.appendChild(ls);}});
+JS;
 		}
 
 		/**

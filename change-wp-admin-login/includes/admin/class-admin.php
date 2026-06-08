@@ -65,6 +65,10 @@ if (!class_exists('AIO_Login\Admin\Admin')) {
 								'title' => __('Change Login URL', 'change-wp-admin-login'),
 								'slug' => 'change-login-url',
 							),
+							'login-redirection' => array(
+								'title' => __('Login Redirection', 'change-wp-admin-login'),
+								'slug' => 'login-redirection',
+							),
 							'limit-login-attempts' => array(
 								'title' => __('Limit Login Attempts', 'change-wp-admin-login'),
 								'slug' => 'limit-login-attempts',

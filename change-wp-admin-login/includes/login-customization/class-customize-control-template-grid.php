@@ -46,7 +46,8 @@ class Customize_Control_Template_Grid extends \WP_Customize_Control {
 	 * Render control markup (Customizer left panel).
 	 */
 	protected function render_content() {
-		$value = $this->value();
+		$input_id = '_customize-input-' . $this->id;
+		$value    = $this->value();
 
 		if ( ! isset( $this->choices[ $value ] ) ) {
 			$value = isset( $this->choices['default'] ) ? 'default' : ( $this->free_slugs[0] ?? '' );
@@ -126,7 +127,7 @@ class Customize_Control_Template_Grid extends \WP_Customize_Control {
 					<?php endif; ?>
 				<?php endif; ?>
 			<?php endif; ?>
-			<input type="hidden" id="<?php echo esc_attr( $this->input_id ); ?>" <?php $this->link(); ?> value="<?php echo esc_attr( $value ); ?>" />
+			<input type="hidden" id="<?php echo esc_attr( $input_id ); ?>" <?php $this->link(); ?> value="<?php echo esc_attr( $value ); ?>" />
 		</div>
 		<?php
 	}

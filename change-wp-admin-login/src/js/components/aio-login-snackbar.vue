@@ -1,10 +1,14 @@
 <template>
-	<div class="aio-login__snackbar">
+	<div
+		class="aio-login__snackbar"
+		@mouseenter="handleMouseEnter"
+		@mouseleave="handleMouseLeave"
+	>
 		<div class="aio-login__snackbar__content">
 
 			{{ message }}
 
-			<button @click="handleClose">&times;</button>
+			<button type="button" @click="handleClose">&times;</button>
 		</div>
 	</div>
 </template>
@@ -23,10 +27,18 @@ export default {
 			type: Number,
 			default: 5000,
 		},
+
+		/** Milliseconds to wait after the pointer leaves before dismissing. */
+		dismissAfterLeave: {
+			type: Number,
+			default: 3000,
+		},
 	},
 
-	data: ( vm ) => ( {
+	data: () => ( {
 		disable: false,
+		dismissTimer: null,
+		isHovered: false,
 	} ),
 
 	watch: {
@@ -38,15 +50,50 @@ export default {
 	},
 
 	methods: {
+		clearDismissTimer() {
+			if ( this.dismissTimer ) {
+				clearTimeout( this.dismissTimer );
+				this.dismissTimer = null;
+			}
+		},
+
+		scheduleDismiss( delayMs ) {
+			this.clearDismissTimer();
+			const delay = Math.max( 0, Number( delayMs ) || 0 );
+			if ( delay <= 0 ) {
+				this.disable = true;
+				return;
+			}
+			this.dismissTimer = setTimeout( () => {
+				this.dismissTimer = null;
+				if ( ! this.isHovered ) {
+					this.disable = true;
+				}
+			}, delay );
+		},
+
 		handleClose() {
+			this.clearDismissTimer();
 			this.disable = true;
+		},
+
+		handleMouseEnter() {
+			this.isHovered = true;
+			this.clearDismissTimer();
+		},
+
+		handleMouseLeave() {
+			this.isHovered = false;
+			this.scheduleDismiss( this.dismissAfterLeave );
 		},
 	},
 
 	mounted() {
-		setTimeout( () => {
-			this.disable = true;
-		}, this.duration );
+		this.scheduleDismiss( this.duration );
+	},
+
+	beforeUnmount() {
+		this.clearDismissTimer();
 	},
 }
 </script>
@@ -56,6 +103,7 @@ export default {
 	position: fixed;
 	bottom: 40px;
 	right: 40px;
+	z-index: 100010;
 	background: #9516df;
 	color: #fff;
 	padding: 10px 20px;

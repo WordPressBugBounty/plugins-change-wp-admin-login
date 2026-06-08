@@ -13,6 +13,7 @@ use AIO_Login\Google_Recaptcha\Google_Recaptcha;
 use AIO_Login\Helper\Helper;
 use AIO_Login\Login_Controller\Failed_Logins;
 use AIO_Login\Login_Controller\Login_Controller;
+use AIO_Login\Login_Controller\Login_Redirection;
 use AIO_Login\Login_Customization\Login_Customization;
 use AIO_Login\Login_Customization\Login_Customization_Output;
 use AIO_Login\Rest_API\Controller;
@@ -41,6 +42,7 @@ if ( ! class_exists( 'AIO_Login\\AIO_Login' ) ) {
 			self::class_loader( Change_WP_Admin_Login::class );
 			self::class_loader( Google_Recaptcha::class );
 			self::class_loader( Login_Controller::class );
+			self::class_loader( Login_Redirection::class );
 			self::class_loader( Login_Customization::class );
 			self::class_loader( Login_Customization_Output::class );
 			/*
@@ -73,6 +75,7 @@ if ( ! class_exists( 'AIO_Login\\AIO_Login' ) ) {
 			require_once AIO_LOGIN__DIR_PATH . 'includes/change-wp-admin-login/class-change-wp-admin-login.php';
 			require_once AIO_LOGIN__DIR_PATH . 'includes/google-recaptcha/class-google-recaptcha.php';
 			require_once AIO_LOGIN__DIR_PATH . 'includes/login-controller/class-login-controller.php';
+			require_once AIO_LOGIN__DIR_PATH . 'includes/login-controller/class-login-redirection.php';
 			require_once AIO_LOGIN__DIR_PATH . 'includes/login-controller/class-failed-logins.php';
 			require_once AIO_LOGIN__DIR_PATH . 'includes/login-customization/class-login-customization.php';
 			require_once AIO_LOGIN__DIR_PATH . 'includes/login-customization/class-login-customization-output.php';

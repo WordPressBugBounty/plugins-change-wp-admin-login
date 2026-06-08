@@ -288,10 +288,23 @@ export default {
 .aio-login__container {
 	background: #fff;
 	border-radius: 0 8px 8px 8px;
+	max-width: 100%;
+	overflow: hidden;
 }
 
 .aio-login__content-wrapper {
 	padding: 25px;
+}
+
+@media screen and (max-width: 782px) {
+	.aio-login-header-version {
+		min-height: auto;
+		flex-wrap: wrap;
+	}
+
+	.aio-login__content-wrapper {
+		padding: 16px;
+	}
 }
 
 .aio-login-subtabs-locked {
@@ -312,5 +325,4 @@ export default {
 	pointer-events: none;
 	opacity: 0.45;
 }
-
 </style>

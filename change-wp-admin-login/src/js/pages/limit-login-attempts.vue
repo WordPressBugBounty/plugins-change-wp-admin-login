@@ -220,10 +220,8 @@ export default {
 	left: 0;
 	width: 100%;
 	height: 100%;
-	min-height: 220px;
 	z-index: 10;
 	cursor: pointer;
-	background: rgba( 255, 255, 255, 0.38 );
 	backdrop-filter: blur( 1px );
 }
 </style>

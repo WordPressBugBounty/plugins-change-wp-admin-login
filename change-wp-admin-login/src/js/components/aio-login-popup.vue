@@ -79,7 +79,8 @@ export default {
 	width: 100%;
 	height: 100%;
 	background-color: rgba( 0, 0, 0, 0.5);
-	z-index: 9999;
+	/* Above login-redirection rule modal (.aio-login-lr-modal-backdrop uses 99999). */
+	z-index: 100000;
 	backdrop-filter: blur( 1px );
 	display: flex;
 	justify-content: center;
