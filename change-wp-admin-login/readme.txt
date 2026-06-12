@@ -4,7 +4,7 @@ Tags: login url, login, wp admin, wp login, custom login
 Requires at least: 4.6
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 2.3.0
+Stable tag: 2.3.1
 License: GPLv2 or later
 
 Do you want to secure and customize the WordPress login page? Download the All in One Login plugin for login page security and customization.
@@ -447,7 +447,10 @@ Please report security bugs found in the source code of the Change wp-admin logi
 
 == Changelog ==
 
-= 1.6.0 - June 08, 2026 =
+= 2.3.1 - June 12, 2026 =
+* TWEAK – Added an admin notice
+
+= 2.3.0 – June 08, 2026 =
 * NEW – Introduced Login Redirection, allowing users to create personalized login and logout redirection rules.
 * FIX – Resolved a CSS issue affecting the WordPress login page.
 * FIX - Resolved a PHP warning related to the Template Grid customization control when rendering login customization templates.

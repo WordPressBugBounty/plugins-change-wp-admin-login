@@ -60,6 +60,7 @@ import aioLoginLoginRedirection from './pages/login-redirection-feature.js';
 import aioLoginDatatable from './components/aio-login-datatable.vue';
 import aioLoginPopup from './components/aio-login-popup.vue';
 import aioLoginProPopup from './components/aio-login-pro-popup.vue';
+import aioLoginAppsumoHelloBar from './components/aio-login-appsumo-hello-bar.vue';
 import aioLoginTooltip from './components/aio-login-tooltip.vue';
 
 
@@ -157,6 +158,7 @@ aio_login__mount_helper.prototype.mount = function( element, required_components
 	aio_login__app.component( 'aio-login-getpro', aioLoginGetPro );
 	aio_login__app.component( 'aio-login-popup', aioLoginPopup );
 	aio_login__app.component( 'aio-login-pro-popup', aioLoginProPopup );
+	aio_login__app.component( 'aio-login-appsumo-hello-bar', aioLoginAppsumoHelloBar );
 	aio_login__app.component( 'aio-login-tooltip', aioLoginTooltip );
 
 	aio_login__app.mount( element );

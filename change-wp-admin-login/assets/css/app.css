@@ -686,16 +686,16 @@ to {
 }
 
 
-.aio-login-header-img[data-v-c4476ede] {
+.aio-login-header-img[data-v-31b279da] {
 	margin-top: 15px;
 }
-.aio-login-header-version[data-v-c4476ede] {
+.aio-login-header-version[data-v-31b279da] {
 	min-height: 100px;
 	display: inline-flex;
 	align-items: center;
 	gap: 8px;
 }
-.aio-login-header-version__badge[data-v-c4476ede] {
+.aio-login-header-version__badge[data-v-31b279da] {
 	display: inline-flex;
 	align-items: center;
 	padding: 6px 10px;
@@ -705,38 +705,38 @@ to {
 	line-height: 1;
 	letter-spacing: 0.01em;
 }
-.aio-login-header-version__badge--free[data-v-c4476ede] {
+.aio-login-header-version__badge--free[data-v-31b279da] {
 	color: #4a5568;
 	background: #edf2f7;
 	border: 1px solid #d5dee9;
 }
-.aio-login-header-version__badge--pro[data-v-c4476ede] {
+.aio-login-header-version__badge--pro[data-v-31b279da] {
 	color: #ffffff;
 	background: linear-gradient(180deg, #9516df 0%, #510c79 100%);
 	border: 1px solid #7a27bf;
 }
-.aio-login__container[data-v-c4476ede] {
+.aio-login__container[data-v-31b279da] {
 	background: #fff;
 	border-radius: 0 8px 8px 8px;
 	max-width: 100%;
 	overflow: hidden;
 }
-.aio-login__content-wrapper[data-v-c4476ede] {
+.aio-login__content-wrapper[data-v-31b279da] {
 	padding: 25px;
 }
 @media screen and (max-width: 782px) {
-.aio-login-header-version[data-v-c4476ede] {
+.aio-login-header-version[data-v-31b279da] {
 		min-height: auto;
 		flex-wrap: wrap;
 }
-.aio-login__content-wrapper[data-v-c4476ede] {
+.aio-login__content-wrapper[data-v-31b279da] {
 		padding: 16px;
 }
 }
-.aio-login-subtabs-locked[data-v-c4476ede] {
+.aio-login-subtabs-locked[data-v-31b279da] {
 	position: relative;
 }
-.aio-login-subtabs-locked[data-v-c4476ede]::after {
+.aio-login-subtabs-locked[data-v-31b279da]::after {
 	content: '';
 	position: absolute;
 	inset: 0;
@@ -745,7 +745,7 @@ to {
 	z-index: 20;
 	cursor: pointer;
 }
-.aio-login-sub-tabs--locked[data-v-c4476ede] {
+.aio-login-sub-tabs--locked[data-v-31b279da] {
 	pointer-events: none;
 	opacity: 0.45;
 }
@@ -4069,6 +4069,155 @@ body.aio-login-modal-open[data-v-495a98e7] {
 }
 
 
+.aio-login-appsumo-hello-bar[data-v-0df53c44] {
+	position: relative;
+	width: 100%;
+	min-height: 50px;
+	background: #7ef689;
+	overflow: hidden;
+	box-sizing: border-box;
+}
+.aio-login-appsumo-hello-bar__bokeh[data-v-0df53c44] {
+	position: absolute;
+	top: -68px;
+	width: 305px;
+	height: 177px;
+	pointer-events: none;
+	background-repeat: no-repeat;
+	background-size: contain;
+	background-position: center;
+	z-index: 0;
+}
+.aio-login-appsumo-hello-bar__bokeh--left[data-v-0df53c44] {
+	left: -59px;
+	transform: rotate(180deg);
+}
+.aio-login-appsumo-hello-bar__bokeh--right[data-v-0df53c44] {
+	right: -59px;
+}
+.aio-login-appsumo-hello-bar__inner[data-v-0df53c44] {
+	position: relative;
+	z-index: 1;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex-wrap: wrap;
+	gap: 12px 20px;
+	width: 100%;
+	min-height: 50px;
+	padding: 9px 56px;
+	box-sizing: border-box;
+}
+.aio-login-appsumo-hello-bar__copy[data-v-0df53c44] {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex-wrap: wrap;
+	gap: 8px 20px;
+	text-align: center;
+}
+.aio-login-appsumo-hello-bar__headline-wrap[data-v-0df53c44] {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-height: 28px;
+	flex-shrink: 0;
+}
+.aio-login-appsumo-hello-bar__headline[data-v-0df53c44] {
+	display: inline-block;
+	font-family: 'Protest Riot', cursive !important;
+	font-style: normal !important;
+	font-weight: 400 !important;
+	font-size: 16px;
+	line-height: 1.5;
+	color: #000000;
+	text-align: center;
+	transform: rotate(-3.2deg);
+	white-space: nowrap;
+	letter-spacing: 0;
+	-webkit-font-smoothing: antialiased;
+}
+.aio-login-appsumo-hello-bar__text[data-v-0df53c44] {
+	margin: 0;
+	font-family: Figtree, sans-serif !important;
+	font-size: 14px;
+	line-height: 1;
+	font-weight: 600;
+	color: #000000;
+	white-space: nowrap;
+}
+.aio-login-appsumo-hello-bar__brand[data-v-0df53c44] {
+	font-family: Figtree, sans-serif !important;
+	font-weight: 700 !important;
+}
+.aio-login-appsumo-hello-bar__cta[data-v-0df53c44] {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	padding: 9px 13px;
+	border: 1px solid #000000;
+	border-radius: 6px;
+	background: #ffffff;
+	color: #000000;
+	font-size: 14px;
+	font-weight: 600;
+	line-height: 1;
+	text-decoration: none;
+	box-shadow: 0 2px 0 #000000;
+	white-space: nowrap;
+	transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.aio-login-appsumo-hello-bar__cta[data-v-0df53c44]:hover,
+.aio-login-appsumo-hello-bar__cta[data-v-0df53c44]:focus {
+	color: #000000;
+	transform: translateY(1px);
+	box-shadow: 0 1px 0 #000000;
+}
+.aio-login-appsumo-hello-bar__close[data-v-0df53c44] {
+	position: absolute;
+	top: 50%;
+	right: 20px;
+	z-index: 2;
+	transform: translateY(-50%);
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 28px;
+	height: 28px;
+	padding: 0;
+	border: 0;
+	background: transparent;
+	cursor: pointer;
+	flex-shrink: 0;
+}
+.aio-login-appsumo-hello-bar__close:hover svg circle[data-v-0df53c44],
+.aio-login-appsumo-hello-bar__close:focus svg circle[data-v-0df53c44] {
+	fill-opacity: 1;
+}
+.aio-login-appsumo-hello-bar__close svg[data-v-0df53c44] {
+	display: block;
+	width: 15px;
+	height: 15px;
+}
+@media (max-width: 782px) {
+.aio-login-appsumo-hello-bar__inner[data-v-0df53c44] {
+		padding-right: 48px;
+		padding-left: 12px;
+}
+.aio-login-appsumo-hello-bar__close[data-v-0df53c44] {
+		right: 12px;
+}
+.aio-login-appsumo-hello-bar__copy[data-v-0df53c44] {
+		flex-direction: column;
+		gap: 4px;
+}
+.aio-login-appsumo-hello-bar__text[data-v-0df53c44],
+	.aio-login-appsumo-hello-bar__headline[data-v-0df53c44] {
+		white-space: normal;
+}
+}
+
+
 .aio-login-tooltip-wrap[data-v-269ae202] {
 	display: inline-flex;
 	align-items: center;
@@ -4539,6 +4688,23 @@ to {
     src: url(../fonts/figtree-600-2.woff2) format('woff2');
     unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
+/* latin — bold (hello bar AppSumo label + admin UI) */
+@font-face {
+    font-family: 'Figtree';
+    font-style: normal;
+    font-weight: 700;
+    font-display: swap;
+    src: url(../fonts/figtree-700.ttf) format('truetype');
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+	font-family: 'Protest Riot';
+	font-style: normal;
+	font-weight: 400;
+	font-display: swap;
+	src: url(../fonts/protest-riot-400.ttf) format('truetype');
+}
+
 @charset "UTF-8";
 :root {
     --dt-row-selected: 13, 110, 253;

@@ -1,5 +1,7 @@
 <template>
 	<div>
+		<aio-login-appsumo-hello-bar />
+
 		<aio-login-header class="mb-25">
 			<template v-slot:logo>
 				<img class="aio-login-header-img" :src="assets_url + 'images/dashboard-logo.png'" alt="logo">

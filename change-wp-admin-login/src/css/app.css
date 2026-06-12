@@ -1,5 +1,7 @@
 @import "figtree.css";
 
+@import "protest-riot.css";
+
 @import "datatables.css";
 
 #aio-login__app *:not(.dashicons) {
