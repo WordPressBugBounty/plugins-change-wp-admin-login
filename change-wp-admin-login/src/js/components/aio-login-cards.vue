@@ -33,6 +33,20 @@ export default {
 <style scoped>
 .aio-login__cards-container {
 	display: grid;
-	grid-template-columns: 25% 25% 25% 25%;
+	grid-template-columns: repeat(4, minmax(0, 1fr));
+	gap: 15px;
+}
+
+@media screen and (max-width: 1200px) {
+	.aio-login__cards-container {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+}
+
+@media screen and (max-width: 782px) {
+	.aio-login__cards-container {
+		grid-template-columns: 1fr;
+		gap: 12px;
+	}
 }
 </style>

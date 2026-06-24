@@ -24,7 +24,7 @@
 					</div>
 				</div>
 
-				<div style="border-radius: 0 0 5px 5px;overflow: hidden;" v-if="'lockouts' === current_tab">
+				<div class="aio-login__table-scroll" v-if="'lockouts' === current_tab">
 					<table class="aio-login__table">
 						<thead>
 						<tr>
@@ -45,7 +45,7 @@
 					</table>
 				</div>
 
-				<div style="border-radius: 0 0 5px 5px;overflow: hidden;" v-if="'failed-logins' === current_tab">
+				<div class="aio-login__table-scroll" v-if="'failed-logins' === current_tab">
 					<table class="aio-login__table">
 						<thead>
 						<tr>
@@ -184,9 +184,23 @@ export default {
 }
 
 .aio-login-table-nav {
-	height: 48px;
+	height: auto;
+	min-height: 48px;
 	border-radius: 8px 8px 0 0;
 	background: #FBF5FF;
+	display: flex;
+	flex-wrap: wrap;
+}
+
+.aio-login__table-wrapper {
+	border-radius: 0 0 8px 8px;
+	overflow: hidden;
+}
+
+.aio-login__table-scroll {
+	overflow-x: auto;
+	-webkit-overflow-scrolling: touch;
+	border-radius: 0 0 5px 5px;
 }
 
 .aio-login__table-nav-item {
@@ -222,6 +236,7 @@ export default {
 .aio-login__table {
 	width: 100%;
 	border-collapse: collapse;
+	min-width: 720px;
 }
 
 .aio-login__table thead th {
@@ -257,5 +272,29 @@ export default {
 	background: #fff;
 	padding: 12px 24px;
 	border-radius: 4px;
+}
+
+@media screen and (max-width: 782px) {
+	.aio-login__recent-activity-wrapper h2 {
+		font-size: 20px;
+	}
+
+	.aio-login__table-nav-item {
+		padding: 12px 16px;
+	}
+
+	.aio-login__table-nav-item a {
+		font-size: 14px;
+	}
+
+	.aio-login__table {
+		min-width: 640px;
+	}
+
+	.aio-login__table thead th,
+	.aio-login__table td {
+		padding: 12px 16px;
+		font-size: 14px;
+	}
 }
 </style>

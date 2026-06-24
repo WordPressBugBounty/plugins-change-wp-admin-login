@@ -322,13 +322,40 @@ if (!class_exists('AIO_Login\\Helper\\Helper')) {
 		 *
 		 * @return int
 		 */
-		public static function get_timeout($timestamp)
-		{
-			$timeout = get_option('aio_login_limit_attempts_timeout', 0);
-			if (empty($timeout)) {
+		public static function get_timeout( $timestamp, $ip = '' ) {
+			if ( empty( $ip ) ) {
+				$ip = self::get_ip();
+			}
+
+			if ( class_exists( '\AIO_Login\Passwordless_Otp\OTP_Lockout' ) ) {
+				$hash = md5( $ip );
+				$keys = array(
+					'aio_login_otp_verify_lockout_until_' . $hash,
+					'aio_login_otp_lockout_until_' . $hash,
+				);
+				foreach ( $keys as $key ) {
+					$otp_until = (int) get_transient( $key );
+					if ( $otp_until > (int) $timestamp ) {
+						return $otp_until;
+					}
+				}
+
+				$row = Failed_Logins::is_user_blocked_raw( $ip );
+				if ( is_array( $row ) && isset( $row['time'] ) && (int) $row['time'] === (int) $timestamp ) {
+					$user_agent = isset( $row['user_agent'] ) ? (string) $row['user_agent'] : '';
+					if ( str_starts_with( $user_agent, 'aio-login-otp:' ) && class_exists( '\AIO_Login\Passwordless_Otp\OTP_Settings' ) ) {
+						$channel = str_ends_with( $user_agent, ':sms' ) ? 'sms' : 'email';
+						$minutes = \AIO_Login\Passwordless_Otp\OTP_Settings::get_block_duration_minutes( $channel );
+						return (int) $timestamp + ( (int) $minutes * MINUTE_IN_SECONDS );
+					}
+				}
+			}
+
+			$timeout = get_option( 'aio_login_limit_attempts_timeout', 0 );
+			if ( empty( $timeout ) ) {
 				$timeout = 5;
 			}
-			return $timestamp + ($timeout * 60);
+			return (int) $timestamp + ( (int) $timeout * 60 );
 		}
 
 		/**
@@ -404,29 +431,19 @@ if (!class_exists('AIO_Login\\Helper\\Helper')) {
 
 			// 1. Check hCaptcha
 			if (
-				$get_opt('aio_login_hcaptcha_enable') === 'on' &&
-				!empty($get_opt('aio_login_hcaptcha_site_key')) &&
-				!empty($get_opt('aio_login_hcaptcha_secret_key'))
+				\AIO_Login\Captcha\Captcha_Validation::is_active_for_frontend( 'hcaptcha' )
 			) {
 				$snapshot['captcha'][] = 'hcaptcha';
 			}
 
 			// 2. Check reCAPTCHA
-			$version = $get_opt('aio_login_google_recaptcha_version', 'v2');
-			if ($get_opt('aio_login_google_recaptcha_enable') === 'on') {
-				if (
-					!empty($get_opt('aio_login_google_recaptcha_' . $version . '_site_key')) &&
-					!empty($get_opt('aio_login_google_recaptcha_' . $version . '_secret_key'))
-				) {
-					$snapshot['captcha'][] = 'recaptcha';
-				}
+			if ( \AIO_Login\Captcha\Captcha_Validation::is_active_for_frontend( 'recaptcha' ) ) {
+				$snapshot['captcha'][] = 'recaptcha';
 			}
 
 			// 3. Check Cloudflare Turnstile
 			if (
-				$get_opt('aio_login_turnstile_enable') === 'on' &&
-				!empty($get_opt('aio_login_turnstile_site_key')) &&
-				!empty($get_opt('aio_login_turnstile_secret_key'))
+				\AIO_Login\Captcha\Captcha_Validation::is_active_for_frontend( 'turnstile' )
 			) {
 				$snapshot['captcha'][] = 'turnstile';
 			}

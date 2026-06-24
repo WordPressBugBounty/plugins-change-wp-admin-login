@@ -159,6 +159,13 @@
 						</div>
 					</div>
 				</div>
+
+				<aio-login-captcha-verify
+					:namespace="apiNamespace"
+					:nonce="apiNonce"
+					:payload="testPayload"
+					v-model:verified="connectionVerified"
+				/>
 			</div>
 
 			</div>
@@ -171,7 +178,7 @@
 					<button v-if="currentStep === 1" @click="nextStep" class="next-btn">Next</button>
 				</div>
 				<button v-if="currentStep === 2" @click="nextStep" class="next-btn">Next</button>
-				<button v-if="currentStep === 3" @click="finish" class="finish-btn">Finished</button>
+				<button v-if="currentStep === 3" @click="finish" class="finish-btn" :disabled="!connectionVerified">Finished</button>
 			</div>
 		</div>
 	</div>
@@ -189,7 +196,15 @@ export default {
 		initialData: {
 			type: Object,
 			default: () => ({})
-		}
+		},
+		apiNamespace: {
+			type: String,
+			default: 'aio-login/grecaptcha',
+		},
+		apiNonce: {
+			type: String,
+			default: '',
+		},
 	},
 
 	data() {
@@ -204,7 +219,8 @@ export default {
 				secretKey: '',
 				theme: 'light',
 				threshold: '0.5'
-			}
+			},
+			connectionVerified: false,
 		}
 	},
 
@@ -216,7 +232,21 @@ export default {
 			}
 			if (this.currentStep === 3) return true;
 			return false;
-		}
+		},
+		testPayload() {
+			if (this.formData.version === 'v2') {
+				return {
+					version: 'v2',
+					v2_site_key: this.formData.siteKey,
+					v2_secret_key: this.formData.secretKey,
+				};
+			}
+			return {
+				version: 'v3',
+				v3_site_key: this.formData.siteKey,
+				v3_secret_key: this.formData.secretKey,
+			};
+		},
 	},
 
 	watch: {
@@ -224,6 +254,7 @@ export default {
 			if (newVal) {
 				this.currentStep = 1;
 				this.formData = { ...this.initialData };
+				this.connectionVerified = !!this.initialData.validated;
 				this.showValidationError = false;
 				// Prevent body scroll when modal is open
 				document.body.style.overflow = 'hidden';
@@ -260,9 +291,9 @@ export default {
 		},
 
 		onVersionChange() {
-			// Reset keys when version changes
 			this.formData.siteKey = '';
 			this.formData.secretKey = '';
+			this.connectionVerified = false;
 		},
 
 		clearField(field) {
@@ -270,7 +301,13 @@ export default {
 		},
 
 		finish() {
-			this.$emit('save', this.formData);
+			if (!this.connectionVerified) {
+				return;
+			}
+			this.$emit('save', {
+				...this.formData,
+				validated: true,
+			});
 		}
 	}
 }
@@ -392,6 +429,11 @@ export default {
 	color: #6E16DF;
 }
 
+.finish-btn:disabled {
+	opacity: 0.6;
+	cursor: not-allowed;
+}
+
 .finish-btn {
 	background: linear-gradient(262.54deg, #F7ECFD -5.51%, #8076FF 252.88%);
 	color: #6E16DF;
@@ -489,12 +531,7 @@ export default {
 	font-weight: 400;
 }
 
-/* Step 2 Styling (match aio-login-pro popup spacing when Pro CSS is not loaded) */
-.aio-login-pro__step2 {
-	margin-bottom: 50px;
-	width: 100%;
-}
-
+/* Step 2 Styling */
 .aio-login-pro__step2__description {
 	color: #606C80;
 	font-size: 14px;
@@ -503,9 +540,8 @@ export default {
 
 .aio-login-pro__inline-form {
 	display: flex;
-	flex-wrap: wrap;
 	gap: 20px;
-	margin-top: 30px;
+	margin-top: 10px;
 }
 
 .aio-login-pro__form-group {

@@ -230,7 +230,15 @@ export default {
 <style scoped>
 .aio-login__meta-container {
 	display: grid;
-	grid-template-columns: 50% 50%;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 15px;
+}
+
+@media screen and (max-width: 782px) {
+	.aio-login__meta-container {
+		grid-template-columns: 1fr;
+		gap: 12px;
+	}
 }
 
 .aio-login-configuration-btn-wrapper {
@@ -248,7 +256,7 @@ export default {
 }
 
 .aio-login__configuration-select {
-	margin-top: 20px !important;
+	margin-top: 0 !important;
 	padding: 12px 16px !important;
 	width: 100px !important;
 	font-size: 14px !important;
@@ -264,8 +272,9 @@ export default {
 }
 
 .aio-login__configuration-switch {
-	position: absolute;
-	bottom: 25px;
-	right: 25px;
+	margin-top: auto;
+	align-self: flex-end;
+	padding-top: 16px;
+	flex-shrink: 0;
 }
 </style>

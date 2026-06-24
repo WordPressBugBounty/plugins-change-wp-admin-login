@@ -183,4 +183,44 @@ export default {
 	userEnumerationProtectionEnable: {
 		content: '<p>Enable to hide usernames to strengthen site security.</p>',
 	},
+
+	passwordlessOtpBlockDuration: {
+		content: '<p>How long (in minutes) the IP address remains blocked after too many failed OTP attempts for this login method. Blocked IPs appear in Activity Log → Lockouts.</p>',
+	},
+	passwordlessOtpSkip2fa: {
+		content: '<p>When enabled, a successful passwordless OTP login counts as completing AIO Login two-factor authentication, so users are not asked for 2FA again in the same session. Requires AIO Login Pro with 2FA enabled.</p>',
+	},
+	passwordlessEmailOtp: {
+		content: '<p>Allow users to sign in securely without a password using a one-time code sent to their email address</p>',
+	},
+	passwordlessSmsOtp: {
+		content: '<p>Allow users to sign in with an SMS code via Twilio. Requires AIO Login Pro and Twilio credentials.</p>',
+	},
+	passwordlessOtpLength: {
+		content: '<p>Number of digits in the verification code shown to users.</p>',
+	},
+	passwordlessOtpExpiration: {
+		content: '<p>How long the OTP remains valid before users must request a new code.</p>',
+	},
+	passwordlessOtpResend: {
+		content: '<p>Minimum wait time before users can request another OTP.</p>',
+	},
+	passwordlessOtpRetries: {
+		content: '<p>Maximum incorrect OTP attempts before the session is invalidated.</p>',
+	},
+	passwordlessTwilioToken: {
+		content: '<p>Stored encrypted. Leave blank when saving other settings to keep the existing token.</p>',
+	},
+	magicLinkEnable: {
+		content: '<p>When enabled, registered users can request a secure one-time sign-in link by email from the login page.</p>',
+	},
+	magicLinkValidity: {
+		content: '<p>How long the magic link remains valid before it expires.</p>',
+	},
+	magicLinkRequests: {
+		content: '<p>Maximum number of login link requests allowed per user within the validity window.</p>',
+	},
+	magicLinkSkip2fa: {
+		content: '<p>Magic Link Login already acts as a possession-based authentication factor. Enabling this option skips the additional 2FA challenge.</p>',
+	},
 };

@@ -72,5 +72,32 @@ export default {
 	padding: 16px 32px;
 	margin-top: 20px;
 	background: #FFBA08;
+	flex-shrink: 0;
+}
+
+@media screen and (max-width: 960px) {
+	.aio-login__pro-branding-container {
+		height: auto;
+		padding: 28px 24px;
+		background-image: none;
+	}
+
+	.aio-login__pro-flex {
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 20px;
+		height: auto;
+	}
+
+	.aio-login__pro-branding-container p br {
+		display: none;
+	}
+
+	.aio-login__button-wrapper {
+		margin-top: 0;
+		width: 100%;
+		box-sizing: border-box;
+		text-align: center;
+	}
 }
 </style>

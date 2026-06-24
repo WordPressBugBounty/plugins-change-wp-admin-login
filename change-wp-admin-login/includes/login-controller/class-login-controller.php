@@ -8,6 +8,7 @@
 namespace AIO_Login\Login_Controller;
 
 use AIO_Login\Helper\Helper;
+use AIO_Login\Passwordless_Otp\OTP_Captcha;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -91,6 +92,16 @@ if ( ! class_exists( 'AIO_Login\\Login_Controller\\Login_Controller' ) ) {
 		public function login_enqueue_scripts() {
 			wp_register_script( 'aio-login--detect-js', AIO_LOGIN__DIR_URL . 'assets/js/detect.js', array(), AIO_LOGIN__VERSION, true );
 			wp_enqueue_script( 'aio-login--login-js', AIO_LOGIN__DIR_URL . 'assets/js/login.js', array( 'jquery', 'aio-login--detect-js' ), AIO_LOGIN__VERSION, true );
+
+			if ( class_exists( OTP_Captcha::class ) && OTP_Captcha::is_required() ) {
+				wp_enqueue_script(
+					'aio-login-form-captcha-position',
+					AIO_LOGIN__DIR_URL . 'assets/js/login-form-captcha-position.js',
+					array(),
+					AIO_LOGIN__VERSION,
+					true
+				);
+			}
 		}
 
 		/**

@@ -92,7 +92,7 @@ if (!class_exists('AIO_Login\Admin\Admin')) {
 					'2fa' => array(
 						'title' => __('2FA', 'change-wp-admin-login'),
 						'slug' => '2fa',
-						'icon' => 'security',
+						'icon' => '2fa-icon',
 						'is-pro' => true,
 						'plan' => 'basic',
 						'sub-tabs' => array(
@@ -111,6 +111,23 @@ if (!class_exists('AIO_Login\Admin\Admin')) {
 								'slug' => 'advanced-settings',
 								'is-pro' => true,
 								'plan' => 'professional',
+							),
+						),
+					),
+					'passwordless-authentication' => array(
+						'title' => __('Passwordless Authentication', 'change-wp-admin-login'),
+						'slug' => 'passwordless-authentication',
+						'icon' => 'passwordless-authetication-icon',
+						'sub-tabs' => array(
+							'otp-login' => array(
+								'title' => __('OTP Login', 'change-wp-admin-login'),
+								'slug' => 'otp-login',
+							),
+							'login-link' => array(
+								'title' => __('Login Link', 'change-wp-admin-login'),
+								'slug' => 'login-link',
+								'is-pro' => true,
+								'plan' => 'business',
 							),
 						),
 					),
@@ -259,17 +276,6 @@ if (!class_exists('AIO_Login\Admin\Admin')) {
 				'upgrade_popup_variant' => ( function_exists( 'aiologin_pro_is_custom_license_runtime' ) && aiologin_pro_is_custom_license_runtime() )
 					? 'appsumo'
 					: 'freemius',
-				'appsumo_deal_url'      => 'https://appsumo.8odi.net/DWbJmq',
-				'show_appsumo_hello_bar' => apply_filters(
-					'aio_login_show_appsumo_hello_bar',
-					! \AIO_Login\Aio_Login::has_pro()
-				) ? 'true' : 'false',
-				'hello_bar_headline'          => __( 'Good News!', 'change-wp-admin-login' ),
-				'hello_bar_message_before'    => __( 'All In One Login is live on ', 'change-wp-admin-login' ),
-				'hello_bar_message_highlight' => __( 'AppSumo', 'change-wp-admin-login' ),
-				'hello_bar_cta_label'         => __( 'Get Lifetime Deal Now', 'change-wp-admin-login' ),
-				'hello_bar_aria_label'        => __( 'AppSumo promotion', 'change-wp-admin-login' ),
-				'hello_bar_dismiss_label'     => __( 'Dismiss promotion', 'change-wp-admin-login' ),
 			);
 
 			if ($is_limited_user) {
@@ -278,7 +284,7 @@ if (!class_exists('AIO_Login\Admin\Admin')) {
 					'2fa' => array(
 						'title' => __('2FA', 'change-wp-admin-login'),
 						'slug'  => '2fa',
-						'icon'  => 'security',
+						'icon'  => '2fa-icon',
 						'sub-tabs' => array(
 							'authentication-methods' => array(
 								'title' => __('Authentication Methods', 'change-wp-admin-login'),
@@ -717,7 +723,7 @@ if (!class_exists('AIO_Login\Admin\Admin')) {
 					'2fa' => array(
 						'title' => __('2FA', 'change-wp-admin-login'),
 						'slug'  => '2fa',
-						'icon'  => 'security',
+						'icon'  => '2fa-icon',
 						'sub-tabs' => array(
 							'authentication-methods' => array(
 								'title' => __('Authentication Methods', 'change-wp-admin-login'),

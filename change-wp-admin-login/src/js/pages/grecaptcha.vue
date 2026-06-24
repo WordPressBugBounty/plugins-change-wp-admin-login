@@ -20,6 +20,7 @@
 					:has-pro="has_pro"
 					:enabled="form_data.enabled"
 					:config-data="configData"
+					:api-nonce="nonce"
 					@toggle-captcha="handleToggleCaptcha"
 					@save-settings="handleSaveSettings"
 				/>
@@ -29,6 +30,7 @@
 					:has-pro="hcaptchaUnlocked"
 					:enabled="hcaptcha_form_data.enabled"
 					:config-data="hcaptchaConfigData"
+					:api-nonce="hcaptcha_nonce"
 					@toggle-captcha="handleToggleHCaptcha"
 					@save-settings="handleSaveHCaptchaSettings"
 				/>
@@ -38,6 +40,7 @@
 					:has-pro="turnstileUnlocked"
 					:enabled="turnstile_form_data.enabled"
 					:config-data="turnstileConfigData"
+					:api-nonce="turnstile_nonce"
 					@toggle-captcha="handleToggleTurnstile"
 					@save-settings="handleSaveTurnstileSettings"
 				/>
@@ -73,6 +76,7 @@ export default {
 			v3_site_key: '',
 			v3_secret_key: '',
 			threshold: '0.5',
+			validated: false,
 		},
 		hcaptcha_namespace: 'aio-login/hcaptcha',
 		hcaptcha_nonce: '',
@@ -83,6 +87,7 @@ export default {
 			theme: 'light',
 			size: 'normal',
 			language: 'en',
+			validated: false,
 		},
 		turnstile_namespace: 'aio-login/turnstile',
 		turnstile_nonce: '',
@@ -93,6 +98,7 @@ export default {
 			theme: 'auto',
 			size: 'normal',
 			language: 'auto',
+			validated: false,
 		},
 		snackbar: {
 			message: '',
@@ -127,7 +133,8 @@ export default {
 				siteKey: this.form_data.version === 'v2' ? this.form_data.v2_site_key : this.form_data.v3_site_key,
 				secretKey: this.form_data.version === 'v2' ? this.form_data.v2_secret_key : this.form_data.v3_secret_key,
 				theme: this.form_data.theme,
-				threshold: this.form_data.threshold
+				threshold: this.form_data.threshold,
+				validated: this.form_data.validated,
 			};
 		},
 		hcaptchaConfigData() {
@@ -136,7 +143,8 @@ export default {
 				secretKey: this.hcaptcha_form_data.secret_key,
 				theme: this.hcaptcha_form_data.theme,
 				size: this.hcaptcha_form_data.size,
-				language: this.hcaptcha_form_data.language
+				language: this.hcaptcha_form_data.language,
+				validated: this.hcaptcha_form_data.validated,
 			};
 		},
 		turnstileConfigData() {
@@ -145,7 +153,8 @@ export default {
 				secretKey: this.turnstile_form_data.secret_key,
 				theme: this.turnstile_form_data.theme,
 				size: this.turnstile_form_data.size,
-				language: this.turnstile_form_data.language
+				language: this.turnstile_form_data.language,
+				validated: this.turnstile_form_data.validated,
 			};
 		},
 		anyCaptchaEnabled() {
@@ -199,10 +208,10 @@ export default {
 		},
 
 		handleSaveSettings(data) {
-			// Update form data with popup data
 			this.form_data.version = data.version;
 			this.form_data.theme = data.theme;
 			this.form_data.threshold = data.threshold;
+			this.form_data.validated = !!data.validated;
 			
 			if (data.version === 'v2') {
 				this.form_data.v2_site_key = data.siteKey;
@@ -212,18 +221,26 @@ export default {
 				this.form_data.v3_secret_key = data.secretKey;
 			}
 			
-			this.saveSettings();
+			this.saveSettings(true);
 		},
 
-		saveSettings() {
-			this.form_data._wpnonce = this.nonce;
-			axios.post(this.namespace + '/save-settings', this.form_data)
+		saveSettings(fromVerifiedSave = false) {
+			const payload = { ...this.form_data, _wpnonce: this.nonce };
+			if (fromVerifiedSave) {
+				payload.validated = true;
+			}
+			axios.post(this.namespace + '/save-settings', payload)
 				.then(response => {
+					this.form_data.validated = fromVerifiedSave ? true : this.form_data.validated;
 					this.snackbar.message = response.data.message;
 					this.snackbar.show = true;
 				})
 				.catch(error => {
-					console.error('Error saving settings:', error);
+					const message = (error.response && error.response.data && error.response.data.message)
+						? error.response.data.message
+						: 'Error saving settings.';
+					this.snackbar.message = message;
+					this.snackbar.show = true;
 				});
 		},
 
@@ -260,18 +277,27 @@ export default {
 			this.hcaptcha_form_data.language = data.language;
 			this.hcaptcha_form_data.site_key = data.siteKey;
 			this.hcaptcha_form_data.secret_key = data.secretKey;
-			this.saveHCaptchaSettings();
+			this.hcaptcha_form_data.validated = !!data.validated;
+			this.saveHCaptchaSettings(true);
 		},
 
-		saveHCaptchaSettings() {
-			this.hcaptcha_form_data._wpnonce = this.hcaptcha_nonce;
-			axios.post(this.hcaptcha_namespace + '/save-settings', this.hcaptcha_form_data)
+		saveHCaptchaSettings(fromVerifiedSave = false) {
+			const payload = { ...this.hcaptcha_form_data, _wpnonce: this.hcaptcha_nonce };
+			if (fromVerifiedSave) {
+				payload.validated = true;
+			}
+			axios.post(this.hcaptcha_namespace + '/save-settings', payload)
 				.then(response => {
+					this.hcaptcha_form_data.validated = fromVerifiedSave ? true : this.hcaptcha_form_data.validated;
 					this.snackbar.message = response.data.message;
 					this.snackbar.show = true;
 				})
 				.catch(error => {
-					console.error('Error saving hCaptcha settings:', error);
+					const message = (error.response && error.response.data && error.response.data.message)
+						? error.response.data.message
+						: 'Error saving hCaptcha settings.';
+					this.snackbar.message = message;
+					this.snackbar.show = true;
 				});
 		},
 
@@ -299,18 +325,27 @@ export default {
 			this.turnstile_form_data.language = data.language;
 			this.turnstile_form_data.site_key = data.siteKey;
 			this.turnstile_form_data.secret_key = data.secretKey;
-			this.saveTurnstileSettings();
+			this.turnstile_form_data.validated = !!data.validated;
+			this.saveTurnstileSettings(true);
 		},
 
-		saveTurnstileSettings() {
-			this.turnstile_form_data._wpnonce = this.turnstile_nonce;
-			axios.post(this.turnstile_namespace + '/save-settings', this.turnstile_form_data)
+		saveTurnstileSettings(fromVerifiedSave = false) {
+			const payload = { ...this.turnstile_form_data, _wpnonce: this.turnstile_nonce };
+			if (fromVerifiedSave) {
+				payload.validated = true;
+			}
+			axios.post(this.turnstile_namespace + '/save-settings', payload)
 				.then(response => {
+					this.turnstile_form_data.validated = fromVerifiedSave ? true : this.turnstile_form_data.validated;
 					this.snackbar.message = response.data.message;
 					this.snackbar.show = true;
 				})
 				.catch(error => {
-					console.error('Error saving Turnstile settings:', error);
+					const message = (error.response && error.response.data && error.response.data.message)
+						? error.response.data.message
+						: 'Error saving Turnstile settings.';
+					this.snackbar.message = message;
+					this.snackbar.show = true;
 				});
 		},
 
@@ -324,6 +359,7 @@ export default {
 					this.hcaptcha_form_data.theme = response.data.theme || 'light';
 					this.hcaptcha_form_data.size = response.data.size || 'normal';
 					this.hcaptcha_form_data.language = response.data.language || 'en';
+					this.hcaptcha_form_data.validated = !!response.data.validated;
 					this.hcaptcha_nonce = response.data.nonce;
 				})
 				.catch(error => {
@@ -340,6 +376,7 @@ export default {
 					this.turnstile_form_data.theme = response.data.theme || 'auto';
 					this.turnstile_form_data.size = response.data.size || 'normal';
 					this.turnstile_form_data.language = response.data.language || 'auto';
+					this.turnstile_form_data.validated = !!response.data.validated;
 					this.turnstile_nonce = response.data.nonce;
 				})
 				.catch(error => {
@@ -360,6 +397,7 @@ export default {
 				this.form_data.v3_site_key = response.data.v3_site_key;
 				this.form_data.v3_secret_key = response.data.v3_secret_key;
 				this.form_data.threshold = response.data.threshold;
+				this.form_data.validated = !!response.data.validated;
 				this.nonce = response.data.nonce;
 			})
 			.catch(error => {

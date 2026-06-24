@@ -4,7 +4,7 @@ Tags: login url, login, wp admin, wp login, custom login
 Requires at least: 4.6
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 2.3.1
+Stable tag: 2.4.0
 License: GPLv2 or later
 
 Do you want to secure and customize the WordPress login page? Download the All in One Login plugin for login page security and customization.
@@ -446,6 +446,9 @@ Please report security bugs found in the source code of the Change wp-admin logi
 
 
 == Changelog ==
+
+= 2.4.0 – June 24, 2026 =
+* NEW – Introduced Email OTP Login.
 
 = 2.3.1 - June 12, 2026 =
 * TWEAK – Added an admin notice

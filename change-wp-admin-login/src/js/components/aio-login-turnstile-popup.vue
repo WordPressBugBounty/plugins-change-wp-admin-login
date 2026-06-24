@@ -161,6 +161,13 @@
 						</div>
 					</div>
 				</div>
+
+				<aio-login-captcha-verify
+					:namespace="apiNamespace"
+					:nonce="apiNonce"
+					:payload="testPayload"
+					v-model:verified="connectionVerified"
+				/>
 			</div>
 
 			</div>
@@ -172,7 +179,7 @@
 					<button v-if="currentStep === 1" @click="nextStep" class="next-btn">Next</button>
 				</div>
 				<button v-if="currentStep === 2" @click="nextStep" class="next-btn">Next</button>
-				<button v-if="currentStep === 3" @click="finish" class="finish-btn">Finished</button>
+				<button v-if="currentStep === 3" @click="finish" class="finish-btn" :disabled="!connectionVerified">Finished</button>
 			</div>
 		</div>
 	</div>
@@ -190,7 +197,15 @@ export default {
 		initialData: {
 			type: Object,
 			default: () => ({})
-		}
+		},
+		apiNamespace: {
+			type: String,
+			default: 'aio-login/turnstile',
+		},
+		apiNonce: {
+			type: String,
+			default: '',
+		},
 	},
 
 	data() {
@@ -205,7 +220,8 @@ export default {
 				theme: 'auto',
 				size: 'normal',
 				language: 'auto'
-			}
+			},
+			connectionVerified: false,
 		}
 	},
 
@@ -217,7 +233,13 @@ export default {
 			}
 			if (this.currentStep === 3) return true;
 			return false;
-		}
+		},
+		testPayload() {
+			return {
+				site_key: this.formData.siteKey,
+				secret_key: this.formData.secretKey,
+			};
+		},
 	},
 
 	watch: {
@@ -228,6 +250,7 @@ export default {
 				if (!this.formData.theme) this.formData.theme = 'auto';
 				if (!this.formData.size) this.formData.size = 'normal';
 				if (!this.formData.language) this.formData.language = 'auto';
+				this.connectionVerified = !!this.initialData.validated;
 				this.showValidationError = false;
 				document.body.style.overflow = 'hidden';
 				document.body.classList.add('aio-login-modal-open');
@@ -266,7 +289,13 @@ export default {
 		},
 
 		finish() {
-			this.$emit('save', this.formData);
+			if (!this.connectionVerified) {
+				return;
+			}
+			this.$emit('save', {
+				...this.formData,
+				validated: true,
+			});
 		}
 	}
 }

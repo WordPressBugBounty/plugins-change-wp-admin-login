@@ -49,6 +49,7 @@
 		<aio-login-hcaptcha-popup
 			:show="showPopup"
 			:initial-data="popupData"
+			:api-nonce="apiNonce"
 			@close="closePopup"
 			@save="saveSettings"
 		/>
@@ -73,7 +74,11 @@ export default {
 		configData: {
 			type: Object,
 			default: () => ({})
-		}
+		},
+		apiNonce: {
+			type: String,
+			default: '',
+		},
 	},
 
 	data: ( vm ) => ( {
@@ -94,9 +99,9 @@ export default {
 			return ! this.hasPro && ! this.proPluginActive;
 		},
 		statusBadge() {
-			if (this.enabled && this.hasValidKeys()) {
+			if (this.enabled && this.hasValidKeys() && this.configData.validated) {
 				return 'green';
-			} else if (!this.enabled && this.hasValidKeys()) {
+			} else if (this.hasValidKeys()) {
 				return 'orange';
 			}
 			return null;
@@ -104,9 +109,9 @@ export default {
 
 		statusBadgeText() {
 			if (this.statusBadge === 'green') {
-				return 'Configured';
+				return 'Verified';
 			} else if (this.statusBadge === 'orange') {
-				return 'Configured';
+				return 'Needs Test';
 			}
 			return '';
 		}

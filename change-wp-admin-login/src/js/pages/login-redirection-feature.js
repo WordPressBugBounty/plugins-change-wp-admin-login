@@ -50,7 +50,7 @@ export default {
 							<col class="aio-login-lr-col aio-login-lr-col--url" />
 							<col class="aio-login-lr-col aio-login-lr-col--narrow" />
 							<col class="aio-login-lr-col aio-login-lr-col--value" />
-							<col class="aio-login-lr-col aio-login-lr-col--order" />
+							<col v-if="showRuleOrder" class="aio-login-lr-col aio-login-lr-col--order" />
 							<col class="aio-login-lr-col aio-login-lr-col--actions" />
 						</colgroup>
 						<thead>
@@ -59,12 +59,7 @@ export default {
 								<th>Logout URL</th>
 								<th>Condition</th>
 								<th>Condition Value</th>
-								<th class="col-order">
-									<span class="aio-login-lr-order-th">
-										Order
-										<span v-if="!ruleOrderUnlocked" class="aio-login-lr-condtype-pro">PRO</span>
-									</span>
-								</th>
+								<th v-if="showRuleOrder" class="col-order">Order</th>
 								<th class="col-actions">Actions</th>
 							</tr>
 						</thead>
@@ -87,15 +82,7 @@ export default {
 									</template>
 									<span v-else class="aio-login-lr-pill aio-login-lr-pill--value">{{ conditionValueLabel(rule) }}</span>
 								</td>
-								<td
-									class="cell-order"
-									:class="{ 'is-locked': !ruleOrderUnlocked }"
-									:title="!ruleOrderUnlocked ? 'Upgrade to Pro to use rule priority order' : ''"
-									@click="!ruleOrderUnlocked && handleProFeatureClick()"
-								>
-									<template v-if="ruleOrderUnlocked">{{ rule.order ?? '-' }}</template>
-									<span v-else class="aio-login-lr-order-locked-cell" aria-hidden="true">—</span>
-								</td>
+								<td v-if="showRuleOrder" class="cell-order">{{ rule.order ?? '-' }}</td>
 								<td class="cell-actions">
 									<button v-if="advanced_conditions || rule.condition_type === 'all_users'" type="button" class="aio-login-lr-action-link aio-login-lr-action-edit" @click="editRule(rule)">
 										<span class="dashicons dashicons-edit" aria-hidden="true"></span>
@@ -480,29 +467,13 @@ export default {
 						<p v-if="ruleFormErrors.logout_custom" class="aio-login-lr-field-error">{{ ruleFormErrors.logout_custom }}</p>
 					</div>
 
-					<label class="aio-login-lr-order-label">
-						<span>Order</span>
-						<span v-if="!ruleOrderUnlocked" class="aio-login-lr-condtype-pro">PRO</span>
-					</label>
-					<div
-						class="aio-login-lr-order-control"
-						:class="{ 'is-locked': !ruleOrderUnlocked }"
-						@click="onOrderFieldClick"
-					>
-						<input
-							type="number"
-							class="small-text aio-login-lr-order-input"
-							v-model.number="draft.order"
-							min="0"
-							step="1"
-							:disabled="!ruleOrderUnlocked"
-							:readonly="!ruleOrderUnlocked"
-							:tabindex="ruleOrderUnlocked ? 0 : -1"
-							:aria-disabled="!ruleOrderUnlocked ? 'true' : 'false'"
-							@blur="clampDraftOrder"
-						/>
-						<p class="aio-login-lr-help">{{ orderHelpText }}</p>
-					</div>
+					<template v-if="showRuleOrder">
+						<label>Order</label>
+						<div>
+							<input type="number" class="small-text aio-login-lr-order-input" v-model.number="draft.order" min="0" step="1" @blur="clampDraftOrder" />
+							<p class="aio-login-lr-help">Lower number = higher priority (1, 2, …). Use 0 for no priority — that rule only runs when no other rule on this site uses order 1 or higher.</p>
+						</div>
+					</template>
 				</div>
 				</div>
 				<div class="aio-login-lr-modal-footer">
@@ -534,12 +505,9 @@ export default {
 	</div>`,
 	data: () => ({
 		featureTooltip: 'Login Redirection feature allows administrators to define simple, rule-based redirects for users on login and logout.',
-		orderHelpText:
-			'Set the rule priority order. Lower numbers have higher priority (1, 2, 3, etc.), while 0 disables priority-based ordering.',
 		nonce: '',
 		page_loaded: false,
 		advanced_conditions: false,
-		rule_order_allowed: false,
 		condition_type_menu_open: false,
 		show_modal: false,
 		show_delete_modal: false,
@@ -581,7 +549,7 @@ export default {
 		snackbar: {
 			message: '',
 			show: false,
-			timeout: 6000,
+			timeout: 3000,
 		},
 		tablePageSize: 10,
 		tablePage: 1,
@@ -606,11 +574,15 @@ export default {
 				this.ruleRowSearchBlob(r).includes(q)
 			);
 		},
-		ruleOrderUnlocked() {
-			return !!this.rule_order_allowed;
+		showRuleOrder() {
+			if (typeof window === 'undefined' || !window.aio_login__app_object) {
+				return false;
+			}
+			const h = window.aio_login__app_object.has_pro;
+			return h === true || h === 'true' || h === 1 || h === '1';
 		},
 		tableColspan() {
-			return 6;
+			return this.showRuleOrder ? 6 : 5;
 		},
 		totalFiltered() {
 			return this.filteredRules.length;
@@ -735,18 +707,6 @@ export default {
 				p = p.$parent;
 			}
 		},
-		onOrderFieldClick(event) {
-			if (this.ruleOrderUnlocked) {
-				return;
-			}
-			if (event && typeof event.preventDefault === 'function') {
-				event.preventDefault();
-			}
-			if (event && typeof event.stopPropagation === 'function') {
-				event.stopPropagation();
-			}
-			this.handleProFeatureClick();
-		},
 		/**
 		 * Re-fetch plan meta (e.g. after Freemius activation) so User / User Role unlock without full page reload.
 		 */
@@ -760,10 +720,8 @@ export default {
 					}
 					const meta = d.meta || {};
 					this.advanced_conditions = !!meta.advanced_conditions;
-					this.rule_order_allowed = !!meta.rule_order_allowed;
 					const metaRest = { ...meta };
 					delete metaRest.advanced_conditions;
-					delete metaRest.rule_order_allowed;
 					this.meta = Object.assign({}, this.meta, metaRest);
 				})
 				.catch(() => { });
@@ -810,7 +768,7 @@ export default {
 					? 'all users'
 					: this.conditionValueLabel(rule),
 			];
-			if (this.ruleOrderUnlocked) {
+			if (this.showRuleOrder) {
 				parts.push(String(rule.order ?? ''));
 			}
 			return parts.join(' ').toLowerCase();
@@ -1224,7 +1182,7 @@ export default {
 					? String(this.draft.login_target).replace(/^page:/, '')
 					: this.draft.login_custom,
 				...this.buildLogoutRulePayload(),
-				order: this.ruleOrderUnlocked
+				order: this.showRuleOrder
 					? this.normalizeOrderForSubmit(this.draft.order)
 					: 0,
 			};
@@ -1290,10 +1248,8 @@ export default {
 				this.nonce = response.data.nonce;
 				const meta = response.data.meta || {};
 				this.advanced_conditions = !!meta.advanced_conditions;
-				this.rule_order_allowed = !!meta.rule_order_allowed;
 				const metaRest = { ...meta };
 				delete metaRest.advanced_conditions;
-				delete metaRest.rule_order_allowed;
 				this.settings = response.data.settings || this.settings;
 				this.savedRedirectionEnabled = !!this.settings.enabled;
 				this.rules = response.data.rules || [];

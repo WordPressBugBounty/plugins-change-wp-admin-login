@@ -164,6 +164,14 @@ if (window.aio_login__object.routes.length) {
 		if ('notifications' === route.my_slug) {
 			window.aio_login__object.routes[i].component = require('./pages/notifications.vue').default;
 		}
+
+		if ('otp-login' === route.my_slug) {
+			window.aio_login__object.routes[i].component = require('./pages/passwordless-otp-login.vue').default;
+		}
+
+		if ('login-link' === route.my_slug) {
+			window.aio_login__object.routes[i].component = require('./pages/passwordless-login-link.vue').default;
+		}
 	});
 }
 
@@ -180,18 +188,20 @@ function aio_login_set_menu_position() {
 		aio_login_active_menu(3);
 	} else if ('2fa' === tab) {
 		aio_login_active_menu(4);
-	} else if ('activity-log' === tab) {
+	} else if ('passwordless-authentication' === tab) {
 		aio_login_active_menu(5);
-	} else if ('security' === tab) {
+	} else if ('activity-log' === tab) {
 		aio_login_active_menu(6);
-	} else if ('temp-access' === tab) {
+	} else if ('security' === tab) {
 		aio_login_active_menu(7);
-	} else if ('social-login' === tab) {
+	} else if ('temp-access' === tab) {
 		aio_login_active_menu(8);
-	} else if ('integrations' === tab) {
+	} else if ('social-login' === tab) {
 		aio_login_active_menu(9);
-	} else if ('getpro' === tab) {
+	} else if ('integrations' === tab) {
 		aio_login_active_menu(10);
+	} else if ('getpro' === tab) {
+		aio_login_active_menu(11);
 	} else {
 		aio_login_active_menu(2);
 	}

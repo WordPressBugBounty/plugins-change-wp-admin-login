@@ -7,6 +7,7 @@
 
 namespace AIO_Login\Google_Recaptcha;
 
+use AIO_Login\Captcha\Captcha_Validation;
 use AIO_Login\Helper\Helper;
 
 defined('ABSPATH') || exit;
@@ -82,10 +83,10 @@ if (!class_exists('AIO_Login\\Google_Recaptcha\\Google_Recaptcha')) {
 			$this->theme = get_option('aio_login_google_recaptcha_v2_theme', 'light');
 			$this->threshold = get_option('aio_login_google_recaptcha_v3_threshold', '0.5');
 
-			$this->is_enabled = 'on' === $this->is_enabled;
+			$this->is_enabled = 'on' === get_option('aio_login_google_recaptcha_enable', 'off');
 
 
-			if ($this->is_enabled()) {
+			if (Captcha_Validation::is_active_for_frontend('recaptcha')) {
 				add_filter('aio_login__wp_authenticate_user', array($this, 'wp_authenticate_user'));
 				add_action('login_enqueue_scripts', array($this, 'login_enqueue_scripts'));
 				add_action('login_form', array($this, 'login_form'));
@@ -263,12 +264,23 @@ if (!class_exists('AIO_Login\\Google_Recaptcha\\Google_Recaptcha')) {
 					'permission_callback' => array(Helper::class, 'get_api_permission'),
 				)
 			);
+
+			register_rest_route(
+				'aio-login/grecaptcha',
+				'/test-connection',
+				array(
+					'methods' => 'POST',
+					'callback' => array($this, 'test_connection'),
+					'permission_callback' => array(Helper::class, 'get_api_permission'),
+				)
+			);
 		}
 
 		public function get_settings()
 		{
 			$response = array(
 				'enabled' => $this->is_enabled,
+				'validated' => Captcha_Validation::is_validated('recaptcha'),
 				'version' => $this->version,
 				'v2_site_key' => get_option('aio_login_google_recaptcha_v2_site_key', ''),
 				'v2_secret_key' => get_option('aio_login_google_recaptcha_v2_secret_key', ''),
@@ -304,15 +316,29 @@ if (!class_exists('AIO_Login\\Google_Recaptcha\\Google_Recaptcha')) {
 				update_option('aio_login_google_recaptcha_version', $version);
 
 				if ('v2' === $version) {
+					$prev_site   = (string) get_option('aio_login_google_recaptcha_v2_site_key', '');
+					$prev_secret = (string) get_option('aio_login_google_recaptcha_v2_secret_key', '');
 					update_option('aio_login_google_recaptcha_v2_site_key', $v2_site_key);
 					update_option('aio_login_google_recaptcha_v2_secret_key', $v2_secret_key);
 					update_option('aio_login_google_recaptcha_v2_theme', $theme);
+					if ($prev_site !== $v2_site_key || $prev_secret !== $v2_secret_key) {
+						Captcha_Validation::set_validated('recaptcha', false);
+					}
 				}
 
 				if ('v3' === $version) {
+					$prev_site   = (string) get_option('aio_login_google_recaptcha_v3_site_key', '');
+					$prev_secret = (string) get_option('aio_login_google_recaptcha_v3_secret_key', '');
 					update_option('aio_login_google_recaptcha_v3_site_key', $v3_site_key);
 					update_option('aio_login_google_recaptcha_v3_secret_key', $v3_secret_key);
 					update_option('aio_login_google_recaptcha_v3_threshold', $threshold);
+					if ($prev_site !== $v3_site_key || $prev_secret !== $v3_secret_key) {
+						Captcha_Validation::set_validated('recaptcha', false);
+					}
+				}
+
+				if (isset($params['validated']) && true === $params['validated']) {
+					Captcha_Validation::set_validated('recaptcha', true);
 				}
 
 				// If enabling reCAPTCHA, disable other captcha providers.
@@ -335,6 +361,50 @@ if (!class_exists('AIO_Login\\Google_Recaptcha\\Google_Recaptcha')) {
 			}
 
 			return new \WP_Error('invalid-nonce', __('Nonce verification failed', 'change-wp-admin-login'), array('status' => 401));
+		}
+
+		/**
+		 * Test reCAPTCHA credentials without enabling frontend hooks.
+		 *
+		 * @param \WP_REST_Request $request Request object.
+		 * @return \WP_REST_Response|\WP_Error
+		 */
+		public function test_connection(\WP_REST_Request $request)
+		{
+			$params = $request->get_params();
+
+			if (!isset($params['_wpnonce']) || !wp_verify_nonce($params['_wpnonce'], 'google-recaptcha')) {
+				return new \WP_Error('invalid-nonce', __('Nonce verification failed', 'change-wp-admin-login'), array('status' => 401));
+			}
+
+			$version    = sanitize_text_field(wp_unslash($params['version'] ?? 'v2'));
+			$site_key   = sanitize_text_field(wp_unslash('v2' === $version ? ($params['v2_site_key'] ?? '') : ($params['v3_site_key'] ?? '')));
+			$secret_key = sanitize_text_field(wp_unslash('v2' === $version ? ($params['v2_secret_key'] ?? '') : ($params['v3_secret_key'] ?? '')));
+
+			$verify = Captcha_Validation::verify_provider_keys(
+				'recaptcha',
+				array(
+					'site_key'   => $site_key,
+					'secret_key' => $secret_key,
+					'version'    => $version,
+					'response'   => Captcha_Validation::sanitize_captcha_response_token( $params['response'] ?? $params['g-recaptcha-response'] ?? '' ),
+				)
+			);
+
+			if (is_wp_error($verify)) {
+				return new \WP_Error(
+					'captcha_validation_failed',
+					$verify->get_error_message(),
+					array('status' => 400)
+				);
+			}
+
+			return rest_ensure_response(
+				array(
+					'success' => true,
+					'message' => __('Connection successful. Your reCAPTCHA keys are valid.', 'change-wp-admin-login'),
+				)
+			);
 		}
 
 		/**

@@ -326,6 +326,94 @@
 						</table>
 					</div>
 					</div>
+
+					<!-- Login With Link -->
+					<div class="settings-section">
+						<div class="section-header">
+							<div class="section-title-row">
+								<h3>
+									<span>Login With Link</span>
+									<span class="aio-login-wc-new-badge">NEW</span>
+								</h3>
+								<label class="toggle-switch">
+									<aio-login-toggle
+										id="magic-link-options"
+										name="magic-link-options"
+										v-on:toggle-input="handleMagicLinkToggle"
+										:enabled="settingsData.magicLinkEnabled"
+									/>
+								</label>
+							</div>
+							<p class="section-description">
+								Allow passwordless sign-in via email link on WooCommerce login, registration, and checkout. New customers can be created automatically when they request a link. Configure expiration in
+								<a href="#" class="link-text" @click.prevent="goToPasswordlessLoginLink">Passwordless Authentication Settings</a>.
+							</p>
+						</div>
+
+						<div v-if="settingsData.magicLinkEnabled" class="social-providers magic-link-providers">
+							<div v-if="!magicLinkConfigured" class="no-providers-message">
+								<p>
+									Login Link is not enabled yet. Turn it on in
+									<a href="#" class="link-text" @click.prevent="goToPasswordlessLoginLink">Passwordless Authentication → Login Link</a>.
+								</p>
+							</div>
+							<table v-else class="settings-table">
+								<thead>
+									<tr>
+										<th>Provider</th>
+										<th>Login</th>
+										<th>Registration</th>
+										<th>Checkout</th>
+									</tr>
+								</thead>
+								<tbody>
+									<tr>
+										<td>
+											<div class="provider-cell">
+												<span class="provider-icon provider-icon--magic-link" aria-hidden="true">
+													<svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+														<path d="M4 6.5h16c.83 0 1.5.67 1.5 1.5v8c0 .83-.67 1.5-1.5 1.5H4A1.5 1.5 0 012.5 16V8c0-.83.67-1.5 1.5-1.5z" stroke="currentColor" stroke-width="1.75" stroke-linejoin="round"/>
+														<path d="M3 7.5l8.65 5.77a1.5 1.5 0 001.7 0L22 7.5" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+													</svg>
+												</span>
+												<span class="provider-name">Email Login Link</span>
+											</div>
+										</td>
+										<td>
+											<label class="toggle-switch">
+												<aio-login-toggle
+													id="magic-link-login"
+													name="magic-link-login"
+													v-on:toggle-input="(val) => updateMagicLinkContextOption('login', val)"
+													:enabled="settingsData.magicLinkContexts.login"
+												/>
+											</label>
+										</td>
+										<td>
+											<label class="toggle-switch">
+												<aio-login-toggle
+													id="magic-link-registration"
+													name="magic-link-registration"
+													v-on:toggle-input="(val) => updateMagicLinkContextOption('registration', val)"
+													:enabled="settingsData.magicLinkContexts.registration"
+												/>
+											</label>
+										</td>
+										<td>
+											<label class="toggle-switch">
+												<aio-login-toggle
+													id="magic-link-checkout"
+													name="magic-link-checkout"
+													v-on:toggle-input="(val) => updateMagicLinkContextOption('checkout', val)"
+													:enabled="settingsData.magicLinkContexts.checkout"
+												/>
+											</label>
+										</td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
+					</div>
 				</div>
 
 				<p class="submit">
@@ -394,6 +482,12 @@ export default {
 					registration: false
 				}
 			},
+			magicLinkEnabled: false,
+			magicLinkContexts: {
+				login: true,
+				registration: true,
+				checkout: true,
+			},
 			socialProviders: {
 				microsoft: {
 					login: false,
@@ -431,7 +525,8 @@ export default {
 					checkout: false
 				}
 			}
-		}
+		},
+		magicLinkConfigured: false,
 	} ),
 
 	computed: {
@@ -513,6 +608,7 @@ export default {
 					if (settings.socialProviders) {
 						this.settingsData.socialProviders = { ...this.settingsData.socialProviders, ...settings.socialProviders };
 					}
+					// Login-link fields are resolved from the API only (see applyMagicLinkSettings).
 				}
 				
 				// Also load configured providers from cache
@@ -566,6 +662,7 @@ export default {
 			if (hash === '#/woocommerce-integrations') {
 				this.showSettings = true;
 				this.resetProvidersLoadingState();
+				this.loadWooCommerceSettings();
 			} else {
 				this.showSettings = false;
 				// If hash is #/integrations or empty, remove it to keep URL clean
@@ -590,6 +687,21 @@ export default {
 				window.location.hash = hash;
 			}
 		},
+		applyMagicLinkSettings(settings) {
+			if (!settings) {
+				this.magicLinkConfigured = false;
+				this.settingsData.magicLinkEnabled = false;
+				return;
+			}
+			this.magicLinkConfigured = !!settings.magicLinkConfigured;
+			this.settingsData.magicLinkEnabled = this.magicLinkConfigured && !!settings.magicLinkEnabled;
+			if (settings.magicLinkContexts) {
+				this.settingsData.magicLinkContexts = {
+					...this.settingsData.magicLinkContexts,
+					...settings.magicLinkContexts,
+				};
+			}
+		},
 		async loadWooCommerceSettings() {
 			// Load WooCommerce settings from backend
 			try {
@@ -611,6 +723,7 @@ export default {
 					}
 					this.settingsData.captchaEnabled = settings.captchaEnabled || false;
 					this.settingsData.socialLoginEnabled = settings.socialLoginEnabled || false;
+					this.applyMagicLinkSettings(settings);
 					this.settingsData.providers = { ...this.settingsData.providers, ...settings.providers };
 					this.settingsData.socialProviders = { ...this.settingsData.socialProviders, ...settings.socialProviders };
 					
@@ -816,6 +929,23 @@ export default {
 		handleSocialLoginToggle(enabled) {
 			this.settingsData.socialLoginEnabled = enabled;
 		},
+		handleMagicLinkToggle(enabled) {
+			if (enabled && !this.magicLinkConfigured) {
+				this.settingsData.magicLinkEnabled = true;
+				return;
+			}
+			this.settingsData.magicLinkEnabled = enabled;
+			if (enabled && this.magicLinkConfigured) {
+				this.settingsData.magicLinkContexts.login = true;
+				this.settingsData.magicLinkContexts.registration = true;
+				this.settingsData.magicLinkContexts.checkout = true;
+			}
+		},
+		updateMagicLinkContextOption(option, value) {
+			if (this.settingsData.magicLinkContexts && Object.prototype.hasOwnProperty.call(this.settingsData.magicLinkContexts, option)) {
+				this.settingsData.magicLinkContexts[option] = value;
+			}
+		},
 		updateProviderOption(provider, option, value) {
 			if (this.settingsData.providers[provider]) {
 				this.settingsData.providers[provider][option] = value;
@@ -883,6 +1013,12 @@ export default {
 		goToSocialLogin() {
 			const url = new URL(window.location.href);
 			url.searchParams.set('tab', 'social-login');
+			window.location.href = url.toString();
+		},
+		goToPasswordlessLoginLink() {
+			const url = new URL(window.location.href);
+			url.searchParams.set('tab', 'passwordless-authentication');
+			url.hash = '#/login-link';
 			window.location.href = url.toString();
 		},
 				async saveSettings() {
@@ -1059,6 +1195,33 @@ export default {
 	white-space: nowrap;
 	flex-shrink: 0;
 	min-width: 250px;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.aio-login-wc-new-badge {
+	display: inline-block;
+	padding: 2px 8px;
+	font-size: 11px;
+	font-weight: 600;
+	line-height: 1.4;
+	color: #6e16df;
+	background: #f7ecfd;
+	border-radius: 4px;
+	text-transform: uppercase;
+	letter-spacing: 0.02em;
+}
+
+.provider-icon--magic-link {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 28px;
+	height: 28px;
+	color: #6e16df;
+	background: #f7ecfd;
+	border-radius: 6px;
 }
 
 .section-title-row .toggle-switch {

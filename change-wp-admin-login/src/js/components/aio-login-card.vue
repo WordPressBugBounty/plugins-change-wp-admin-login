@@ -92,13 +92,23 @@ export default {
 
 <style scoped>
 .aio-login__card-container {
-	display: block;
+	display: flex;
+	flex-direction: column;
 	border-radius: 8px;
-	height: 160px;
+	height: auto;
+	min-height: 160px;
 	position: relative;
 	padding-top: 25px !important;
 	padding-bottom: 25px !important;
-	margin-right: 15px;
+	margin-right: 0;
+}
+
+@media screen and (max-width: 782px) {
+	.aio-login__card-container {
+		min-height: 140px;
+		padding-top: 20px !important;
+		padding-bottom: 20px !important;
+	}
 }
 
 .aio-login__card-container h3 {
@@ -110,9 +120,8 @@ export default {
 .aio-login__card-container h2 {
 	font-size: 32px;
 	font-weight: 600;
-	position: absolute;
-	bottom: 0;
-	right: 40px;
+	margin-top: auto;
+	align-self: flex-end;
 }
 
 .container-success {

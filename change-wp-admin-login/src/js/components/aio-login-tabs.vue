@@ -29,6 +29,7 @@
 					<img
 						v-if="'getpro' !== tab.slug"
 						class="aio-login__tab-icon"
+						:class="{ 'aio-login__tab-icon--custom': isCustomSvgIcon( tab ) }"
 						alt=""
 						:src="getSrc( tab )"
 					/>
@@ -88,6 +89,7 @@ export default {
 
 	watch: {
 		test_tab() {
+			// Main tab + active sub-tab (router) both drive overlay; keep logic in aio-login-app.
 			if ( this.$parent && typeof this.$parent.syncCurrentTabAccess === 'function' ) {
 				this.$parent.syncCurrentTabAccess();
 			}
@@ -198,10 +200,18 @@ export default {
 		},
 
 		getSrc( tab ) {
+			if ( this.isCustomSvgIcon( tab ) ) {
+				const suffix = this.activeTab( tab ) ? '' : '-inactive';
+				return this.assetsUrl + 'images/' + tab.icon + suffix + '.svg';
+			}
 			if ( 'social-login' === tab.slug || 'integrations' === tab.slug ) {
 				return this.assetsUrl + `images/icons/${ tab.icon }${ this.activeTab( tab ) ? '-active' : '' }.svg`;
 			}
 			return this.assetsUrl + `images/icons/${ tab.icon }${ this.activeTab( tab ) ? '-active' : '' }.png`;
+		},
+
+		isCustomSvgIcon( tab ) {
+			return '2fa-icon' === tab.icon || 'passwordless-authetication-icon' === tab.icon;
 		},
 	},
 };
@@ -303,6 +313,12 @@ export default {
 	width: auto;
 	height: auto;
 	object-fit: contain;
+}
+
+.aio-login__tab-icon--custom {
+	width: 24px;
+	height: 24px;
+	max-height: 24px;
 }
 
 .aio-login__link-wrapper.active {

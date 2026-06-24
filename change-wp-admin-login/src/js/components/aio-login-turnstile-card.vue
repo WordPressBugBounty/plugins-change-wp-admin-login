@@ -43,6 +43,7 @@
 		<aio-login-turnstile-popup
 			:show="showPopup"
 			:initial-data="popupData"
+			:api-nonce="apiNonce"
 			@close="closePopup"
 			@save="saveSettings"
 		/>
@@ -65,7 +66,11 @@ export default {
 		configData: {
 			type: Object,
 			default: () => ({})
-		}
+		},
+		apiNonce: {
+			type: String,
+			default: '',
+		},
 	},
 
 	data: () => ({
@@ -85,15 +90,20 @@ export default {
 			return ! this.hasPro && ! this.proPluginActive;
 		},
 		statusBadge() {
-			if (this.enabled && this.hasValidKeys()) {
+			if (this.enabled && this.hasValidKeys() && this.configData.validated) {
 				return 'green';
-			} else if (!this.enabled && this.hasValidKeys()) {
+			} else if (this.hasValidKeys()) {
 				return 'orange';
 			}
 			return null;
 		},
 		statusBadgeText() {
-			return this.statusBadge ? 'Configured' : '';
+			if (this.statusBadge === 'green') {
+				return 'Verified';
+			} else if (this.statusBadge === 'orange') {
+				return 'Needs Test';
+			}
+			return '';
 		}
 	},
 

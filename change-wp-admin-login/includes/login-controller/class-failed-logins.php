@@ -188,7 +188,8 @@ if ( ! class_exists( 'AIO_Login\\Login_Controller\\Failed_Logins' ) ) {
 		 * @return array
 		 */
 		public function add_blocked_tag( $data ) {
-			$timeout      = Helper::get_timeout( $data['time'] );
+			$ip           = isset( $data['ip_address'] ) ? (string) $data['ip_address'] : '';
+			$timeout      = Helper::get_timeout( (int) $data['time'], $ip );
 			$current_time = current_time( 'timestamp' );
 
 			if ( $timeout >= $current_time ) {
@@ -254,7 +255,7 @@ if ( ! class_exists( 'AIO_Login\\Login_Controller\\Failed_Logins' ) ) {
 			$data = $wpdb->get_row( $sql, ARRAY_A ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.NotPrepared
 
 			if ( is_array( $data ) && isset( $data['time'] ) ) {
-				$timeout      = Helper::get_timeout( $data['time'] );
+				$timeout      = Helper::get_timeout( (int) $data['time'], $ip );
 				$current_time = current_time( 'timestamp' );
 
 				if ( $timeout >= $current_time ) {
@@ -263,6 +264,27 @@ if ( ! class_exists( 'AIO_Login\\Login_Controller\\Failed_Logins' ) ) {
 			}
 
 			return false;
+		}
+
+		/**
+		 * Latest lockout row for IP without expiry check.
+		 *
+		 * @param string $ip IP.
+		 * @return array<string, mixed>|false
+		 */
+		public static function is_user_blocked_raw( $ip = '' ) {
+			if ( empty( $ip ) ) {
+				$ip = Helper::get_ip();
+			}
+
+			global $wpdb;
+			$table_name = $wpdb->prefix . 'aio_login_login_lockouts';
+
+			$sql  = 'SELECT * FROM %i WHERE `ip_address` = %s ORDER BY `time` DESC LIMIT 1';
+			$sql  = $wpdb->prepare( $sql, $table_name, $ip ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+			$data = $wpdb->get_row( $sql, ARRAY_A ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.NotPrepared
+
+			return is_array( $data ) ? $data : false;
 		}
 
 		/**

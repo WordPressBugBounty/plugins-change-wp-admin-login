@@ -60,6 +60,11 @@ if ( ! class_exists( 'AIO_Login\\AIO_Login' ) ) {
 			);
 			self::class_loader( \AIO_Login_Pro\Login_Customization\Login_Customizer::class );
 			self::class_loader( \AIO_Login\User_Enumeration_Protection\User_Enumeration_Protection::class );
+			self::class_loader( \AIO_Login\Passwordless_Otp\OTP_Admin_Rest::class );
+			self::class_loader( \AIO_Login\Passwordless_Otp\OTP_Login::class );
+			self::class_loader( \AIO_Login\Passwordless_Otp\OTP_User_Phone::class );
+			self::class_loader( \AIO_Login\Passwordless_Otp\Magic_Link_Admin_Rest::class );
+			self::class_loader( \AIO_Login\Passwordless_Otp\Magic_Link_Login::class );
 
 			$this->init();
 
@@ -71,6 +76,7 @@ if ( ! class_exists( 'AIO_Login\\AIO_Login' ) ) {
 		 */
 		private function include_files() {
 			require_once AIO_LOGIN__DIR_PATH . 'includes/class-helper.php';
+			require_once AIO_LOGIN__DIR_PATH . 'includes/captcha/class-captcha-validation.php';
 			require_once AIO_LOGIN__DIR_PATH . 'includes/admin/class-admin.php';
 			require_once AIO_LOGIN__DIR_PATH . 'includes/change-wp-admin-login/class-change-wp-admin-login.php';
 			require_once AIO_LOGIN__DIR_PATH . 'includes/google-recaptcha/class-google-recaptcha.php';
@@ -83,6 +89,21 @@ if ( ! class_exists( 'AIO_Login\\AIO_Login' ) ) {
 			require_once AIO_LOGIN__DIR_PATH . 'includes/login-customization/class-login-customizer.php';
 			require_once AIO_LOGIN__DIR_PATH . 'includes/user-enumeration-protection/class-user-enumeration-protection.php';
 			require_once AIO_LOGIN__DIR_PATH . 'includes/user-enumeration-protection/class-user-enumeration-activator.php';
+			require_once AIO_LOGIN__DIR_PATH . 'includes/passwordless-otp/class-otp-lockout.php';
+			require_once AIO_LOGIN__DIR_PATH . 'includes/passwordless-otp/class-otp-encryption.php';
+			require_once AIO_LOGIN__DIR_PATH . 'includes/passwordless-otp/class-otp-country-codes.php';
+			require_once AIO_LOGIN__DIR_PATH . 'includes/passwordless-otp/class-otp-settings.php';
+			require_once AIO_LOGIN__DIR_PATH . 'includes/passwordless-otp/class-otp-captcha.php';
+			require_once AIO_LOGIN__DIR_PATH . 'includes/passwordless-otp/class-otp-service.php';
+			require_once AIO_LOGIN__DIR_PATH . 'includes/passwordless-otp/class-otp-email-sender.php';
+			require_once AIO_LOGIN__DIR_PATH . 'includes/passwordless-otp/class-otp-admin-rest.php';
+			require_once AIO_LOGIN__DIR_PATH . 'includes/passwordless-otp/class-otp-login.php';
+			require_once AIO_LOGIN__DIR_PATH . 'includes/passwordless-otp/class-otp-user-phone.php';
+			require_once AIO_LOGIN__DIR_PATH . 'includes/passwordless-otp/class-magic-link-settings.php';
+			require_once AIO_LOGIN__DIR_PATH . 'includes/passwordless-otp/class-magic-link-admin-rest.php';
+			require_once AIO_LOGIN__DIR_PATH . 'includes/passwordless-otp/class-magic-link-service.php';
+			require_once AIO_LOGIN__DIR_PATH . 'includes/passwordless-otp/class-magic-link-email-sender.php';
+			require_once AIO_LOGIN__DIR_PATH . 'includes/passwordless-otp/class-magic-link-login.php';
 		}
 
 		/**
@@ -178,6 +199,8 @@ if ( ! class_exists( 'AIO_Login\\AIO_Login' ) ) {
 			// Create database tables
 			\AIO_Login\User_Enumeration_Protection\User_Enumeration_Activator::create_table();
 
+			\AIO_Login\Passwordless_Otp\OTP_Settings::set_defaults();
+
 			// Set default options
 			if ( ! get_option( 'aio_login_limit_attempts_enable' ) ) {
 				update_option( 'aio_login_limit_attempts_enable', 'off' );
@@ -250,6 +273,7 @@ if ( ! class_exists( 'AIO_Login\\AIO_Login' ) ) {
 				);
 
 				\AIO_Login\User_Enumeration_Protection\User_Enumeration_Activator::create_table();
+				\AIO_Login\Passwordless_Otp\OTP_Settings::set_defaults();
 
 				update_option( 'aio_login__update', 'true' );
 			}

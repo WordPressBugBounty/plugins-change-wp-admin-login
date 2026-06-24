@@ -21,6 +21,7 @@ import aioLoginSocialLoginMain from './pages/social-login-main.vue';
 import aioLoginIntegrations from './pages/integrations.vue';
 import aioLoginCaptcha from './demo/components/aio-login-captcha.vue';
 import aioLoginRecaptchaPopup from './components/aio-login-recaptcha-popup.vue';
+import aioLoginCaptchaVerify from './components/aio-login-captcha-verify.vue';
 import aioLoginHcaptchaCard from './components/aio-login-hcaptcha-card.vue';
 import aioLoginHcaptchaPopup from './components/aio-login-hcaptcha-popup.vue';
 import aioLoginTurnstileCard from './components/aio-login-turnstile-card.vue';
@@ -60,7 +61,6 @@ import aioLoginLoginRedirection from './pages/login-redirection-feature.js';
 import aioLoginDatatable from './components/aio-login-datatable.vue';
 import aioLoginPopup from './components/aio-login-popup.vue';
 import aioLoginProPopup from './components/aio-login-pro-popup.vue';
-import aioLoginAppsumoHelloBar from './components/aio-login-appsumo-hello-bar.vue';
 import aioLoginTooltip from './components/aio-login-tooltip.vue';
 
 
@@ -140,6 +140,7 @@ aio_login__mount_helper.prototype.mount = function( element, required_components
 	aio_login__app.component( 'aio-login-integrations', aioLoginIntegrations );
 	aio_login__app.component( 'aio-login-captcha', aioLoginCaptcha );
 	aio_login__app.component( 'aio-login-recaptcha-popup', aioLoginRecaptchaPopup );
+	aio_login__app.component( 'aio-login-captcha-verify', aioLoginCaptchaVerify );
 	aio_login__app.component( 'aio-login-hcaptcha-card', aioLoginHcaptchaCard );
 	aio_login__app.component( 'aio-login-hcaptcha-popup', aioLoginHcaptchaPopup );
 	aio_login__app.component( 'aio-login-turnstile-card', aioLoginTurnstileCard );
@@ -158,7 +159,6 @@ aio_login__mount_helper.prototype.mount = function( element, required_components
 	aio_login__app.component( 'aio-login-getpro', aioLoginGetPro );
 	aio_login__app.component( 'aio-login-popup', aioLoginPopup );
 	aio_login__app.component( 'aio-login-pro-popup', aioLoginProPopup );
-	aio_login__app.component( 'aio-login-appsumo-hello-bar', aioLoginAppsumoHelloBar );
 	aio_login__app.component( 'aio-login-tooltip', aioLoginTooltip );
 
 	aio_login__app.mount( element );

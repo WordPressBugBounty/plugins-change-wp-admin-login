@@ -87,7 +87,11 @@ body.login.aio-login__template-09 #loginform {
     flex-direction: column !important;
 }
 
-body.login.aio-login__template-09 #lostpasswordform,
+body.login.aio-login__template-09 #lostpasswordform {
+    display: flex !important;
+    flex-direction: column !important;
+}
+
 body.login.aio-login__template-09 #registerform {
     display: flex !important;
     flex-direction: column !important;
@@ -114,18 +118,64 @@ body.login.aio-login__template-09 #loginform>p,
 body.login.aio-login__template-09 #loginform>.user-pass-wrap,
 body.login.aio-login__template-09 #lostpasswordform>p,
 body.login.aio-login__template-09 #lostpasswordform>.user-pass-wrap,
-body.login.aio-login__template-09 #registerform>p,
-body.login.aio-login__template-09 #registerform>.user-pass-wrap {
+body.login.aio-login__template-09 #registerform>p {
     order: 10 !important;
 }
 
 /* Force layout order inside the flex form */
-body.login.aio-login__template-09 #login form p.submit {
+body.login.aio-login__template-09 #loginform p.submit {
     order: 30 !important;
+    margin-bottom: 6px !important;
+}
+
+body.login.aio-login__template-09 #registerform p.submit {
+    order: 30 !important;
+    margin-bottom: 6px !important;
+}
+
+body.login.aio-login__template-09 #registerform #reg_passmail {
+    order: 20 !important;
+    margin: 0 0 16px 0 !important;
+    font-size: 13px !important;
+    color: #6b7280 !important;
+    line-height: 1.45 !important;
+}
+
+body.login.aio-login__template-09 #login form .aio-login-otp-buttons-wrapper {
+    order: 14 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    align-self: stretch !important;
+    flex: 0 0 auto !important;
+    box-sizing: border-box !important;
+}
+
+body.login.aio-login__template-09 #login form .aio-login-magic-link-buttons-wrapper {
+    order: 15 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    align-self: stretch !important;
+    flex: 0 0 auto !important;
+    box-sizing: border-box !important;
+    margin: 0 0 10px !important;
+}
+
+body.login.aio-login__template-09 #loginform .h-captcha,
+body.login.aio-login__template-09 #loginform .g-recaptcha,
+body.login.aio-login__template-09 #loginform .cf-turnstile,
+body.login.aio-login__template-09 #loginform #g-recaptcha-response,
+body.login.aio-login__template-09 #loginform input[name="cf-turnstile-error-code"] {
+    order: 17 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    align-self: stretch !important;
+    flex: 0 0 auto !important;
+    box-sizing: border-box !important;
+    margin: 0 0 12px !important;
 }
 
 body.login.aio-login__template-09 #login form .aio-login-social-login-buttons-wrapper {
-    order: 20 !important;
+    order: 16 !important;
 }
 
 body.login.aio-login__template-09 #login form .aio-login__template-09-footer-links {
@@ -221,9 +271,6 @@ body.login.login-action-lostpassword.aio-login__template-09 #lostpasswordform>.m
     order: 2 !important;
 }
 
-/*
- * Register: title via ::before; #login > h1 is moved into #registerform via footer script.
- */
 body.login.login-action-register.aio-login__template-09 #registerform::before {
     content: "Register";
     display: block;
@@ -240,25 +287,8 @@ body.login.login-action-register.aio-login__template-09 #registerform > h1 {
     order: 0 !important;
 }
 
-body.login.login-action-register.aio-login__template-09 #registerform > h1:not(.wp-login-logo) {
-    border: 0 !important;
-    clip: rect(1px, 1px, 1px, 1px) !important;
-    clip-path: inset(50%) !important;
-    height: 1px !important;
-    width: 1px !important;
-    margin: -1px !important;
-    overflow: hidden !important;
-    padding: 0 !important;
-    position: absolute !important;
-    word-wrap: normal !important;
-}
-
-body.login.aio-login__template-09 #registerform > #reg_passmail {
-    order: 15 !important;
-    text-align: center !important;
-    color: #6b7280 !important;
-    font-size: 13px !important;
-    margin: 0 0 8px 0 !important;
+body.login.login-action-register.aio-login__template-09 #registerform > .message.register {
+    order: 2 !important;
 }
 
 /* Alerts (moved into the form via JS for template-09) */
@@ -326,13 +356,6 @@ body.login.aio-login__template-09 input[type="password"] {
     background-size: 18px !important;
 }
 
-body.login.aio-login__template-09 input[type="email"] {
-    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="%239ca3af"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>') !important;
-    background-repeat: no-repeat !important;
-    background-position: 14px center !important;
-    background-size: 18px !important;
-}
-
 body.login.aio-login__template-09 #loginform input[type="submit"],
 body.login.aio-login__template-09 #lostpasswordform input[type="submit"],
 body.login.aio-login__template-09 #registerform input[type="submit"],
@@ -350,12 +373,121 @@ body.login.aio-login__template-09 #resetpassform input[type="submit"] {
     flex-shrink: 0 !important;
 }
 
+/* Passwordless panels (Email/SMS OTP, login link) — inside white form column */
+body.login.aio-login__template-09 #loginform > #aio-login-otp-panel,
+body.login.aio-login__template-09 #loginform > #aio-login-magic-link-panel {
+    order: 8 !important;
+    width: 100% !important;
+    flex: 0 0 auto !important;
+}
+
+body.login.aio-login__template-09 #loginform .aio-login-otp-panel .aio-login-otp-field label,
+body.login.aio-login__template-09 #loginform .aio-login-magic-link-panel .aio-login-otp-field label {
+    display: block !important;
+    margin-bottom: 6px !important;
+    font-weight: 500 !important;
+    font-size: 13px !important;
+    color: #374151 !important;
+}
+
+body.login.aio-login__template-09 #loginform .aio-login-otp-panel select {
+    width: 100% !important;
+    margin-bottom: 12px !important;
+    padding: 12px 15px !important;
+    border: 1px solid #e5e7eb !important;
+    border-radius: 8px !important;
+    font-size: 15px !important;
+    box-sizing: border-box !important;
+    background: #ffffff !important;
+}
+
+body.login.aio-login__template-09 #loginform .aio-login-otp-panel .aio-login-otp-send,
+body.login.aio-login__template-09 #loginform .aio-login-magic-link-panel .aio-login-magic-link-send {
+    background: #232a35 !important;
+    border: none !important;
+    border-radius: 8px !important;
+    color: #ffffff !important;
+    font-weight: 600 !important;
+    width: 100% !important;
+    height: 50px !important;
+    font-size: 16px !important;
+    cursor: pointer;
+    margin-top: 8px !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+}
+
+body.login.aio-login__template-09 #loginform .aio-login-otp-panel .aio-login-otp-captcha,
+body.login.aio-login__template-09 #loginform .aio-login-magic-link-panel .aio-login-otp-captcha {
+    margin: 12px 0 16px !important;
+}
+
+body.login.aio-login__template-09 #loginform .aio-login-otp-panel .aio-login-otp-phone-field {
+    display: flex !important;
+    align-items: stretch !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-bottom: 6px !important;
+    border: 1px solid #e5e7eb !important;
+    border-radius: 8px !important;
+    background: #ffffff !important;
+    overflow: hidden !important;
+    box-sizing: border-box !important;
+}
+
+body.login.aio-login__template-09 #loginform .aio-login-otp-panel .aio-login-otp-phone-field:focus-within {
+    border-color: #2271b1 !important;
+    outline: 2px solid rgba(34, 113, 177, 0.2) !important;
+    outline-offset: 0 !important;
+}
+
+body.login.aio-login__template-09 #loginform .aio-login-otp-panel .aio-login-otp-phone-field__dial {
+    display: inline-flex !important;
+    align-items: center !important;
+    padding: 0 12px !important;
+    border: none !important;
+    border-right: 1px solid #e5e7eb !important;
+    border-radius: 0 !important;
+    background: #f9fafb !important;
+    color: #374151 !important;
+    font-size: 15px !important;
+    font-weight: 500 !important;
+    line-height: 1.4 !important;
+    flex-shrink: 0 !important;
+    user-select: none !important;
+}
+
+body.login.aio-login__template-09 #loginform .aio-login-otp-panel .aio-login-otp-phone-field input[type="tel"],
+body.login.aio-login__template-09 #loginform .aio-login-otp-panel #aio-login-otp-phone {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    width: auto !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 12px 15px !important;
+    border: none !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    background-image: none !important;
+    box-shadow: none !important;
+    font-size: 15px !important;
+    height: auto !important;
+}
+
+body.login.aio-login__template-09 #loginform .aio-login-otp-panel .aio-login-otp-phone-field__hint {
+    margin: 0 0 12px !important;
+    font-size: 12px !important;
+    color: #6b7280 !important;
+    line-height: 1.45 !important;
+}
+
 /* Footer links inside form (template-09 only) */
 body.login.aio-login__template-09 form .aio-login__template-09-footer-links {
-    margin-top: 14px !important;
+    margin-top: 24px !important;
+    padding-top: 4px !important;
     display: flex !important;
     flex-direction: column !important;
-    gap: 6px !important;
+    gap: 10px !important;
     align-items: center !important;
 }
 
@@ -366,6 +498,34 @@ body.login.aio-login__template-09 form .aio-login__template-09-footer-links .aio
     text-align: center !important;
 }
 
+body.login.aio-login__template-09 form .aio-login__template-09-footer-links .aio-login__template-09-nav-row {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    justify-content: center !important;
+    align-items: center !important;
+    column-gap: 0.65em !important;
+    row-gap: 0.35em !important;
+    width: 100% !important;
+}
+
+body.login.aio-login__template-09 form .aio-login__template-09-nav-row a {
+    display: inline !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+body.login.aio-login__template-09 form .aio-login__template-09-nav-sep {
+    display: inline-block !important;
+    color: #6b7280 !important;
+    font-size: 13px !important;
+    line-height: 1.4 !important;
+    user-select: none !important;
+    margin: 0 !important;
+    padding: 0 0.15em !important;
+    white-space: pre !important;
+}
+
 body.login.aio-login__template-09 form .aio-login__template-09-footer-links a {
     color: #6b7280 !important;
     font-size: 13px !important;
@@ -374,10 +534,6 @@ body.login.aio-login__template-09 form .aio-login__template-09-footer-links a {
 
 body.login.aio-login__template-09 form .aio-login__template-09-footer-links a:hover {
     color: #111827 !important;
-}
-
-body.login.aio-login__template-09 form .aio-login__template-09-footer-links .aio-login__template-09-nav-sep {
-    color: #6b7280 !important;
 }
 
 /*
@@ -445,45 +601,6 @@ body.login.aio-login__template-09 .aio-login-social-login-buttons-wrapper a {
     justify-content: center;
     align-items: center;
     box-sizing: border-box !important;
-}
-
-/*
- * CAPTCHA (hCaptcha / reCAPTCHA / Turnstile): after social buttons (20), above Remember me (25).
- * Widgets hook into login_form with default flex order 0, which placed them under the logo.
- */
-body.login.aio-login__template-09 #loginform .h-captcha,
-body.login.aio-login__template-09 #loginform .g-recaptcha,
-body.login.aio-login__template-09 #loginform .cf-turnstile,
-body.login.aio-login__template-09 #loginform .aio-login-turnstile-widget-error,
-body.login.aio-login__template-09 #registerform .h-captcha,
-body.login.aio-login__template-09 #registerform .g-recaptcha,
-body.login.aio-login__template-09 #registerform .cf-turnstile,
-body.login.aio-login__template-09 #registerform .aio-login-turnstile-widget-error {
-    order: 22 !important;
-    width: 100% !important;
-    margin: 0 0 16px 0 !important;
-    flex-shrink: 0 !important;
-    display: flex !important;
-    justify-content: center !important;
-    box-sizing: border-box !important;
-}
-
-body.login.aio-login__template-09 #loginform .aio-login-turnstile-widget-error,
-body.login.aio-login__template-09 #registerform .aio-login-turnstile-widget-error {
-    display: block !important;
-    max-width: 100% !important;
-}
-
-body.login.aio-login__template-09 #loginform input[name="cf-turnstile-error-code"],
-body.login.aio-login__template-09 #registerform input[name="cf-turnstile-error-code"],
-body.login.aio-login__template-09 #loginform #g-recaptcha-response {
-    order: 22 !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    height: 0 !important;
-    min-height: 0 !important;
-    border: 0 !important;
-    overflow: hidden !important;
 }
 
 body.login.aio-login__template-09 #loginform .forgetmenot {
@@ -579,7 +696,9 @@ body.login.aio-login__template-09 #registerform > .language-switcher label .dash
     body.login.aio-login__template-09 #loginform > h1.wp-login-logo,
     body.login.aio-login__template-09 #loginform > h1,
     body.login.aio-login__template-09 #lostpasswordform > h1.wp-login-logo,
-    body.login.aio-login__template-09 #lostpasswordform > h1 {
+    body.login.aio-login__template-09 #lostpasswordform > h1,
+    body.login.aio-login__template-09 #registerform > h1.wp-login-logo,
+    body.login.aio-login__template-09 #registerform > h1 {
         transform: none !important;
         margin-bottom: 16px !important;
     }
