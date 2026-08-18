@@ -15,6 +15,8 @@
 </template>
 
 <script>
+import { t } from '../i18n.js';
+
 export default {
 	name: 'aio-login-datatable',
 
@@ -60,6 +62,26 @@ export default {
 			} );
 		},
 
+		getLanguage() {
+			return {
+				emptyTable: t( 'No data available in table' ),
+				info: t( 'Showing _START_ to _END_ of _TOTAL_ entries' ),
+				infoEmpty: t( 'Showing 0 to 0 of 0 entries' ),
+				infoFiltered: t( '(filtered from _MAX_ total entries)' ),
+				lengthMenu: t( '_MENU_ entries per page' ),
+				loadingRecords: t( 'Loading...' ),
+				processing: t( 'Processing...' ),
+				search: t( 'Search:' ),
+				zeroRecords: t( 'No matching records found' ),
+				paginate: {
+					first: t( 'First' ),
+					last: t( 'Last' ),
+					next: t( 'Next' ),
+					previous: t( 'Previous' ),
+				},
+			};
+		},
+
 		createDatatableInstance() {
 			const timeColumnIndex = this.headers.findIndex(
 				header => header && header.key === 'time'
@@ -69,6 +91,7 @@ export default {
 				columns: this.getColumns(),
 				data: this.rows,
 				responsive: true,
+				language: this.getLanguage(),
 			}
 			if ( timeColumnIndex >= 0 ) {
 				kf.order = [ [ timeColumnIndex, 'desc' ] ];

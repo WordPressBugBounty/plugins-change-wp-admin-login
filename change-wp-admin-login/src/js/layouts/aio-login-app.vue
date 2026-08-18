@@ -7,13 +7,13 @@
 			<template v-slot:version>
 				<div class="aio-login-header-version">
 					<span class="aio-login-header-version__badge aio-login-header-version__badge--free">
-						Free v{{ version }}
+						{{ $t('Free') }} v{{ version }}
 					</span>
 					<span
 						v-if="show_pro_version"
 						class="aio-login-header-version__badge aio-login-header-version__badge--pro"
 					>
-						Pro v{{ pro_version }}
+						{{ $t('Pro') }} v{{ pro_version }}
 					</span>
 				</div>
 			</template>
@@ -325,5 +325,4 @@ export default {
 	pointer-events: none;
 	opacity: 0.45;
 }
-
 </style>

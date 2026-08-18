@@ -39,7 +39,8 @@ if (!class_exists('AIO_Login\\Login_Customization\\Login_Customization_Output_Pr
 			add_action('login_enqueue_scripts', array($this, 'login_enqueue_scripts'));
 			add_filter('login_body_class', array($this, 'body_class'));
 			add_filter('aio_login__custom_css', array($this, 'custom_css'));
-			add_action('login_form', array($this, 'template_09_form_footer_links'), 99);
+			add_action( 'login_form', array( $this, 'template_09_form_footer_links' ), 99 );
+			add_action( 'lostpassword_form', array( $this, 'template_09_form_footer_links' ), 99 );
 			add_action('register_form', array($this, 'template_09_register_footer_links'), 99);
 			add_action('login_footer', array($this, 'login_footer'));
 			add_filter( 'wp_login_errors', array( $this, 'filter_login_errors_in_customizer_preview' ), 999, 2 );
@@ -216,6 +217,64 @@ if (!class_exists('AIO_Login\\Login_Customization\\Login_Customization_Output_Pr
 				return $errors;
 			}
 			return new \WP_Error();
+		}
+
+		/**
+		 * Primary nav row for template-09 (Register | Lost password, etc.) — mirrors wp-login.php #nav.
+		 *
+		 * @return string
+		 */
+		private function get_template_09_primary_nav_markup() {
+			$action = '';
+			if ( isset( $_REQUEST['action'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+				$action = sanitize_text_field( wp_unslash( $_REQUEST['action'] ) );
+			}
+
+			$parts = array();
+			$sep   = apply_filters( 'login_link_separator', ' | ' );
+
+			if ( 'lostpassword' === $action ) {
+				$parts[] = sprintf(
+					'<a href="%1$s">%2$s</a>',
+					esc_url( wp_login_url() ),
+					esc_html__( 'Log in', 'default' )
+				);
+				if ( get_option( 'users_can_register' ) ) {
+					$parts[] = sprintf(
+						'<a class="wp-login-register" href="%1$s">%2$s</a>',
+						esc_url( wp_registration_url() ),
+						esc_html__( 'Register', 'default' )
+					);
+				}
+			} elseif ( 'register' === $action ) {
+				$parts[] = sprintf(
+					'<a href="%1$s">%2$s</a>',
+					esc_url( wp_login_url() ),
+					esc_html__( 'Log in', 'default' )
+				);
+			} else {
+				if ( get_option( 'users_can_register' ) ) {
+					$parts[] = sprintf(
+						'<a class="wp-login-register" href="%1$s">%2$s</a>',
+						esc_url( wp_registration_url() ),
+						esc_html__( 'Register', 'default' )
+					);
+				}
+				$parts[] = sprintf(
+					'<a class="wp-login-lost-password" href="%1$s">%2$s</a>',
+					esc_url( wp_lostpassword_url() ),
+					esc_html__( 'Lost your password?', 'default' )
+				);
+			}
+
+			if ( empty( $parts ) ) {
+				return '';
+			}
+
+			return implode(
+				'<span class="aio-login__template-09-nav-sep">' . esc_html( $sep ) . '</span>',
+				$parts
+			);
 		}
 
 		public function template_09_form_footer_links() {

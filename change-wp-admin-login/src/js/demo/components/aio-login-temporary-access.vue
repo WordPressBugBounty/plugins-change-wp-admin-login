@@ -10,7 +10,7 @@
 			v-on:handle-submit="handleSubmit"
 		>
 			<template v-slot:title>
-				<span>Temporary Access</span>
+				<span>{{ $t('Temporary Access') }}</span>
 				<aio-login-tooltip
 					:content="tooltipContent.temporaryAccess.content"
 					:title="tooltipContent.temporaryAccess.title"
@@ -19,17 +19,17 @@
 			</template>
 
 			<template v-slot:description>
-				Create a temporary login link that you can share with other people. You can set the link’s lifespan and the maximum usage limit to prevent abuse.
+				{{ $t('Create a temporary login link that you can share with other people. You can set the link’s lifespan and the maximum usage limit to prevent abuse.') }}
 				<br>
-				If needed
-				<a href="https://wordpress-1080859-4061994.cloudwaysapps.com/wp-admin/user-new.php">create a new WP user </a>
-				"guest" instead of using one of the existing user.
+				{{ $t('If needed') }}
+				<a href="https://wordpress-1080859-4061994.cloudwaysapps.com/wp-admin/user-new.php">{{ $t('create a new WP user') }} </a>
+				{{ $t('"guest" instead of using one of the existing user.') }}
 			</template>
 
 			<template v-slot:form-fields>
 				<tr>
 					<th>
-						<label for="enable">Enable Temp Access</label>
+						<label for="enable">{{ $t('Enable Temp Access') }}</label>
 					</th>
 					<td>
 
@@ -42,7 +42,7 @@
 						/>
 						<p class="desc">
 							<strong>
-								Enable to allow users temporary admin access securely.
+								{{ $t('Enable to allow users temporary admin access securely.') }}
 							</strong>
 						</p>
 					</td>

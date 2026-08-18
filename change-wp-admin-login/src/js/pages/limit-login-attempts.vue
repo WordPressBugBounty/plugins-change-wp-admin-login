@@ -6,7 +6,7 @@
 			v-on:handle-submit="handleSubmit"
 		>
 			<template v-slot:title>
-				<span>Limit Login Attempts</span>
+				<span>{{ $t("Limit Login Attempts") }}</span>
 				<aio-login-tooltip
 					:content="tooltipContent.limitLoginAttempts.content"
 					placement="bottom"
@@ -16,7 +16,7 @@
 			<template v-slot:form-fields>
 				<tr>
 					<th scope="row">
-						<label for="enable">Enable</label>
+						<label for="enable">{{ $t("Enable") }}</label>
 					</th>
 
 					<td>
@@ -28,16 +28,14 @@
 						/>
 
 						<p class="desc">
-							<strong>
-								Enable to restrict repeated login attempts per IP.
-							</strong>
+							<strong>{{ $t("Enable to restrict repeated login attempts per IP.") }}</strong>
 						</p>
 					</td>
 				</tr>
 
 				<tr v-if="form_data.enabled">
 					<th scope="row">
-						<label for="maximum-attempts">Maximum Attempts</label>
+						<label for="maximum-attempts">{{ $t("Maximum Attempts") }}</label>
 					</th>
 
 					<td>
@@ -54,7 +52,7 @@
 
 				<tr v-if="form_data.enabled">
 					<th scope="row">
-						<label for="timeout">Timeout (min)</label>
+						<label for="timeout">{{ $t("Timeout (min)") }}</label>
 					</th>
 
 					<td>
@@ -71,7 +69,7 @@
 
 				<tr v-if="form_data.enabled">
 					<th scope="row">
-						<label for="lockout-message">Lockout Message</label>
+						<label for="lockout-message">{{ $t("Lockout Message") }}</label>
 					</th>
 
 					<td>
@@ -106,6 +104,7 @@
 <script>
 import tooltipContent from '../tooltip-content.js';
 import resolveParentCurrentIsPro from '../resolve-parent-current-is-pro.js';
+import { t } from '../i18n.js';
 
 export default {
 	name: 'limit-login-attempts',
@@ -126,7 +125,7 @@ export default {
 			enabled: false,
 			maximum_attempts: '5',
 			timeout: '5',
-			lockout_message: 'You have been locked out due to too many login attempts.',
+			lockout_message: t( 'You have been blocked due to too many unsuccessful login attempts. Please try again in %d minutes.' ),
 		},
 
 		snackbar: {

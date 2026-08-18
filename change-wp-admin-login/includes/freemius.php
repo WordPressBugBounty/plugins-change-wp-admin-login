@@ -35,6 +35,20 @@ if ( ! function_exists( 'aio_login__fs' ) ) {
 					),
 				)
 			);
+
+			$aio_login__fs->add_filter(
+				'pricing_url',
+				static function () {
+					return defined( 'AIO_LOGIN_GET_PRO_URL' )
+						? AIO_LOGIN_GET_PRO_URL
+						: 'https://aiologin.com/pricing/?utm_source=plugn-redirect&utm_medium=upgrade-to-pro&utm_campaign=get-pro&utm_id=plugin';
+				}
+			);
+			$aio_login__fs->override_i18n(
+				array(
+					'upgrade' => __( 'Get Pro', 'change-wp-admin-login' ),
+				)
+			);
 		}
 
 		return $aio_login__fs;

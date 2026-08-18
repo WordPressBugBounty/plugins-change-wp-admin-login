@@ -9,7 +9,7 @@
 			<div class="aio-login-magic-link__row aio-login-magic-link__row--stacked">
 				<div class="aio-login-magic-link__label-col">
 					<label class="aio-login-2fa-methods__label aio-login-magic-link__label" for="magic_link_enable">
-						Login Link
+						{{ $t("Login Link") }}
 						<aio-login-tooltip :content="tooltipContent.magicLinkEnable.content" />
 					</label>
 				</div>
@@ -22,7 +22,7 @@
 						v-on:toggle-input="form.magic_link_enable = $event"
 					/>
 					<p class="aio-login-2fa-methods__help aio-login-magic-link__help">
-						Allow users to sign in instantly with a secure one-time link sent to their email.
+						{{ $t("Allow users to sign in instantly with a secure one-time link sent to their email.") }}
 					</p>
 				</div>
 			</div>
@@ -31,7 +31,7 @@
 			<div class="aio-login-magic-link__row">
 				<div class="aio-login-magic-link__label-col">
 					<label class="aio-login-2fa-methods__label aio-login-magic-link__label" for="magic_link_validity">
-						Login Link Validity
+						{{ $t("Login Link Validity") }}
 						<aio-login-tooltip :content="tooltipContent.magicLinkValidity.content" />
 					</label>
 				</div>
@@ -52,9 +52,9 @@
 							class="aio-login-2fa-methods__input aio-login-magic-link__validity-unit"
 							:disabled="fieldsDisabled"
 						>
-							<option value="minutes">Minutes</option>
-							<option value="hours">Hours</option>
-							<option value="days">Days</option>
+							<option value="minutes">{{ $t("Minutes") }}</option>
+							<option value="hours">{{ $t("Hours") }}</option>
+							<option value="days">{{ $t("Days") }}</option>
 						</select>
 					</div>
 				</div>
@@ -63,7 +63,7 @@
 			<div class="aio-login-magic-link__row">
 				<div class="aio-login-magic-link__label-col">
 					<label class="aio-login-2fa-methods__label aio-login-magic-link__label" for="magic_link_max_requests">
-						Login Link Requests
+						{{ $t("Login Link Requests") }}
 						<aio-login-tooltip :content="tooltipContent.magicLinkRequests.content" />
 					</label>
 				</div>
@@ -83,7 +83,7 @@
 			<div class="aio-login-magic-link__row">
 				<div class="aio-login-magic-link__label-col">
 					<label class="aio-login-2fa-methods__label aio-login-magic-link__label" for="magic_link_skip_2fa">
-						Skip 2FA for Login Link
+						{{ $t("Skip 2FA for Login Link") }}
 						<aio-login-tooltip :content="tooltipContent.magicLinkSkip2fa.content" />
 					</label>
 				</div>
@@ -106,7 +106,7 @@
 					:disabled="saving"
 					@click.stop="saveSettings"
 				>
-					{{ saving ? 'Saving…' : 'Save Changes' }}
+					{{ saving ? $t('Saving…') : $t('Save Changes') }}
 				</button>
 			</div>
 		</div>

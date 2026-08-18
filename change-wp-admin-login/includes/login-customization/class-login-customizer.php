@@ -192,9 +192,9 @@ if ( ! class_exists( 'AIO_Login_Pro\\Login_Customization\\Login_Customizer' ) ) 
 			$wp_customize->add_panel(
 				'aio_login_customizer',
 				array(
-					'title'       => __( 'AIO Login Customize', 'aio-login-pro' ),
+					'title'       => __( 'AIO Login Customize', 'change-wp-admin-login' ),
 					'priority'    => 35,
-					'description' => __( 'Customize your login screen with live preview (same sections as LoginPress: themes, logo, form, footer links, fonts, and CSS).', 'aio-login-pro' ),
+					'description' => __( 'Customize your login screen with live preview (same sections as LoginPress: themes, logo, form, footer links, fonts, and CSS).', 'change-wp-admin-login' ),
 				)
 			);
 
@@ -234,7 +234,7 @@ if ( ! class_exists( 'AIO_Login_Pro\\Login_Customization\\Login_Customizer' ) ) 
 			$wp_customize->add_section(
 				'aio_login_reset',
 				array(
-					'title'    => __( 'Reset customization', 'aio-login-pro' ),
+					'title'    => __( 'Reset customization', 'change-wp-admin-login' ),
 					'panel'    => 'aio_login_customizer',
 					'priority' => 1000,
 				)
@@ -246,8 +246,8 @@ if ( ! class_exists( 'AIO_Login_Pro\\Login_Customization\\Login_Customizer' ) ) 
 					'aio_login_customizer_reset_ui',
 					array(
 						'section'     => 'aio_login_reset',
-						'label'       => __( 'Master reset', 'aio-login-pro' ),
-						'description' => __( 'Restore every AIO Login Customize option to its default. Click Publish to save. Other Customizer sections (theme, widgets, etc.) are not changed.', 'aio-login-pro' ),
+						'label'       => __( 'Master reset', 'change-wp-admin-login' ),
+						'description' => __( 'Restore every AIO Login Customize option to its default. Click Publish to save. Other Customizer sections (theme, widgets, etc.) are not changed.', 'change-wp-admin-login' ),
 					)
 				)
 			);
@@ -417,26 +417,26 @@ if ( ! class_exists( 'AIO_Login_Pro\\Login_Customization\\Login_Customizer' ) ) 
 			$wp_customize->add_section(
 				$section,
 				array(
-					'title'    => __( 'Templates', 'aio-login-pro' ),
+					'title'    => __( 'Templates', 'change-wp-admin-login' ),
 					'panel'    => 'aio_login_customizer',
 					'priority' => 10,
 				)
 			);
 
 			$choices_all = array(
-				'default'    => __( 'Modern Center', 'aio-login-pro' ),
-				'template-8' => __( 'Future Tech Split', 'aio-login-pro' ),
-				'template-1' => __( 'Classic Bold', 'aio-login-pro' ),
-				'template-2' => __( 'Midnight Dark', 'aio-login-pro' ),
-				'template-3' => __( 'Dynamic Split', 'aio-login-pro' ),
-				'template-4' => __( 'Deep Glass', 'aio-login-pro' ),
-				'template-5' => __( 'Corporate Pro', 'aio-login-pro' ),
-				'template-6' => __( 'Vibrant Duo', 'aio-login-pro' ),
-				'template-7' => __( 'Elegant Frost', 'aio-login-pro' ),
+				'default'    => __( 'Modern Center', 'change-wp-admin-login' ),
+				'template-8' => __( 'Future Tech Split', 'change-wp-admin-login' ),
+				'template-1' => __( 'Classic Bold', 'change-wp-admin-login' ),
+				'template-2' => __( 'Midnight Dark', 'change-wp-admin-login' ),
+				'template-3' => __( 'Dynamic Split', 'change-wp-admin-login' ),
+				'template-4' => __( 'Deep Glass', 'change-wp-admin-login' ),
+				'template-5' => __( 'Corporate Pro', 'change-wp-admin-login' ),
+				'template-6' => __( 'Vibrant Duo', 'change-wp-admin-login' ),
+				'template-7' => __( 'Elegant Frost', 'change-wp-admin-login' ),
 			);
 			$themes_unlocked = $this->plan_allows_customizer_login_themes();
 			$description     = $themes_unlocked
-				? __( 'Click a thumbnail to apply that login design. The preview refreshes after you pick a template.', 'aio-login-pro' )
+				? __( 'Click a thumbnail to apply that login design. The preview refreshes after you pick a template.', 'change-wp-admin-login' )
 				: __( 'Modern Center and Future Tech are included on all plans. Additional themes require Professional or Business (tier 3+).', 'change-wp-admin-login' );
 
 			$wp_customize->add_control(
@@ -445,7 +445,7 @@ if ( ! class_exists( 'AIO_Login_Pro\\Login_Customization\\Login_Customizer' ) ) 
 					'aio_login__customization_templates',
 					array(
 						'section'     => $section,
-						'label'       => __( 'Templates', 'aio-login-pro' ),
+						'label'       => __( 'Templates', 'change-wp-admin-login' ),
 						'description' => $description,
 						'choices'     => $choices_all,
 						'has_pro'    => $themes_unlocked,
@@ -466,7 +466,7 @@ if ( ! class_exists( 'AIO_Login_Pro\\Login_Customization\\Login_Customizer' ) ) 
 				return $choices;
 			}
 			$choices = array(
-				'Inherit' => __( 'Inherit (Theme/WP Default)', 'aio-login-pro' ),
+				'Inherit' => __( 'Inherit (Theme/WP Default)', 'change-wp-admin-login' ),
 			);
 			$file = AIO_LOGIN__DIR_PATH . 'includes/login-customization/data/google-fonts-families.json';
 			if ( ! is_readable( $file ) ) {
@@ -493,11 +493,11 @@ if ( ! class_exists( 'AIO_Login_Pro\\Login_Customization\\Login_Customizer' ) ) 
 			$wp_customize->add_section(
 				$section,
 				array(
-					'title'       => __( 'Google Fonts', 'aio-login-pro' ),
+					'title'       => __( 'Google Fonts', 'change-wp-admin-login' ),
 					'panel'       => 'aio_login_customizer',
 					'priority'    => 80,
 					'description' => $fonts_unlocked
-						? __( 'Pick any font from the Google Fonts catalog (~1,900 families). Applies across the login form text.', 'aio-login-pro' )
+						? __( 'Pick any font from the Google Fonts catalog (~1,900 families). Applies across the login form text.', 'change-wp-admin-login' )
 						: __( 'The full Google Fonts catalog unlocks on Professional or Business (tier 3+). Inherit stays available on all plans.', 'change-wp-admin-login' ),
 				)
 			);
@@ -517,7 +517,7 @@ if ( ! class_exists( 'AIO_Login_Pro\\Login_Customization\\Login_Customizer' ) ) 
 					'aio_login_el_text_font_family',
 					array(
 						'section'    => $section,
-						'label'      => __( 'Font family', 'aio-login-pro' ),
+						'label'      => __( 'Font family', 'change-wp-admin-login' ),
 						'choices'    => $this->get_google_font_family_choices(),
 						'has_pro'    => $fonts_unlocked,
 						'free_value' => 'Inherit',
@@ -531,7 +531,7 @@ if ( ! class_exists( 'AIO_Login_Pro\\Login_Customization\\Login_Customizer' ) ) 
 			$wp_customize->add_section(
 				$section,
 				array(
-					'title'    => __( 'Background', 'aio-login-pro' ),
+					'title'    => __( 'Background', 'change-wp-admin-login' ),
 					'panel'    => 'aio_login_customizer',
 					'priority' => 30,
 				)
@@ -551,7 +551,7 @@ if ( ! class_exists( 'AIO_Login_Pro\\Login_Customization\\Login_Customizer' ) ) 
 					'aio_login_background_color',
 					array(
 						'section' => $section,
-						'label'   => __( 'Background color', 'aio-login-pro' ),
+						'label'   => __( 'Background color', 'change-wp-admin-login' ),
 					)
 				)
 			);
@@ -570,7 +570,7 @@ if ( ! class_exists( 'AIO_Login_Pro\\Login_Customization\\Login_Customizer' ) ) 
 					'aio_login_background_image',
 					array(
 						'section'   => $section,
-						'label'     => __( 'Background image', 'aio-login-pro' ),
+						'label'     => __( 'Background image', 'change-wp-admin-login' ),
 						'mime_type' => 'image',
 					)
 				)
@@ -590,7 +590,7 @@ if ( ! class_exists( 'AIO_Login_Pro\\Login_Customization\\Login_Customizer' ) ) 
 					'aio_login_background_image_mobile',
 					array(
 						'section'   => $section,
-						'label'     => __( 'Mobile background image', 'aio-login-pro' ),
+						'label'     => __( 'Mobile background image', 'change-wp-admin-login' ),
 						'mime_type' => 'image',
 					)
 				)
@@ -608,13 +608,13 @@ if ( ! class_exists( 'AIO_Login_Pro\\Login_Customization\\Login_Customizer' ) ) 
 				'aio_login_el_background_repeat',
 				array(
 					'section' => $section,
-					'label'   => __( 'Background repeat', 'aio-login-pro' ),
+					'label'   => __( 'Background repeat', 'change-wp-admin-login' ),
 					'type'    => 'select',
 					'choices' => array(
-						'no-repeat' => __( 'No repeat', 'aio-login-pro' ),
-						'repeat'    => __( 'Tile', 'aio-login-pro' ),
-						'repeat-x'  => __( 'Repeat X', 'aio-login-pro' ),
-						'repeat-y'  => __( 'Repeat Y', 'aio-login-pro' ),
+						'no-repeat' => __( 'No repeat', 'change-wp-admin-login' ),
+						'repeat'    => __( 'Tile', 'change-wp-admin-login' ),
+						'repeat-x'  => __( 'Repeat X', 'change-wp-admin-login' ),
+						'repeat-y'  => __( 'Repeat Y', 'change-wp-admin-login' ),
 					),
 				)
 			);
@@ -631,12 +631,12 @@ if ( ! class_exists( 'AIO_Login_Pro\\Login_Customization\\Login_Customizer' ) ) 
 				'aio_login_el_background_position',
 				array(
 					'section' => $section,
-					'label'   => __( 'Background position', 'aio-login-pro' ),
+					'label'   => __( 'Background position', 'change-wp-admin-login' ),
 					'type'    => 'select',
 					'choices' => array(
-						'left top'      => __( 'Left', 'aio-login-pro' ),
-						'center center' => __( 'Center', 'aio-login-pro' ),
-						'right top'     => __( 'Right', 'aio-login-pro' ),
+						'left top'      => __( 'Left', 'change-wp-admin-login' ),
+						'center center' => __( 'Center', 'change-wp-admin-login' ),
+						'right top'     => __( 'Right', 'change-wp-admin-login' ),
 					),
 				)
 			);
@@ -653,12 +653,12 @@ if ( ! class_exists( 'AIO_Login_Pro\\Login_Customization\\Login_Customizer' ) ) 
 				'aio_login_el_background_size',
 				array(
 					'section' => $section,
-					'label'   => __( 'Background size', 'aio-login-pro' ),
+					'label'   => __( 'Background size', 'change-wp-admin-login' ),
 					'type'    => 'select',
 					'choices' => array(
-						'cover'   => __( 'Cover', 'aio-login-pro' ),
-						'contain' => __( 'Contain', 'aio-login-pro' ),
-						'initial' => __( 'Initial', 'aio-login-pro' ),
+						'cover'   => __( 'Cover', 'change-wp-admin-login' ),
+						'contain' => __( 'Contain', 'change-wp-admin-login' ),
+						'initial' => __( 'Initial', 'change-wp-admin-login' ),
 					),
 				)
 			);
@@ -669,7 +669,7 @@ if ( ! class_exists( 'AIO_Login_Pro\\Login_Customization\\Login_Customizer' ) ) 
 			$wp_customize->add_section(
 				$section,
 				array(
-					'title'    => __( 'Logo', 'aio-login-pro' ),
+					'title'    => __( 'Logo', 'change-wp-admin-login' ),
 					'panel'    => 'aio_login_customizer',
 					'priority' => 20,
 				)
@@ -679,7 +679,7 @@ if ( ! class_exists( 'AIO_Login_Pro\\Login_Customization\\Login_Customizer' ) ) 
 				'aio_login_disable_logo',
 				array(
 					'section' => $section,
-					'label'   => __( 'Disable logo', 'aio-login-pro' ),
+					'label'   => __( 'Disable logo', 'change-wp-admin-login' ),
 					'type'    => 'checkbox',
 				)
 			);
@@ -692,7 +692,7 @@ if ( ! class_exists( 'AIO_Login_Pro\\Login_Customization\\Login_Customizer' ) ) 
 					'aio_login_logo',
 					array(
 						'section'   => $section,
-						'label'     => __( 'Upload logo image', 'aio-login-pro' ),
+						'label'     => __( 'Upload logo image', 'change-wp-admin-login' ),
 						'mime_type' => 'image',
 					)
 				)
@@ -702,7 +702,7 @@ if ( ! class_exists( 'AIO_Login_Pro\\Login_Customization\\Login_Customizer' ) ) 
 				'aio_login_logo_width',
 				array(
 					'section'     => $section,
-					'label'       => __( 'Logo width (px)', 'aio-login-pro' ),
+					'label'       => __( 'Logo width (px)', 'change-wp-admin-login' ),
 					'type'        => 'number',
 					'input_attrs' => array( 'min' => 0, 'step' => 1 ),
 				)
@@ -712,7 +712,7 @@ if ( ! class_exists( 'AIO_Login_Pro\\Login_Customization\\Login_Customizer' ) ) 
 				'aio_login_logo_height',
 				array(
 					'section'     => $section,
-					'label'       => __( 'Logo height (px)', 'aio-login-pro' ),
+					'label'       => __( 'Logo height (px)', 'change-wp-admin-login' ),
 					'type'        => 'number',
 					'input_attrs' => array( 'min' => 0, 'step' => 1 ),
 				)
@@ -722,7 +722,7 @@ if ( ! class_exists( 'AIO_Login_Pro\\Login_Customization\\Login_Customizer' ) ) 
 				'aio_login_margin_bottom',
 				array(
 					'section'     => $section,
-					'label'       => __( 'Spacing below logo (px)', 'aio-login-pro' ),
+					'label'       => __( 'Spacing below logo (px)', 'change-wp-admin-login' ),
 					'type'        => 'number',
 					'input_attrs' => array( 'min' => 0, 'step' => 1 ),
 				)
@@ -732,7 +732,7 @@ if ( ! class_exists( 'AIO_Login_Pro\\Login_Customization\\Login_Customizer' ) ) 
 				'aio_login_logo_url',
 				array(
 					'section' => $section,
-					'label'   => __( 'Logo URL', 'aio-login-pro' ),
+					'label'   => __( 'Logo URL', 'change-wp-admin-login' ),
 					'type'    => 'url',
 				)
 			);
@@ -741,7 +741,7 @@ if ( ! class_exists( 'AIO_Login_Pro\\Login_Customization\\Login_Customizer' ) ) 
 				'aio_login_logo_title',
 				array(
 					'section'     => $section,
-					'label'       => __( 'Logo title', 'aio-login-pro' ),
+					'label'       => __( 'Logo title', 'change-wp-admin-login' ),
 					'type'        => 'text',
 				)
 			);
@@ -752,10 +752,10 @@ if ( ! class_exists( 'AIO_Login_Pro\\Login_Customization\\Login_Customizer' ) ) 
 			$wp_customize->add_section(
 				$section,
 				array(
-					'title'       => __( 'Customize Login Form', 'aio-login-pro' ),
+					'title'       => __( 'Customize Login Form', 'change-wp-admin-login' ),
 					'panel'       => 'aio_login_customizer',
 					'priority'    => 40,
-					'description' => __( 'Form box, fields, and labels.', 'aio-login-pro' ),
+					'description' => __( 'Form box, fields, and labels.', 'change-wp-admin-login' ),
 				)
 			);
 
@@ -771,7 +771,7 @@ if ( ! class_exists( 'AIO_Login_Pro\\Login_Customization\\Login_Customizer' ) ) 
 				'aio_login_el_form_transparent',
 				array(
 					'section' => $section,
-					'label'   => __( 'Enable form transparency', 'aio-login-pro' ),
+					'label'   => __( 'Enable form transparency', 'change-wp-admin-login' ),
 					'type'    => 'checkbox',
 				)
 			);
@@ -788,7 +788,7 @@ if ( ! class_exists( 'AIO_Login_Pro\\Login_Customization\\Login_Customizer' ) ) 
 				'aio_login_el_form_width',
 				array(
 					'section'     => $section,
-					'label'       => __( 'Form width (px)', 'aio-login-pro' ),
+					'label'       => __( 'Form width (px)', 'change-wp-admin-login' ),
 					'type'        => 'number',
 					'input_attrs' => array( 'min' => 0, 'step' => 1 ),
 				)
@@ -806,7 +806,7 @@ if ( ! class_exists( 'AIO_Login_Pro\\Login_Customization\\Login_Customizer' ) ) 
 				'aio_login_el_form_min_height',
 				array(
 					'section'     => $section,
-					'label'       => __( 'Minimum height (px)', 'aio-login-pro' ),
+					'label'       => __( 'Minimum height (px)', 'change-wp-admin-login' ),
 					'type'        => 'number',
 					'input_attrs' => array( 'min' => 0, 'step' => 1 ),
 				)
@@ -824,7 +824,7 @@ if ( ! class_exists( 'AIO_Login_Pro\\Login_Customization\\Login_Customizer' ) ) 
 				'aio_login_el_form_border_radius',
 				array(
 					'section'     => $section,
-					'label'       => __( 'Border radius (px)', 'aio-login-pro' ),
+					'label'       => __( 'Border radius (px)', 'change-wp-admin-login' ),
 					'type'        => 'number',
 					'input_attrs' => array( 'min' => 0, 'step' => 1 ),
 				)
@@ -842,7 +842,7 @@ if ( ! class_exists( 'AIO_Login_Pro\\Login_Customization\\Login_Customizer' ) ) 
 				'aio_login_el_form_shadow',
 				array(
 					'section' => $section,
-					'label'   => __( 'Shadow (e.g. 0 10px 30px)', 'aio-login-pro' ),
+					'label'   => __( 'Shadow (e.g. 0 10px 30px)', 'change-wp-admin-login' ),
 					'type'    => 'text',
 				)
 			);
@@ -859,7 +859,7 @@ if ( ! class_exists( 'AIO_Login_Pro\\Login_Customization\\Login_Customizer' ) ) 
 				'aio_login_el_form_shadow_opacity',
 				array(
 					'section'     => $section,
-					'label'       => __( 'Shadow opacity (0-1)', 'aio-login-pro' ),
+					'label'       => __( 'Shadow opacity (0-1)', 'change-wp-admin-login' ),
 					'type'        => 'number',
 					'input_attrs' => array( 'min' => 0, 'max' => 1, 'step' => 0.01 ),
 				)
@@ -877,9 +877,9 @@ if ( ! class_exists( 'AIO_Login_Pro\\Login_Customization\\Login_Customizer' ) ) 
 				'aio_login_el_form_padding',
 				array(
 					'section'     => $section,
-					'label'       => __( 'Padding (top right bottom left) with units', 'aio-login-pro' ),
+					'label'       => __( 'Padding (top right bottom left) with units', 'change-wp-admin-login' ),
 					'type'        => 'text',
-					'description' => __( 'Example: 20px 24px 20px 24px', 'aio-login-pro' ),
+					'description' => __( 'Example: 20px 24px 20px 24px', 'change-wp-admin-login' ),
 				)
 			);
 
@@ -895,22 +895,22 @@ if ( ! class_exists( 'AIO_Login_Pro\\Login_Customization\\Login_Customizer' ) ) 
 				'aio_login_el_form_border',
 				array(
 					'section'     => $section,
-					'label'       => __( 'Border (CSS shorthand)', 'aio-login-pro' ),
+					'label'       => __( 'Border (CSS shorthand)', 'change-wp-admin-login' ),
 					'type'        => 'text',
-					'description' => __( 'Example: 2px dotted black', 'aio-login-pro' ),
+					'description' => __( 'Example: 2px dotted black', 'change-wp-admin-login' ),
 				)
 			);
 
 			// Labels & inputs (merged here — LoginPress-style single "Customize Login Form" area).
-			$this->color_setting( $wp_customize, $section, 'aio_login_el_label_color', __( 'Label color', 'aio-login-pro' ) );
-			$this->color_setting( $wp_customize, $section, 'aio_login_el_remember_label_color', __( '"Remember Me" label color', 'aio-login-pro' ) );
+			$this->color_setting( $wp_customize, $section, 'aio_login_el_label_color', __( 'Label color', 'change-wp-admin-login' ) );
+			$this->color_setting( $wp_customize, $section, 'aio_login_el_remember_label_color', __( '"Remember Me" label color', 'change-wp-admin-login' ) );
 
 			$wp_customize->add_setting( 'aio_login_el_label_font_size', array( 'type' => 'option', 'transport' => 'postMessage', 'default' => '' ) );
 			$wp_customize->add_control(
 				'aio_login_el_label_font_size',
 				array(
 					'section' => $section,
-					'label'   => __( 'Label font size (px)', 'aio-login-pro' ),
+					'label'   => __( 'Label font size (px)', 'change-wp-admin-login' ),
 					'type'    => 'number',
 				)
 			);
@@ -920,7 +920,7 @@ if ( ! class_exists( 'AIO_Login_Pro\\Login_Customization\\Login_Customizer' ) ) 
 				'aio_login_el_remember_font_size',
 				array(
 					'section' => $section,
-					'label'   => __( '"Remember Me" font size (px)', 'aio-login-pro' ),
+					'label'   => __( '"Remember Me" font size (px)', 'change-wp-admin-login' ),
 					'type'    => 'number',
 				)
 			);
@@ -930,23 +930,23 @@ if ( ! class_exists( 'AIO_Login_Pro\\Login_Customization\\Login_Customizer' ) ) 
 				'aio_login_el_input_margin',
 				array(
 					'section'     => $section,
-					'label'       => __( 'Input margin (top right bottom left) with units', 'aio-login-pro' ),
+					'label'       => __( 'Input margin (top right bottom left) with units', 'change-wp-admin-login' ),
 					'type'        => 'text',
-					'description' => __( 'Example: 0 0 14px 0', 'aio-login-pro' ),
+					'description' => __( 'Example: 0 0 14px 0', 'change-wp-admin-login' ),
 				)
 			);
 
-			$this->color_setting( $wp_customize, $section, 'aio_login_el_input_bg_color', __( 'Input background color', 'aio-login-pro' ) );
-			$this->color_setting( $wp_customize, $section, 'aio_login_el_input_text_color', __( 'Input text color', 'aio-login-pro' ) );
+			$this->color_setting( $wp_customize, $section, 'aio_login_el_input_bg_color', __( 'Input background color', 'change-wp-admin-login' ) );
+			$this->color_setting( $wp_customize, $section, 'aio_login_el_input_text_color', __( 'Input text color', 'change-wp-admin-login' ) );
 
 			$wp_customize->add_setting( 'aio_login_el_input_width', array( 'type' => 'option', 'transport' => 'postMessage', 'default' => '' ) );
 			$wp_customize->add_control(
 				'aio_login_el_input_width',
 				array(
 					'section'     => $section,
-					'label'       => __( 'Field width (CSS)', 'aio-login-pro' ),
+					'label'       => __( 'Field width (CSS)', 'change-wp-admin-login' ),
 					'type'        => 'text',
-					'description' => __( 'Example: 100% or 320px', 'aio-login-pro' ),
+					'description' => __( 'Example: 100% or 320px', 'change-wp-admin-login' ),
 				)
 			);
 		}
@@ -956,23 +956,23 @@ if ( ! class_exists( 'AIO_Login_Pro\\Login_Customization\\Login_Customizer' ) ) 
 			$wp_customize->add_section(
 				$section,
 				array(
-					'title'    => __( 'Button Customization', 'aio-login-pro' ),
+					'title'    => __( 'Button Customization', 'change-wp-admin-login' ),
 					'panel'    => 'aio_login_customizer',
 					'priority' => 60,
 				)
 			);
 
-			$this->color_setting( $wp_customize, $section, 'aio_login_el_btn_bg_color', __( 'Button color', 'aio-login-pro' ) );
-			$this->color_setting( $wp_customize, $section, 'aio_login_el_btn_hover_color', __( 'Hover color', 'aio-login-pro' ) );
-			$this->color_setting( $wp_customize, $section, 'aio_login_el_btn_text_color', __( 'Text color', 'aio-login-pro' ) );
-			$this->color_setting( $wp_customize, $section, 'aio_login_el_btn_border_color', __( 'Border color', 'aio-login-pro' ) );
+			$this->color_setting( $wp_customize, $section, 'aio_login_el_btn_bg_color', __( 'Button color', 'change-wp-admin-login' ) );
+			$this->color_setting( $wp_customize, $section, 'aio_login_el_btn_hover_color', __( 'Hover color', 'change-wp-admin-login' ) );
+			$this->color_setting( $wp_customize, $section, 'aio_login_el_btn_text_color', __( 'Text color', 'change-wp-admin-login' ) );
+			$this->color_setting( $wp_customize, $section, 'aio_login_el_btn_border_color', __( 'Border color', 'change-wp-admin-login' ) );
 
 			$wp_customize->add_setting( 'aio_login_el_btn_size', array( 'type' => 'option', 'transport' => 'postMessage', 'default' => '' ) );
 			$wp_customize->add_control(
 				'aio_login_el_btn_size',
 				array(
 					'section' => $section,
-					'label'   => __( 'Button size (height px)', 'aio-login-pro' ),
+					'label'   => __( 'Button size (height px)', 'change-wp-admin-login' ),
 					'type'    => 'number',
 				)
 			);
@@ -981,9 +981,9 @@ if ( ! class_exists( 'AIO_Login_Pro\\Login_Customization\\Login_Customizer' ) ) 
 				'aio_login_el_btn_padding',
 				array(
 					'section'     => $section,
-					'label'       => __( 'Button padding', 'aio-login-pro' ),
+					'label'       => __( 'Button padding', 'change-wp-admin-login' ),
 					'type'        => 'text',
-					'description' => __( 'CSS padding shorthand, e.g. 16px (all sides), 12px 24px (top/bottom left/right), or four values for top, right, bottom, left.', 'aio-login-pro' ),
+					'description' => __( 'CSS padding shorthand, e.g. 16px (all sides), 12px 24px (top/bottom left/right), or four values for top, right, bottom, left.', 'change-wp-admin-login' ),
 				)
 			);
 
@@ -992,7 +992,7 @@ if ( ! class_exists( 'AIO_Login_Pro\\Login_Customization\\Login_Customizer' ) ) 
 				'aio_login_el_btn_border_radius',
 				array(
 					'section' => $section,
-					'label'   => __( 'Border radius (px)', 'aio-login-pro' ),
+					'label'   => __( 'Border radius (px)', 'change-wp-admin-login' ),
 					'type'    => 'number',
 				)
 			);
@@ -1002,7 +1002,7 @@ if ( ! class_exists( 'AIO_Login_Pro\\Login_Customization\\Login_Customizer' ) ) 
 				'aio_login_el_btn_shadow',
 				array(
 					'section' => $section,
-					'label'   => __( 'Shadow (e.g. 0 8px 20px)', 'aio-login-pro' ),
+					'label'   => __( 'Shadow (e.g. 0 8px 20px)', 'change-wp-admin-login' ),
 					'type'    => 'text',
 				)
 			);
@@ -1012,7 +1012,7 @@ if ( ! class_exists( 'AIO_Login_Pro\\Login_Customization\\Login_Customizer' ) ) 
 				'aio_login_el_btn_shadow_opacity',
 				array(
 					'section'     => $section,
-					'label'       => __( 'Shadow opacity (0-1)', 'aio-login-pro' ),
+					'label'       => __( 'Shadow opacity (0-1)', 'change-wp-admin-login' ),
 					'type'        => 'number',
 					'input_attrs' => array( 'min' => 0, 'max' => 1, 'step' => 0.01 ),
 				)
@@ -1023,7 +1023,7 @@ if ( ! class_exists( 'AIO_Login_Pro\\Login_Customization\\Login_Customizer' ) ) 
 				'aio_login_el_btn_text_size',
 				array(
 					'section' => $section,
-					'label'   => __( 'Text size (px)', 'aio-login-pro' ),
+					'label'   => __( 'Text size (px)', 'change-wp-admin-login' ),
 					'type'    => 'number',
 				)
 			);
@@ -1090,10 +1090,10 @@ if ( ! class_exists( 'AIO_Login_Pro\\Login_Customization\\Login_Customizer' ) ) 
 			$wp_customize->add_section(
 				$section,
 				array(
-					'title'       => __( 'Form Footer', 'aio-login-pro' ),
+					'title'       => __( 'Form Footer', 'change-wp-admin-login' ),
 					'panel'       => 'aio_login_customizer',
 					'priority'    => 70,
-					'description' => __( 'Footer links (Lost password, Back to site) and browser tab title.', 'aio-login-pro' ),
+					'description' => __( 'Footer links (Lost password, Back to site) and browser tab title.', 'change-wp-admin-login' ),
 				)
 			);
 
@@ -1103,7 +1103,7 @@ if ( ! class_exists( 'AIO_Login_Pro\\Login_Customization\\Login_Customizer' ) ) 
 					'aio_login_el_link_color',
 					array(
 						'section' => $section,
-						'label'   => __( 'Footer link color', 'aio-login-pro' ),
+						'label'   => __( 'Footer link color', 'change-wp-admin-login' ),
 					)
 				)
 			);
@@ -1120,7 +1120,7 @@ if ( ! class_exists( 'AIO_Login_Pro\\Login_Customization\\Login_Customizer' ) ) 
 				'aio_login_login_page_title',
 				array(
 					'section' => $section,
-					'label'   => __( 'Login page title', 'aio-login-pro' ),
+					'label'   => __( 'Login page title', 'change-wp-admin-login' ),
 					'type'    => 'text',
 				)
 			);
@@ -1139,7 +1139,7 @@ if ( ! class_exists( 'AIO_Login_Pro\\Login_Customization\\Login_Customizer' ) ) 
 					'aio_login_favicon',
 					array(
 						'section'   => $section,
-						'label'     => __( 'Custom favicon', 'aio-login-pro' ),
+						'label'     => __( 'Custom favicon', 'change-wp-admin-login' ),
 						'mime_type' => 'image',
 					)
 				)
@@ -1151,7 +1151,7 @@ if ( ! class_exists( 'AIO_Login_Pro\\Login_Customization\\Login_Customizer' ) ) 
 			$wp_customize->add_section(
 				$section,
 				array(
-					'title'    => __( 'Customize Forgot Password', 'aio-login-pro' ),
+					'title'    => __( 'Customize Forgot Password', 'change-wp-admin-login' ),
 					'panel'    => 'aio_login_customizer',
 					'priority' => 50,
 				)
@@ -1171,7 +1171,7 @@ if ( ! class_exists( 'AIO_Login_Pro\\Login_Customization\\Login_Customizer' ) ) 
 					'aio_login_forgot_background_color',
 					array(
 						'section' => $section,
-						'label'   => __( 'Forgot form background color', 'aio-login-pro' ),
+						'label'   => __( 'Forgot form background color', 'change-wp-admin-login' ),
 					)
 				)
 			);
@@ -1190,7 +1190,7 @@ if ( ! class_exists( 'AIO_Login_Pro\\Login_Customization\\Login_Customizer' ) ) 
 					'aio_login_forgot_background_image',
 					array(
 						'section'   => $section,
-						'label'     => __( 'Forgot form background image', 'aio-login-pro' ),
+						'label'     => __( 'Forgot form background image', 'change-wp-admin-login' ),
 						'mime_type' => 'image',
 					)
 				)
@@ -1202,44 +1202,44 @@ if ( ! class_exists( 'AIO_Login_Pro\\Login_Customization\\Login_Customizer' ) ) 
 
 			// Match core Customizer "Additional CSS" section: expandable help + CodeMirror (WP_Customize_Code_Editor_Control).
 			$section_description  = '<p>';
-			$section_description .= esc_html__( 'Add your own CSS code here to customize the appearance and layout of your login screen. JavaScript is not injected from here.', 'aio-login-pro' );
+			$section_description .= esc_html__( 'Add your own CSS code here to customize the appearance and layout of your login screen. JavaScript is not injected from here.', 'change-wp-admin-login' );
 			$section_description .= sprintf(
 				' <a href="%1$s" class="external-link" target="_blank">%2$s<span class="screen-reader-text"> %3$s</span></a>',
 				esc_url( __( 'https://developer.wordpress.org/advanced-administration/wordpress/css/' ) ),
-				esc_html__( 'Learn more about CSS', 'aio-login-pro' ),
+				esc_html__( 'Learn more about CSS', 'change-wp-admin-login' ),
 				sprintf(
 					'<span class="screen-reader-text"> %s</span>',
-					esc_html__( '(opens in a new tab)', 'aio-login-pro' )
+					esc_html__( '(opens in a new tab)', 'change-wp-admin-login' )
 				)
 			);
 			$section_description .= '</p>';
 
-			$section_description .= '<p id="aio-login-editor-keyboard-trap-help-1">' . esc_html__( 'When using a keyboard to navigate:', 'aio-login-pro' ) . '</p>';
+			$section_description .= '<p id="aio-login-editor-keyboard-trap-help-1">' . esc_html__( 'When using a keyboard to navigate:', 'change-wp-admin-login' ) . '</p>';
 			$section_description .= '<ul>';
-			$section_description .= '<li id="aio-login-editor-keyboard-trap-help-2">' . esc_html__( 'In the editing area, the Tab key enters a tab character.', 'aio-login-pro' ) . '</li>';
-			$section_description .= '<li id="aio-login-editor-keyboard-trap-help-3">' . esc_html__( 'To move away from this area, press the Esc key followed by the Tab key.', 'aio-login-pro' ) . '</li>';
-			$section_description .= '<li id="aio-login-editor-keyboard-trap-help-4">' . esc_html__( 'Screen reader users: when in forms mode, you may need to press the Esc key twice.', 'aio-login-pro' ) . '</li>';
+			$section_description .= '<li id="aio-login-editor-keyboard-trap-help-2">' . esc_html__( 'In the editing area, the Tab key enters a tab character.', 'change-wp-admin-login' ) . '</li>';
+			$section_description .= '<li id="aio-login-editor-keyboard-trap-help-3">' . esc_html__( 'To move away from this area, press the Esc key followed by the Tab key.', 'change-wp-admin-login' ) . '</li>';
+			$section_description .= '<li id="aio-login-editor-keyboard-trap-help-4">' . esc_html__( 'Screen reader users: when in forms mode, you may need to press the Esc key twice.', 'change-wp-admin-login' ) . '</li>';
 			$section_description .= '</ul>';
 
 			if ( 'false' !== wp_get_current_user()->syntax_highlighting ) {
 				$section_description .= '<p>';
 				$section_description .= sprintf(
 					/* translators: 1: Opening profile link tag, 2: Closing link tag + screen reader text. */
-					esc_html__( 'The edit field automatically highlights code syntax. You can disable this in your %1$suser profile%2$s to work in plain text mode.', 'aio-login-pro' ),
+					esc_html__( 'The edit field automatically highlights code syntax. You can disable this in your %1$suser profile%2$s to work in plain text mode.', 'change-wp-admin-login' ),
 					'<a href="' . esc_url( get_edit_profile_url() ) . '" class="external-link" target="_blank">',
-					'</a><span class="screen-reader-text"> ' . esc_html__( '(opens in a new tab)', 'aio-login-pro' ) . '</span>'
+					'</a><span class="screen-reader-text"> ' . esc_html__( '(opens in a new tab)', 'change-wp-admin-login' ) . '</span>'
 				);
 				$section_description .= '</p>';
 			}
 
 			$section_description .= '<p class="section-description-buttons">';
-			$section_description .= '<button type="button" class="button-link section-description-close">' . esc_html__( 'Close', 'aio-login-pro' ) . '</button>';
+			$section_description .= '<button type="button" class="button-link section-description-close">' . esc_html__( 'Close', 'change-wp-admin-login' ) . '</button>';
 			$section_description .= '</p>';
 
 			$wp_customize->add_section(
 				$section,
 				array(
-					'title'              => __( 'Custom CSS', 'aio-login-pro' ),
+					'title'              => __( 'Custom CSS', 'change-wp-admin-login' ),
 					'panel'              => 'aio_login_customizer',
 					'priority'           => 90,
 					'description_hidden' => true,
@@ -1248,8 +1248,8 @@ if ( ! class_exists( 'AIO_Login_Pro\\Login_Customization\\Login_Customizer' ) ) 
 			);
 
 			$custom_css_sample = "/* Custom CSS */\n.login-form {\n  /* your styles */\n}";
-			$custom_css_control_description  = '<p>' . esc_html__( 'Add custom CSS to further customize your login page.', 'aio-login-pro' ) . '</p>';
-			$custom_css_control_description .= '<p class="description" style="margin-top:10px;margin-bottom:6px;">' . esc_html__( 'Example:', 'aio-login-pro' ) . '</p>';
+			$custom_css_control_description  = '<p>' . esc_html__( 'Add custom CSS to further customize your login page.', 'change-wp-admin-login' ) . '</p>';
+			$custom_css_control_description .= '<p class="description" style="margin-top:10px;margin-bottom:6px;">' . esc_html__( 'Example:', 'change-wp-admin-login' ) . '</p>';
 			$custom_css_control_description .= '<pre class="aio-login-custom-css-sample" style="white-space:pre-wrap;margin:0 0 4px;padding:10px 12px;background:#f0f0f1;border:1px solid #c3c4c7;border-radius:4px;font-size:12px;line-height:1.5;">' . esc_html( $custom_css_sample ) . '</pre>';
 
 			$wp_customize->add_control(
@@ -1257,7 +1257,7 @@ if ( ! class_exists( 'AIO_Login_Pro\\Login_Customization\\Login_Customizer' ) ) 
 					$wp_customize,
 					'aio_login_custom-css',
 					array(
-						'label'       => __( 'Custom CSS', 'aio-login-pro' ),
+						'label'       => __( 'Custom CSS', 'change-wp-admin-login' ),
 						'description' => $custom_css_control_description,
 						'section'     => $section,
 						'code_type'   => 'text/css',
@@ -1382,13 +1382,13 @@ if ( ! class_exists( 'AIO_Login_Pro\\Login_Customization\\Login_Customizer' ) ) 
 					'freeTemplateSlugs' => array( 'default', 'template-8' ),
 					// Match admin app / aio-login-pro-popup.vue (Freemius vs AppSumo build).
 					'popupTitle'       => $appsumo_popup
-						? __( 'Unlock premium features with the AppSumo deal', 'aio-login-pro' )
-						: __( 'To access more features and options', 'aio-login-pro' ),
+						? __( 'Unlock premium features with the AppSumo deal', 'change-wp-admin-login' )
+						: __( 'To access more features and options', 'change-wp-admin-login' ),
 					'popupButtonLabel' => $appsumo_popup
-						? __( 'View AppSumo Plans', 'aio-login-pro' )
+						? __( 'View AppSumo Plans', 'change-wp-admin-login' )
 						: ( $pro_plugin_active
-							? __( 'Get Business Plan Now', 'aio-login-pro' )
-							: __( 'Get AIO Login Pro', 'aio-login-pro' ) ),
+							? __( 'Get Business Plan Now', 'change-wp-admin-login' )
+							: __( 'Get AIO Login Pro', 'change-wp-admin-login' ) ),
 					'popupUrl'         => $appsumo_popup
 						? 'https://appsumo.com/products/aiologin/?p=1#pricePlans'
 						: 'https://aiologin.com/pricing/?utm_source=plugin&utm_medium=pro_pop_up&utm_campaign=plugin',
@@ -1396,7 +1396,7 @@ if ( ! class_exists( 'AIO_Login_Pro\\Login_Customization\\Login_Customizer' ) ) 
 					'assetsUrl'         => AIO_LOGIN__DIR_URL . 'assets/',
 					'loginPhpUrl'       => site_url( 'wp-login.php' ),
 					'resetDefaults' => $this->get_customizer_default_values(),
-					'resetConfirm'  => __( 'Reset all AIO Login Customize options to their default values? Click Publish to save.', 'aio-login-pro' ),
+					'resetConfirm'  => __( 'Reset all AIO Login Customize options to their default values? Click Publish to save.', 'change-wp-admin-login' ),
 				)
 			);
 

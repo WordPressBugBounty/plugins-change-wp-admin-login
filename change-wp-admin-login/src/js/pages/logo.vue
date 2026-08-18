@@ -2,7 +2,7 @@
 	<div v-if="page_loaded">
 		<aio-login-form :action="nonce" v-on:handle-submit="handleSubmit">
 			<template v-slot:title>
-				<span>Logo</span>
+				<span>{{ $t("Logo") }}</span>
 				<aio-login-tooltip
 					:content="tooltipContent.logo.content"
 					:title="tooltipContent.logo.title"
@@ -13,13 +13,13 @@
 			<template v-slot:form-fields>
 				<tr>
 					<th>
-						<label for="logo">Logo</label>
+						<label for="logo">{{ $t("Logo") }}</label>
 					</th>
 
 					<td>
 						<aio-login-media
 							id="logo"
-							title="Upload Logo"
+							:title="$t('Upload Logo')"
 							:default-image="default_image"
 							:image="logo_image"
 							v-on:image-updated="handelLogoUpload"
@@ -30,7 +30,7 @@
 
 				<tr>
 					<th>
-						<label for="logo-redirect-url">Logo Redirect URL</label>
+						<label for="logo-redirect-url">{{ $t("Logo Redirect URL") }}</label>
 					</th>
 					<td>
 						<input type="text" class="regular-text" id="logo-redirect-url" v-model="form_data.redirect_url" />
@@ -40,7 +40,7 @@
 
 				<tr>
 					<th>
-						<label for="logo-width">Logo Width</label>
+						<label for="logo-width">{{ $t("Logo Width") }}</label>
 					</th>
 
 					<td>
@@ -50,7 +50,7 @@
 
 				<tr>
 					<th>
-						<label for="logo-height">Logo Height</label>
+						<label for="logo-height">{{ $t("Logo Height") }}</label>
 					</th>
 
 					<td>
@@ -60,7 +60,7 @@
 
 				<tr>
 					<th>
-						<label for="margin-bottom">Margin Bottom</label>
+						<label for="margin-bottom">{{ $t("Margin Bottom") }}</label>
 					</th>
 
 					<td>

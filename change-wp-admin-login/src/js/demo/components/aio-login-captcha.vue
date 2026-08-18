@@ -88,21 +88,15 @@ export default {
 
 	computed: {
 		statusBadge() {
-			if (this.enabled && this.hasValidKeys() && this.configData.validated) {
-				return 'green';
-			} else if (this.hasValidKeys()) {
-				return 'orange';
+			if ( ! this.hasValidKeys() ) {
+				return null;
 			}
-			return null;
+			// Configured + enabled = green; configured but disabled = orange.
+			return this.enabled ? 'green' : 'orange';
 		},
 
 		statusBadgeText() {
-			if (this.statusBadge === 'green') {
-				return 'Verified';
-			} else if (this.statusBadge === 'orange') {
-				return 'Needs Test';
-			}
-			return '';
+			return this.statusBadge ? 'Configured' : '';
 		}
 	},
 

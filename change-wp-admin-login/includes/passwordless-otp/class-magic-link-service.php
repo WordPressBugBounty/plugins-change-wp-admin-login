@@ -39,19 +39,20 @@ if ( ! class_exists( 'AIO_Login\\Passwordless_Otp\\Magic_Link_Service' ) ) {
 				return new \WP_Error( 'not_registered', __( 'You do not have an account yet. Please register first or contact the site administrator.', 'change-wp-admin-login' ) );
 			}
 
-			$ip = Helper::get_ip();
-
-			$rate = self::check_rate_limits( $user_id, $ip );
-			if ( is_wp_error( $rate ) ) {
-				return $rate;
-			}
-
+			$ip    = Helper::get_ip();
 			$email = strtolower( sanitize_email( $email ) );
+
 			if ( OTP_Lockout::is_passwordless_verify_blocked( $ip, $email, 'email' ) ) {
 				return new \WP_Error(
 					'verify_blocked',
 					OTP_Lockout::get_passwordless_verify_blocked_message( $ip, $email, 'email' )
 				);
+			}
+
+			// Atomically reserve a user/IP request slot before minting a link (AIOL-692).
+			$rate = self::reserve_request_slots( $user_id, $ip );
+			if ( is_wp_error( $rate ) ) {
+				return $rate;
 			}
 
 			$token  = wp_generate_password( 32, false, false );
@@ -64,7 +65,7 @@ if ( ! class_exists( 'AIO_Login\\Passwordless_Otp\\Magic_Link_Service' ) ) {
 
 			$session = array(
 				'user_id'      => $user_id,
-				'email'        => strtolower( sanitize_email( $email ) ),
+				'email'        => $email,
 				'secret_hash'  => wp_hash_password( $secret ),
 				'secret_enc'   => OTP_Encryption::encrypt( $secret ),
 				'expires'      => $expires,
@@ -75,8 +76,6 @@ if ( ! class_exists( 'AIO_Login\\Passwordless_Otp\\Magic_Link_Service' ) ) {
 			);
 
 			set_transient( self::transient_key( $token ), $session, $ttl + 120 );
-
-			self::increment_user_request_count( $user_id );
 
 			return array(
 				'token'  => $token,
@@ -122,12 +121,25 @@ if ( ! class_exists( 'AIO_Login\\Passwordless_Otp\\Magic_Link_Service' ) ) {
 			}
 
 			if ( ! self::secret_matches_session( $secret, $session ) ) {
+				$fail = OTP_Lockout::increment_identifier_failure_atomic( $session_email, 'email' );
+				OTP_Lockout::record_shared_password_limiter_failure( Helper::get_ip() );
+				$max  = OTP_Lockout::get_verify_attempt_limit( 'email' );
+				if ( ! is_wp_error( $fail ) && (int) $fail >= $max ) {
+					OTP_Lockout::block_ip( $session_email, Helper::get_ip(), 'email' );
+					return new \WP_Error(
+						'verify_blocked',
+						OTP_Lockout::get_passwordless_verify_blocked_message( Helper::get_ip(), $session_email, 'email' )
+					);
+				}
 				return new \WP_Error( 'invalid_link', self::get_error_message( 'invalid_link' ) );
 			}
 
 			$session['used'] = true;
 			$remaining_ttl   = max( 60, (int) $session['expires'] - time() );
 			set_transient( self::transient_key( $token ), $session, $remaining_ttl );
+			OTP_Lockout::clear_account_lockout( (int) ( $session['user_id'] ?? 0 ), $session_email, 'email' );
+			OTP_Lockout::clear_verify_lockout( Helper::get_ip() );
+			Helper::update_user_attempt_count( Helper::get_ip(), true );
 
 			$user_id = isset( $session['user_id'] ) ? (int) $session['user_id'] : 0;
 			if ( $user_id <= 0 || ! get_user_by( 'id', $user_id ) ) {
@@ -278,7 +290,12 @@ if ( ! class_exists( 'AIO_Login\\Passwordless_Otp\\Magic_Link_Service' ) ) {
 				case 'expired':
 					return __( 'This login link has expired. Please request a new login link.', 'change-wp-admin-login' );
 				case 'rate_limited':
-					return __( 'Too many login requests. Please wait before trying again.', 'change-wp-admin-login' );
+					$max = Magic_Link_Settings::get_max_requests();
+					return sprintf(
+						/* translators: %d: maximum login link requests allowed within the validity window */
+						__( 'You have reached the maximum of %d login link requests. Please wait until the validity window resets before requesting another link.', 'change-wp-admin-login' ),
+						$max
+					);
 				case 'verify_blocked':
 					return OTP_Lockout::get_passwordless_verify_blocked_message( Helper::get_ip(), '', 'email' );
 				case 'session_expired':
@@ -289,43 +306,124 @@ if ( ! class_exists( 'AIO_Login\\Passwordless_Otp\\Magic_Link_Service' ) ) {
 		}
 
 		/**
+		 * Atomically enforce per-user and per-IP login-link request limits.
+		 *
 		 * @param int    $user_id User ID.
 		 * @param string $ip      IP address.
 		 * @return true|\WP_Error
 		 */
-		private static function check_rate_limits( $user_id, $ip ) {
+		private static function reserve_request_slots( $user_id, $ip ) {
 			$max_user = Magic_Link_Settings::get_max_requests();
-			$user_key = self::USER_REQUEST_PREFIX . (int) $user_id;
-			$count    = (int) get_transient( $user_key );
+			$window   = max( MINUTE_IN_SECONDS, Magic_Link_Settings::get_validity_minutes() * MINUTE_IN_SECONDS );
 
-			if ( $count >= $max_user ) {
-				return new \WP_Error( 'rate_limited', self::get_error_message( 'rate_limited' ) );
+			$user_result = self::with_rate_limit_lock(
+				'user_' . (int) $user_id,
+				function () use ( $user_id, $max_user, $window ) {
+					return self::reserve_windowed_slot(
+						self::USER_REQUEST_PREFIX . (int) $user_id,
+						$max_user,
+						$window
+					);
+				}
+			);
+
+			if ( is_wp_error( $user_result ) ) {
+				return $user_result;
 			}
 
-			$ip_key   = self::IP_SEND_PREFIX . md5( $ip );
-			$ip_count = (int) get_transient( $ip_key );
-			$ip_max   = max( $max_user, 10 );
+			$ip_max = max( $max_user, 10 );
+			$ip_key = self::IP_SEND_PREFIX . md5( (string) $ip );
 
-			if ( $ip_count >= $ip_max ) {
-				return new \WP_Error( 'rate_limited', self::get_error_message( 'rate_limited' ) );
+			$ip_result = self::with_rate_limit_lock(
+				'ip_' . md5( (string) $ip ),
+				function () use ( $ip_key, $ip_max, $window ) {
+					return self::reserve_windowed_slot( $ip_key, $ip_max, $window );
+				}
+			);
+
+			if ( is_wp_error( $ip_result ) ) {
+				return $ip_result;
 			}
-
-			set_transient( $ip_key, $ip_count + 1, Magic_Link_Settings::get_validity_minutes() * MINUTE_IN_SECONDS );
 
 			return true;
 		}
 
 		/**
-		 * @param int $user_id User ID.
+		 * Keep request timestamps inside the validity window and reserve one slot.
+		 *
+		 * @param string $transient_key Transient key.
+		 * @param int    $max           Max requests in window.
+		 * @param int    $window        Window length in seconds.
+		 * @return true|\WP_Error
 		 */
-		private static function increment_user_request_count( $user_id ) {
-			$user_key = self::USER_REQUEST_PREFIX . (int) $user_id;
-			$count    = (int) get_transient( $user_key );
-			set_transient(
-				$user_key,
-				$count + 1,
-				Magic_Link_Settings::get_validity_minutes() * MINUTE_IN_SECONDS
+		private static function reserve_windowed_slot( $transient_key, $max, $window ) {
+			$max    = max( 1, (int) $max );
+			$window = max( MINUTE_IN_SECONDS, (int) $window );
+			$now    = time();
+			$stored = get_transient( $transient_key );
+			$times  = array();
+
+			if ( is_array( $stored ) && isset( $stored['times'] ) && is_array( $stored['times'] ) ) {
+				$times = $stored['times'];
+			} elseif ( is_numeric( $stored ) && (int) $stored > 0 ) {
+				// Legacy counter → treat as N requests already used in this window.
+				$legacy = min( $max, (int) $stored );
+				for ( $i = 0; $i < $legacy; $i++ ) {
+					$times[] = $now;
+				}
+			}
+
+			$times = array_values(
+				array_filter(
+					$times,
+					static function ( $timestamp ) use ( $now, $window ) {
+						return ( $now - (int) $timestamp ) < $window;
+					}
+				)
 			);
+
+			if ( count( $times ) >= $max ) {
+				return new \WP_Error( 'rate_limited', self::get_error_message( 'rate_limited' ) );
+			}
+
+			$times[] = $now;
+			set_transient(
+				$transient_key,
+				array(
+					'times' => $times,
+				),
+				$window
+			);
+
+			return true;
+		}
+
+		/**
+		 * Serialize rate-limit updates so concurrent requests cannot skip the max.
+		 *
+		 * @param string   $lock_suffix Unique suffix for this lock.
+		 * @param callable $callback    Callback executed while locked.
+		 * @return mixed|\WP_Error
+		 */
+		private static function with_rate_limit_lock( $lock_suffix, $callback ) {
+			if ( ! is_callable( $callback ) ) {
+				return new \WP_Error( 'rate_limited', self::get_error_message( 'rate_limited' ) );
+			}
+
+			global $wpdb;
+
+			$lock_name = 'aio_ml_rl_' . md5( (string) $lock_suffix );
+			$got       = $wpdb->get_var( $wpdb->prepare( 'SELECT GET_LOCK(%s, %d)', $lock_name, 5 ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+
+			if ( '1' !== (string) $got ) {
+				return new \WP_Error( 'rate_limited', self::get_error_message( 'rate_limited' ) );
+			}
+
+			try {
+				return $callback();
+			} finally {
+				$wpdb->get_var( $wpdb->prepare( 'SELECT RELEASE_LOCK(%s)', $lock_name ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+			}
 		}
 
 		/**

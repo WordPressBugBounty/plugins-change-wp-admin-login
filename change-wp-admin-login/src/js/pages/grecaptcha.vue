@@ -3,14 +3,14 @@
 		<div class="aio-login-t-wrapper">
 			<div>
 				<h3>
-					<span>Captcha Settings</span>
+					<span>{{ $t("Captcha Settings") }}</span>
 					<aio-login-tooltip
 						:content="tooltipContent.captcha.content"
 						placement="bottom"
 					/>
 				</h3>
 				<div v-if="showSingleCaptchaNotice && anyCaptchaEnabled && !noteDismissed" class="captcha-note">
-					<span>Note: You can only enable one captcha at a time.</span>
+					<span>{{ $t("Note: You can only enable one captcha at a time.") }}</span>
 					<button type="button" class="dismiss-btn" @click="dismissNote" aria-label="Dismiss">×</button>
 				</div>
 			</div>
@@ -40,6 +40,7 @@
 					:has-pro="turnstileUnlocked"
 					:enabled="turnstile_form_data.enabled"
 					:config-data="turnstileConfigData"
+					:api-namespace="turnstile_namespace"
 					:api-nonce="turnstile_nonce"
 					@toggle-captcha="handleToggleTurnstile"
 					@save-settings="handleSaveTurnstileSettings"
@@ -59,6 +60,7 @@
 <script>
 import tooltipContent from '../tooltip-content.js';
 import resolveParentCurrentIsPro from '../resolve-parent-current-is-pro.js';
+import { t } from '../i18n.js';
 
 export default {
 	name: 'grecaptcha',
@@ -231,14 +233,18 @@ export default {
 			}
 			axios.post(this.namespace + '/save-settings', payload)
 				.then(response => {
-					this.form_data.validated = fromVerifiedSave ? true : this.form_data.validated;
+					if (response.data && typeof response.data.validated !== 'undefined') {
+						this.form_data.validated = !!response.data.validated;
+					} else if (fromVerifiedSave) {
+						this.form_data.validated = true;
+					}
 					this.snackbar.message = response.data.message;
 					this.snackbar.show = true;
 				})
 				.catch(error => {
 					const message = (error.response && error.response.data && error.response.data.message)
 						? error.response.data.message
-						: 'Error saving settings.';
+						: t( 'Error saving settings.' );
 					this.snackbar.message = message;
 					this.snackbar.show = true;
 				});
@@ -288,14 +294,18 @@ export default {
 			}
 			axios.post(this.hcaptcha_namespace + '/save-settings', payload)
 				.then(response => {
-					this.hcaptcha_form_data.validated = fromVerifiedSave ? true : this.hcaptcha_form_data.validated;
+					if (response.data && typeof response.data.validated !== 'undefined') {
+						this.hcaptcha_form_data.validated = !!response.data.validated;
+					} else if (fromVerifiedSave) {
+						this.hcaptcha_form_data.validated = true;
+					}
 					this.snackbar.message = response.data.message;
 					this.snackbar.show = true;
 				})
 				.catch(error => {
 					const message = (error.response && error.response.data && error.response.data.message)
 						? error.response.data.message
-						: 'Error saving hCaptcha settings.';
+						: t( 'Error saving hCaptcha settings.' );
 					this.snackbar.message = message;
 					this.snackbar.show = true;
 				});
@@ -336,14 +346,18 @@ export default {
 			}
 			axios.post(this.turnstile_namespace + '/save-settings', payload)
 				.then(response => {
-					this.turnstile_form_data.validated = fromVerifiedSave ? true : this.turnstile_form_data.validated;
+					if (response.data && typeof response.data.validated !== 'undefined') {
+						this.turnstile_form_data.validated = !!response.data.validated;
+					} else if (fromVerifiedSave) {
+						this.turnstile_form_data.validated = true;
+					}
 					this.snackbar.message = response.data.message;
 					this.snackbar.show = true;
 				})
 				.catch(error => {
 					const message = (error.response && error.response.data && error.response.data.message)
 						? error.response.data.message
-						: 'Error saving Turnstile settings.';
+						: t( 'Error saving Turnstile settings.' );
 					this.snackbar.message = message;
 					this.snackbar.show = true;
 				});

@@ -350,7 +350,11 @@ if ( ! class_exists( 'AIO_Login\\Passwordless_Otp\\Magic_Link_Login' ) ) {
 			} elseif ( $captcha_required && ! empty( $captcha['provider'] ) && 'hcaptcha' === $captcha['provider'] ) {
 				wp_enqueue_script( 'hcaptcha', 'https://js.hcaptcha.com/1/api.js', array(), null, true ); // phpcs:ignore WordPress.WP.EnqueuedResourceParameters.MissingVersion
 			} elseif ( $captcha_required && ! empty( $captcha['provider'] ) && 'turnstile' === $captcha['provider'] ) {
-				wp_enqueue_script( 'cloudflare-turnstile', 'https://challenges.cloudflare.com/turnstile/v0/api.js', array(), null, true ); // phpcs:ignore WordPress.WP.EnqueuedResourceParameters.MissingVersion
+				if ( wp_script_is( 'aio-login-turnstile', 'registered' ) ) {
+					wp_enqueue_script( 'aio-login-turnstile' );
+				} else {
+					wp_enqueue_script( 'cloudflare-turnstile', 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit', array(), null, true ); // phpcs:ignore WordPress.WP.EnqueuedResourceParameters.MissingVersion
+				}
 			}
 
 			$is_woocommerce = ( function_exists( 'is_account_page' ) && is_account_page() )
@@ -544,10 +548,29 @@ if ( ! class_exists( 'AIO_Login\\Passwordless_Otp\\Magic_Link_Login' ) ) {
 
 			if ( $skip_2fa ) {
 				$this->skip_two_factor_for_magic_link( $user );
+				$this->redirect_magic_link_user( $user, $magic_redirect );
+				exit;
 			}
+
+			// Skip 2FA is off: drop any prior "challenge completed" cookie (e.g. from setup)
+			// so login_redirect / pending checks re-require OTP for this passwordless login.
+			$this->clear_two_factor_challenge_cookie();
 
 			$this->redirect_magic_link_user( $user, $magic_redirect );
 			exit;
+		}
+
+		/**
+		 * Clear AIO Login 2FA completion cookie for the current browser request.
+		 */
+		private function clear_two_factor_challenge_cookie() {
+			if ( ! class_exists( '\AIO_Login_Pro\Two_Factor\Two_Factor_Auth' ) ) {
+				return;
+			}
+			$tfa = \AIO_Login_Pro\Two_Factor\Two_Factor_Auth::get_instance();
+			if ( $tfa && method_exists( $tfa, 'clear_login_challenge_cookie' ) ) {
+				$tfa->clear_login_challenge_cookie();
+			}
 		}
 
 		/**
@@ -578,7 +601,9 @@ if ( ! class_exists( 'AIO_Login\\Passwordless_Otp\\Magic_Link_Login' ) ) {
 
 			$checkout_redirect = Magic_Link_Service::sanitize_redirect_to( (string) $requested_redirect_to );
 			if ( '' !== $checkout_redirect ) {
-				if ( $this->magic_link_login_requires_2fa( $user ) && class_exists( '\AIO_Login_Pro\Two_Factor\Two_Factor_Auth' ) ) {
+				if ( ! Magic_Link_Settings::should_skip_two_factor()
+					&& $this->magic_link_login_requires_2fa( $user )
+					&& class_exists( '\AIO_Login_Pro\Two_Factor\Two_Factor_Auth' ) ) {
 					return \AIO_Login_Pro\Two_Factor\Two_Factor_Auth::get_verification_url( $checkout_redirect );
 				}
 				return $checkout_redirect;
@@ -588,10 +613,14 @@ if ( ! class_exists( 'AIO_Login\\Passwordless_Otp\\Magic_Link_Login' ) ) {
 				return $this->resolve_dashboard_redirect( $user );
 			}
 
-			if ( $this->magic_link_login_requires_2fa( $user ) ) {
-				if ( class_exists( '\AIO_Login_Pro\Two_Factor\Two_Factor_Auth' ) ) {
-					return \AIO_Login_Pro\Two_Factor\Two_Factor_Auth::get_verification_url( $redirect_to );
+			// Always land on the 2FA challenge when the user has 2FA configured and Skip 2FA is off.
+			if ( $this->magic_link_login_requires_2fa( $user ) && class_exists( '\AIO_Login_Pro\Two_Factor\Two_Factor_Auth' ) ) {
+				$post_2fa_dest = $redirect_to;
+				if ( is_string( $post_2fa_dest ) && false !== strpos( $post_2fa_dest, 'aio_login_pro__two_factor_auth' ) ) {
+					// Already a challenge URL from maybe_redirect_to_tfa — keep it.
+					return $post_2fa_dest;
 				}
+				return \AIO_Login_Pro\Two_Factor\Two_Factor_Auth::get_verification_url( $post_2fa_dest );
 			}
 
 			return $redirect_to;

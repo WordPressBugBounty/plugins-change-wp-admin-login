@@ -183,28 +183,59 @@ if (!class_exists('AIO_Login\\Google_Recaptcha\\Google_Recaptcha')) {
 		public function login_enqueue_scripts()
 		{
 			if ('v2' === $this->version) {
-				echo '<style type="text/css">';
-
-				if (in_array(get_option('aio_login__customization_templates', 'default'), array('template-2', 'default'), true)) {
-					echo '#login {
-						width: 352px !important;
-					}';
-				}
-
-				echo '.g-recaptcha {
-						margin-bottom: 20px !important;
-						display: flex;
-						justify-content: center;
+				// Checkbox widget is ~304px; core #login is 320px with padding, so it clips
+				// and overlaps floated .forgetmenot without clear + room.
+				echo '<style type="text/css">
+					body.login #login {
+						width: 360px !important;
+						max-width: calc(100vw - 24px) !important;
+						overflow: visible !important;
+					}
+					body.login #loginform {
+						overflow: visible !important;
+					}
+					body.login #loginform .aio-login-wp-captcha {
+						clear: both !important;
+						display: block !important;
+						width: 100% !important;
+						max-width: 100% !important;
+						margin: 10px 0 16px !important;
+						padding: 0 !important;
+						overflow: visible !important;
+						box-sizing: border-box !important;
+						text-align: center;
+						min-height: 78px;
+					}
+					body.login #loginform .aio-login-wp-captcha .g-recaptcha,
+					body.login #loginform > .g-recaptcha {
+						display: inline-block !important;
+						margin: 0 auto 16px !important;
+						max-width: 100% !important;
+						transform: scale(0.95);
+						transform-origin: center top;
+						-webkit-transform: scale(0.95);
+						-webkit-transform-origin: center top;
+					}
+					body.login #loginform p.forgetmenot {
+						clear: both !important;
 					}
 				</style>';
 
+				wp_enqueue_script(
+					'aio-login-form-captcha-position',
+					AIO_LOGIN__DIR_URL . 'assets/js/login-form-captcha-position.js',
+					array(),
+					AIO_LOGIN__VERSION,
+					true
+				);
+
 				// phpcs:ignore WordPress.WP.EnqueuedResourceParameters.MissingVersion
-				wp_register_script('aio-login-g-recaptcha', 'https://google.com/recaptcha/api.js', array(), null, true);
+				wp_register_script('aio-login-g-recaptcha', 'https://www.google.com/recaptcha/api.js', array(), null, true);
 			}
 
 			if ('v3' === $this->version) {
 				// phpcs:ignore WordPress.WP.EnqueuedResourceParameters.MissingVersion
-				wp_register_script('aio-login-g-recaptcha', 'https://google.com/recaptcha/api.js?render=' . $this->site_key, array(), null, true);
+				wp_register_script('aio-login-g-recaptcha', 'https://www.google.com/recaptcha/api.js?render=' . $this->site_key, array(), null, true);
 				wp_add_inline_script(
 					'aio-login-g-recaptcha',
 					'grecaptcha.ready( function() {
@@ -225,7 +256,9 @@ if (!class_exists('AIO_Login\\Google_Recaptcha\\Google_Recaptcha')) {
 		public function login_form()
 		{
 			if ('v2' === $this->version) {
+				echo '<div class="aio-login-wp-captcha">';
 				echo '<div class="g-recaptcha" data-sitekey="' . esc_attr($this->site_key) . '" data-theme="' . esc_attr($this->theme) . '"></div>';
+				echo '</div>';
 			}
 
 			if ('v3' === $this->version) {
@@ -315,47 +348,50 @@ if (!class_exists('AIO_Login\\Google_Recaptcha\\Google_Recaptcha')) {
 				update_option('aio_login_google_recaptcha_enable', $enabled);
 				update_option('aio_login_google_recaptcha_version', $version);
 
-				if ('v2' === $version) {
-					$prev_site   = (string) get_option('aio_login_google_recaptcha_v2_site_key', '');
-					$prev_secret = (string) get_option('aio_login_google_recaptcha_v2_secret_key', '');
-					update_option('aio_login_google_recaptcha_v2_site_key', $v2_site_key);
-					update_option('aio_login_google_recaptcha_v2_secret_key', $v2_secret_key);
-					update_option('aio_login_google_recaptcha_v2_theme', $theme);
-					if ($prev_site !== $v2_site_key || $prev_secret !== $v2_secret_key) {
-						Captcha_Validation::set_validated('recaptcha', false);
+				$mark_validated = isset( $params['validated'] ) && filter_var( $params['validated'], FILTER_VALIDATE_BOOLEAN );
+
+				if ( 'v2' === $version ) {
+					$prev_site   = (string) get_option( 'aio_login_google_recaptcha_v2_site_key', '' );
+					$prev_secret = (string) get_option( 'aio_login_google_recaptcha_v2_secret_key', '' );
+					update_option( 'aio_login_google_recaptcha_v2_site_key', $v2_site_key );
+					update_option( 'aio_login_google_recaptcha_v2_secret_key', $v2_secret_key );
+					update_option( 'aio_login_google_recaptcha_v2_theme', $theme );
+					if ( ! $mark_validated && ( $prev_site !== $v2_site_key || $prev_secret !== $v2_secret_key ) ) {
+						Captcha_Validation::set_validated( 'recaptcha', false );
 					}
 				}
 
-				if ('v3' === $version) {
-					$prev_site   = (string) get_option('aio_login_google_recaptcha_v3_site_key', '');
-					$prev_secret = (string) get_option('aio_login_google_recaptcha_v3_secret_key', '');
-					update_option('aio_login_google_recaptcha_v3_site_key', $v3_site_key);
-					update_option('aio_login_google_recaptcha_v3_secret_key', $v3_secret_key);
-					update_option('aio_login_google_recaptcha_v3_threshold', $threshold);
-					if ($prev_site !== $v3_site_key || $prev_secret !== $v3_secret_key) {
-						Captcha_Validation::set_validated('recaptcha', false);
+				if ( 'v3' === $version ) {
+					$prev_site   = (string) get_option( 'aio_login_google_recaptcha_v3_site_key', '' );
+					$prev_secret = (string) get_option( 'aio_login_google_recaptcha_v3_secret_key', '' );
+					update_option( 'aio_login_google_recaptcha_v3_site_key', $v3_site_key );
+					update_option( 'aio_login_google_recaptcha_v3_secret_key', $v3_secret_key );
+					update_option( 'aio_login_google_recaptcha_v3_threshold', $threshold );
+					if ( ! $mark_validated && ( $prev_site !== $v3_site_key || $prev_secret !== $v3_secret_key ) ) {
+						Captcha_Validation::set_validated( 'recaptcha', false );
 					}
 				}
 
-				if (isset($params['validated']) && true === $params['validated']) {
-					Captcha_Validation::set_validated('recaptcha', true);
+				if ( $mark_validated ) {
+					Captcha_Validation::set_validated( 'recaptcha', true );
 				}
 
 				// If enabling reCAPTCHA, disable other captcha providers.
-				if ('on' === $enabled) {
-					update_option('aio_login_hcaptcha_enable', 'off');
-					update_option('aio_login_turnstile_enable', 'off');
+				if ( 'on' === $enabled ) {
+					update_option( 'aio_login_hcaptcha_enable', 'off' );
+					update_option( 'aio_login_turnstile_enable', 'off' );
 				}
 
 				// Update snapshot for WooCommerce integration
-				if (class_exists('\AIO_Login\Helper\Helper')) {
+				if ( class_exists( '\AIO_Login\Helper\Helper' ) ) {
 					\AIO_Login\Helper\Helper::update_configured_providers_snapshot();
 				}
 
 				return rest_ensure_response(
 					array(
-						'success' => true,
-						'message' => __('Settings saved successfully', 'change-wp-admin-login'),
+						'success'   => true,
+						'validated' => Captcha_Validation::is_validated( 'recaptcha' ),
+						'message'   => __( 'Settings saved successfully', 'change-wp-admin-login' ),
 					)
 				);
 			}

@@ -117,6 +117,11 @@ if ( ! class_exists( 'AIO_Login\\Passwordless_Otp\\OTP_Admin_Rest' ) ) {
 			}
 
 			if ( 'on' === $sms_enable && \AIO_Login\AIO_Login::has_pro() ) {
+				$twilio_error = $this->validate_twilio_settings( $params );
+				if ( is_wp_error( $twilio_error ) ) {
+					return $twilio_error;
+				}
+
 				$allowed_isos = OTP_Settings::sanitize_sms_allowed_country_isos( $params['sms_allowed_countries'] ?? array() );
 				if ( empty( $allowed_isos ) ) {
 					return new \WP_Error(
@@ -141,9 +146,9 @@ if ( ! class_exists( 'AIO_Login\\Passwordless_Otp\\OTP_Admin_Rest' ) ) {
 		 * @param array<string, mixed> $params Params.
 		 */
 		private function save_email_settings( $params ) {
-			$length = isset( $params['email_length'] ) ? absint( $params['email_length'] ) : 4;
+			$length = isset( $params['email_length'] ) ? absint( $params['email_length'] ) : 6;
 			if ( ! in_array( $length, array( 4, 6, 8 ), true ) ) {
-				$length = 4;
+				$length = 6;
 			}
 			update_option( 'aio_login_otp_email_length', (string) $length, false );
 			update_option( 'aio_login_otp_email_expiration', (string) max( 1, min( 60, absint( $params['email_expiration'] ?? 10 ) ) ), false );
@@ -152,12 +157,52 @@ if ( ! class_exists( 'AIO_Login\\Passwordless_Otp\\OTP_Admin_Rest' ) ) {
 		}
 
 		/**
+		 * Require Twilio credentials when SMS OTP is enabled.
+		 *
+		 * @param array<string, mixed> $params Params.
+		 * @return true|\WP_Error
+		 */
+		private function validate_twilio_settings( $params ) {
+			$sid    = sanitize_text_field( $params['twilio_account_sid'] ?? '' );
+			$from   = sanitize_text_field( $params['twilio_sender_number'] ?? '' );
+			$token  = sanitize_text_field( $params['twilio_auth_token'] ?? '' );
+			$has_stored_token = '' !== (string) get_option( 'aio_login_otp_twilio_auth_token', '' );
+			$has_new_token    = '' !== $token && '••••••••••••' !== $token;
+
+			if ( '' === $sid ) {
+				return new \WP_Error(
+					'twilio_account_sid_required',
+					__( 'Account SID is required.', 'change-wp-admin-login' ),
+					array( 'status' => 400 )
+				);
+			}
+
+			if ( ! $has_stored_token && ! $has_new_token ) {
+				return new \WP_Error(
+					'twilio_auth_token_required',
+					__( 'Auth Token is required.', 'change-wp-admin-login' ),
+					array( 'status' => 400 )
+				);
+			}
+
+			if ( '' === $from ) {
+				return new \WP_Error(
+					'twilio_sender_number_required',
+					__( 'Sender number is required.', 'change-wp-admin-login' ),
+					array( 'status' => 400 )
+				);
+			}
+
+			return true;
+		}
+
+		/**
 		 * @param array<string, mixed> $params Params.
 		 */
 		private function save_sms_settings( $params ) {
-			$length = isset( $params['sms_length'] ) ? absint( $params['sms_length'] ) : 4;
+			$length = isset( $params['sms_length'] ) ? absint( $params['sms_length'] ) : 6;
 			if ( ! in_array( $length, array( 4, 6, 8 ), true ) ) {
-				$length = 4;
+				$length = 6;
 			}
 			update_option( 'aio_login_otp_sms_length', (string) $length, false );
 			update_option( 'aio_login_otp_sms_expiration', (string) max( 1, min( 60, absint( $params['sms_expiration'] ?? 10 ) ) ), false );

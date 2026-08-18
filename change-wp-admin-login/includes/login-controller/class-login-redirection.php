@@ -63,6 +63,24 @@ if ( ! class_exists( 'AIO_Login\\Login_Controller\\Login_Redirection' ) ) {
 		}
 
 		/**
+		 * Whether rule priority order (1, 2, …) is allowed for this site license.
+		 *
+		 * @return bool
+		 */
+		public static function rule_order_allowed() {
+			if ( ! \AIO_Login\AIO_Login::has_pro() ) {
+				return false;
+			}
+			if ( function_exists( 'aiologin_pro_can_use_premium_code' ) && ! aiologin_pro_can_use_premium_code() ) {
+				return false;
+			}
+			if ( class_exists( '\AIO_Login_Pro\Plan\Plan_Features' ) ) {
+				return \AIO_Login_Pro\Plan\Plan_Features::can( 'login_redirection' );
+			}
+			return true;
+		}
+
+		/**
 		 * Register REST routes (aio-login namespace).
 		 */
 		public function rest_api_init() {
@@ -1047,6 +1065,7 @@ if ( ! class_exists( 'AIO_Login\\Login_Controller\\Login_Redirection' ) ) {
 						'users'                 => $user_options,
 						'fallback_dashboard_path' => $admin_path,
 						'advanced_conditions'   => self::advanced_conditions_allowed(),
+						'rule_order_allowed'    => self::rule_order_allowed(),
 					),
 					'nonce'    => wp_create_nonce( self::NONCE_ACTION ),
 				)
@@ -1154,6 +1173,10 @@ if ( ! class_exists( 'AIO_Login\\Login_Controller\\Login_Redirection' ) ) {
 				'created_at'          => time(),
 			);
 
+			if ( ! self::rule_order_allowed() ) {
+				$rule['order'] = 0;
+			}
+
 			if ( 'custom' === $rule['login_target_type'] && '' === trim( (string) $rule['login_target_value'] ) ) {
 				return new \WP_Error(
 					'empty_login_url',
@@ -1189,7 +1212,7 @@ if ( ! class_exists( 'AIO_Login\\Login_Controller\\Login_Redirection' ) ) {
 				if ( $ex_norm === $new_norm ) {
 					return new \WP_Error(
 						'duplicate_rule',
-						__( 'A rule with this condition and order already exists. Change the order or the condition.', 'change-wp-admin-login' ),
+						__( 'This rule already exists. Please update the existing rule or remove it before creating a new one.', 'change-wp-admin-login' ),
 						array( 'status' => 409 )
 					);
 				}

@@ -1,7 +1,7 @@
 <template>
 	<div v-if="page_loaded" class="aio-login-pro__social-login__card">
 			<!-- Pro Tag -->
-			<span v-if="showProMarketingBadge" class="aio-login__pro-tab">PRO</span>
+			<span v-if="showProMarketingBadge" class="aio-login__pro-tab">{{ $t("PRO") }}</span>
 			
 			<!-- Configured Tag -->
 			<div 
@@ -16,7 +16,7 @@
 			<div class="aio-login-pro__social-login__card__top">
 				<img :src="getSrc('hcaptcha')" :alt="'hCaptcha'" />
 				<p>
-					<span>hCaptcha</span>
+					<span>{{ $t("hCaptcha") }}</span>
 				</p>
 			</div>
 			<!-- Bottom Section -->
@@ -37,9 +37,7 @@
 					@click="configureCaptcha"
 					@mouseenter="onHover"
 					@mouseleave="onLeave"
-				>
-					Configure
-				</button>
+				>{{ $t("Configure") }}</button>
 			</div>
 
 		<!-- Pro Overlay for Free Users -->
@@ -99,21 +97,15 @@ export default {
 			return ! this.hasPro && ! this.proPluginActive;
 		},
 		statusBadge() {
-			if (this.enabled && this.hasValidKeys() && this.configData.validated) {
-				return 'green';
-			} else if (this.hasValidKeys()) {
-				return 'orange';
+			if ( ! this.hasValidKeys() ) {
+				return null;
 			}
-			return null;
+			// Configured + enabled = green; configured but disabled = orange.
+			return this.enabled ? 'green' : 'orange';
 		},
 
 		statusBadgeText() {
-			if (this.statusBadge === 'green') {
-				return 'Verified';
-			} else if (this.statusBadge === 'orange') {
-				return 'Needs Test';
-			}
-			return '';
+			return this.statusBadge ? 'Configured' : '';
 		}
 	},
 

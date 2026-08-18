@@ -34,7 +34,7 @@ class Customize_Control_Reset extends \WP_Customize_Control {
 		<?php } ?>
 		<p>
 			<button type="button" class="button button-secondary aio-login-customizer-reset-btn" id="aio-login-customizer-reset-all">
-				<?php esc_html_e( 'Reset all to defaults', 'aio-login-pro' ); ?>
+				<?php esc_html_e( 'Reset all to defaults', 'change-wp-admin-login' ); ?>
 			</button>
 		</p>
 		<?php

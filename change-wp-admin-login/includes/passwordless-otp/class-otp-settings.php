@@ -47,13 +47,13 @@ if ( ! class_exists( 'AIO_Login\\Passwordless_Otp\\OTP_Settings' ) ) {
 		 */
 		public static function set_defaults() {
 			$defaults = array(
-				'aio_login_otp_email_enable'          => 'on',
-				'aio_login_otp_email_length'          => '4',
+				'aio_login_otp_email_enable'          => 'off',
+				'aio_login_otp_email_length'          => '6',
 				'aio_login_otp_email_expiration'      => '10',
 				'aio_login_otp_email_resend_timer'    => '60',
 				'aio_login_otp_email_max_retries'     => '5',
 				'aio_login_otp_sms_enable'            => 'off',
-				'aio_login_otp_sms_length'            => '4',
+				'aio_login_otp_sms_length'            => '6',
 				'aio_login_otp_sms_expiration'        => '10',
 				'aio_login_otp_sms_resend_timer'      => '60',
 				'aio_login_otp_sms_max_retries'       => '5',
@@ -76,6 +76,26 @@ if ( ! class_exists( 'AIO_Login\\Passwordless_Otp\\OTP_Settings' ) ) {
 					add_option( $key, $value, '', false );
 				}
 			}
+
+			self::maybe_raise_default_otp_length();
+		}
+
+		/**
+		 * One-time bump of shipped 4-digit OTP default to 6 (AIOL-690).
+		 */
+		public static function maybe_raise_default_otp_length() {
+			if ( '1' === get_option( 'aio_login_otp_length_hardened_6', '' ) ) {
+				return;
+			}
+
+			foreach ( array( 'aio_login_otp_email_length', 'aio_login_otp_sms_length' ) as $key ) {
+				$current = (string) get_option( $key, '6' );
+				if ( '4' === $current || '' === $current ) {
+					update_option( $key, '6', false );
+				}
+			}
+
+			update_option( 'aio_login_otp_length_hardened_6', '1', false );
 		}
 
 		/**
@@ -84,7 +104,7 @@ if ( ! class_exists( 'AIO_Login\\Passwordless_Otp\\OTP_Settings' ) ) {
 		 */
 		public static function is_channel_enabled( $channel ) {
 			if ( 'email' === $channel ) {
-				return 'on' === get_option( 'aio_login_otp_email_enable', 'on' );
+				return 'on' === get_option( 'aio_login_otp_email_enable', 'off' );
 			}
 			if ( 'sms' === $channel ) {
 				if ( ! \AIO_Login\AIO_Login::has_pro() ) {
@@ -101,9 +121,9 @@ if ( ! class_exists( 'AIO_Login\\Passwordless_Otp\\OTP_Settings' ) ) {
 		 */
 		public static function get_otp_length( $channel ) {
 			$key    = 'email' === $channel ? 'aio_login_otp_email_length' : 'aio_login_otp_sms_length';
-			$length = absint( get_option( $key, 4 ) );
+			$length = absint( get_option( $key, 6 ) );
 			if ( ! in_array( $length, array( 4, 6, 8 ), true ) ) {
-				$length = 4;
+				$length = 6;
 			}
 			return $length;
 		}
@@ -187,7 +207,7 @@ if ( ! class_exists( 'AIO_Login\\Passwordless_Otp\\OTP_Settings' ) ) {
 
 			return array(
 				'nonce'                      => wp_create_nonce( self::NONCE_ACTION ),
-				'email_enable'               => 'on' === get_option( 'aio_login_otp_email_enable', 'on' ),
+				'email_enable'               => 'on' === get_option( 'aio_login_otp_email_enable', 'off' ),
 				'email_block_duration'       => (string) self::get_block_duration_minutes( 'email' ),
 				'email_length'               => (string) self::get_otp_length( 'email' ),
 				'email_expiration'           => (string) self::get_expiration_minutes( 'email' ),

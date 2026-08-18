@@ -3,12 +3,12 @@
 		<div v-if="'customize' === type">
 			<div class="aio-login__card-content">
 				<p>
-					Customize your
+					{{ $t("Customize your") }}
 					<br>
-					WP Login
+					{{ $t("WP Login") }}
 				</p>
 				<p class="mt-40">
-					<a :href="adminURL">Lets Go</a>
+					<a :href="adminURL">{{ $t("Lets Go") }}</a>
 				</p>
 			</div>
 		</div>

@@ -4,19 +4,19 @@
 			<div class="popup-header">
 				<div class="popup-title">
 					<img :src="getWooCommerceIcon()" alt="WooCommerce" class="woocommerce-icon" />
-					<h2>WooCommerce Integration Settings</h2>
+					<h2>{{ $t("WooCommerce Integration Settings") }}</h2>
 				</div>
-				<a href="#" class="back-link" @click.prevent="closePopup">← Back</a>
+				<a href="#" class="back-link" @click.prevent="closePopup">{{ $t("← Back") }}</a>
 			</div>
 
 			<div class="woocommerce-settings">
 				<!-- WooCommerce Integration Section -->
 				<div class="settings-section">
 					<div class="section-header">
-						<h3>WooCommerce Integration</h3>
-						<p class="section-description">Enable WooCommerce integration to secure user interactions with Social Login and CAPTCHA.</p>
+						<h3>{{ $t("WooCommerce Integration") }}</h3>
+						<p class="section-description">{{ $t("Enable WooCommerce integration to secure user interactions with Social Login and CAPTCHA.") }}</p>
 						<div v-if="!woocommerceActive" class="woocommerce-notice notice notice-warning inline" style="margin-top: 15px;">
-							<p><strong>WooCommerce is required for this integration.</strong> Please install and activate the WooCommerce plugin to use this feature.</p>
+							<p><strong>{{ $t("WooCommerce is required for this integration.") }}</strong> {{ $t("Please install and activate the WooCommerce plugin to use this feature.") }}</p>
 						</div>
 					</div>
 					<div class="toggle-wrapper">
@@ -35,10 +35,10 @@
 				<!-- Captcha Section -->
 				<div class="settings-section">
 					<div class="section-header">
-						<h3>Captcha</h3>
+						<h3>{{ $t("Captcha") }}</h3>
 						<p class="section-description">
-							To protect forms from bots and spam by adding Captcha, 
-							<a href="#" class="link-text" @click.prevent="goToCaptcha">click here</a>.
+							{{ $t("To protect forms from bots and spam by adding Captcha,") }} 
+							<a href="#" class="link-text" @click.prevent="goToCaptcha">{{ $t("click here") }}</a>.
 						</p>
 					</div>
 					<div class="toggle-wrapper">
@@ -57,29 +57,25 @@
 						<div class="provider-item">
 							<div class="provider-header">
 								<img :src="getProviderIcon('recaptcha')" alt="reCAPTCHA" class="provider-icon" />
-								<span class="provider-name">Recaptcha</span>
+								<span class="provider-name">{{ $t("Recaptcha") }}</span>
 							</div>
 							<div class="provider-options">
 								<div class="option-item">
-									<span>Login</span>
+									<span>{{ $t("Login") }}</span>
 									<label class="toggle-switch">
 										<aio-login-toggle
 											id="recaptcha-login"
 											name="recaptcha-login"
-											v-on:toggle-input="(val) => updateProviderOption('recaptcha', 'login', val)"
-											:enabled="formData.providers.recaptcha.login"
-										/>
+											v-on:toggle-input="(val) => updateProviderOption('recaptcha', 'login', val)" :enabled="formData.providers.recaptcha.login" />
 									</label>
 								</div>
 								<div class="option-item">
-									<span>Registration</span>
+									<span>{{ $t("Registration") }}</span>
 									<label class="toggle-switch">
 										<aio-login-toggle
 											id="recaptcha-registration"
 											name="recaptcha-registration"
-											v-on:toggle-input="(val) => updateProviderOption('recaptcha', 'registration', val)"
-											:enabled="formData.providers.recaptcha.registration"
-										/>
+											v-on:toggle-input="(val) => updateProviderOption('recaptcha', 'registration', val)" :enabled="formData.providers.recaptcha.registration" />
 									</label>
 								</div>
 							</div>
@@ -89,29 +85,25 @@
 						<div class="provider-item">
 							<div class="provider-header">
 								<img :src="getProviderIcon('hcaptcha')" alt="hCaptcha" class="provider-icon" />
-								<span class="provider-name">Hcaptcha</span>
+								<span class="provider-name">{{ $t("Hcaptcha") }}</span>
 							</div>
 							<div class="provider-options">
 								<div class="option-item">
-									<span>Login</span>
+									<span>{{ $t("Login") }}</span>
 									<label class="toggle-switch">
 										<aio-login-toggle
 											id="hcaptcha-login"
 											name="hcaptcha-login"
-											v-on:toggle-input="(val) => updateProviderOption('hcaptcha', 'login', val)"
-											:enabled="formData.providers.hcaptcha.login"
-										/>
+											v-on:toggle-input="(val) => updateProviderOption('hcaptcha', 'login', val)" :enabled="formData.providers.hcaptcha.login" />
 									</label>
 								</div>
 								<div class="option-item">
-									<span>Registration</span>
+									<span>{{ $t("Registration") }}</span>
 									<label class="toggle-switch">
 										<aio-login-toggle
 											id="hcaptcha-registration"
 											name="hcaptcha-registration"
-											v-on:toggle-input="(val) => updateProviderOption('hcaptcha', 'registration', val)"
-											:enabled="formData.providers.hcaptcha.registration"
-										/>
+											v-on:toggle-input="(val) => updateProviderOption('hcaptcha', 'registration', val)" :enabled="formData.providers.hcaptcha.registration" />
 									</label>
 								</div>
 							</div>
@@ -122,10 +114,10 @@
 				<!-- Social Login Section -->
 				<div class="settings-section">
 					<div class="section-header">
-						<h3>Social Login</h3>
+						<h3>{{ $t("Social Login") }}</h3>
 						<p class="section-description">
-							To allow users to log in with their social accounts, 
-							<a href="#" class="link-text" @click.prevent="goToSocialLogin">click here</a>.
+							{{ $t("To allow users to log in with their social accounts,") }} 
+							<a href="#" class="link-text" @click.prevent="goToSocialLogin">{{ $t("click here") }}</a>.
 						</p>
 					</div>
 					<div class="toggle-wrapper">
@@ -144,40 +136,34 @@
 						<div class="provider-item">
 							<div class="provider-header">
 								<img :src="getProviderIcon('microsoft')" alt="Microsoft" class="provider-icon" />
-								<span class="provider-name">Microsoft</span>
+								<span class="provider-name">{{ $t("Microsoft") }}</span>
 							</div>
 							<div class="provider-options">
 								<div class="option-item">
-									<span>Login</span>
+									<span>{{ $t("Login") }}</span>
 									<label class="toggle-switch">
 										<aio-login-toggle
 											id="microsoft-login"
 											name="microsoft-login"
-											v-on:toggle-input="(val) => updateSocialProviderOption('microsoft', 'login', val)"
-											:enabled="formData.socialProviders.microsoft.login"
-										/>
+											v-on:toggle-input="(val) => updateSocialProviderOption('microsoft', 'login', val)" :enabled="formData.socialProviders.microsoft.login" />
 									</label>
 								</div>
 								<div class="option-item">
-									<span>Registration</span>
+									<span>{{ $t("Registration") }}</span>
 									<label class="toggle-switch">
 										<aio-login-toggle
 											id="microsoft-registration"
 											name="microsoft-registration"
-											v-on:toggle-input="(val) => updateSocialProviderOption('microsoft', 'registration', val)"
-											:enabled="formData.socialProviders.microsoft.registration"
-										/>
+											v-on:toggle-input="(val) => updateSocialProviderOption('microsoft', 'registration', val)" :enabled="formData.socialProviders.microsoft.registration" />
 									</label>
 								</div>
 								<div class="option-item">
-									<span>Checkout</span>
+									<span>{{ $t("Checkout") }}</span>
 									<label class="toggle-switch">
 										<aio-login-toggle
 											id="microsoft-checkout"
 											name="microsoft-checkout"
-											v-on:toggle-input="(val) => updateSocialProviderOption('microsoft', 'checkout', val)"
-											:enabled="formData.socialProviders.microsoft.checkout"
-										/>
+											v-on:toggle-input="(val) => updateSocialProviderOption('microsoft', 'checkout', val)" :enabled="formData.socialProviders.microsoft.checkout" />
 									</label>
 								</div>
 							</div>
@@ -187,40 +173,34 @@
 						<div class="provider-item">
 							<div class="provider-header">
 								<img :src="getProviderIcon('google')" alt="Google" class="provider-icon" />
-								<span class="provider-name">Google</span>
+								<span class="provider-name">{{ $t("Google") }}</span>
 							</div>
 							<div class="provider-options">
 								<div class="option-item">
-									<span>Login</span>
+									<span>{{ $t("Login") }}</span>
 									<label class="toggle-switch">
 										<aio-login-toggle
 											id="google-login"
 											name="google-login"
-											v-on:toggle-input="(val) => updateSocialProviderOption('google', 'login', val)"
-											:enabled="formData.socialProviders.google.login"
-										/>
+											v-on:toggle-input="(val) => updateSocialProviderOption('google', 'login', val)" :enabled="formData.socialProviders.google.login" />
 									</label>
 								</div>
 								<div class="option-item">
-									<span>Registration</span>
+									<span>{{ $t("Registration") }}</span>
 									<label class="toggle-switch">
 										<aio-login-toggle
 											id="google-registration"
 											name="google-registration"
-											v-on:toggle-input="(val) => updateSocialProviderOption('google', 'registration', val)"
-											:enabled="formData.socialProviders.google.registration"
-										/>
+											v-on:toggle-input="(val) => updateSocialProviderOption('google', 'registration', val)" :enabled="formData.socialProviders.google.registration" />
 									</label>
 								</div>
 								<div class="option-item">
-									<span>Checkout</span>
+									<span>{{ $t("Checkout") }}</span>
 									<label class="toggle-switch">
 										<aio-login-toggle
 											id="google-checkout"
 											name="google-checkout"
-											v-on:toggle-input="(val) => updateSocialProviderOption('google', 'checkout', val)"
-											:enabled="formData.socialProviders.google.checkout"
-										/>
+											v-on:toggle-input="(val) => updateSocialProviderOption('google', 'checkout', val)" :enabled="formData.socialProviders.google.checkout" />
 									</label>
 								</div>
 							</div>
@@ -230,40 +210,34 @@
 						<div class="provider-item">
 							<div class="provider-header">
 								<img :src="getProviderIcon('facebook')" alt="Facebook" class="provider-icon" />
-								<span class="provider-name">Facebook</span>
+								<span class="provider-name">{{ $t("Facebook") }}</span>
 							</div>
 							<div class="provider-options">
 								<div class="option-item">
-									<span>Login</span>
+									<span>{{ $t("Login") }}</span>
 									<label class="toggle-switch">
 										<aio-login-toggle
 											id="facebook-login"
 											name="facebook-login"
-											v-on:toggle-input="(val) => updateSocialProviderOption('facebook', 'login', val)"
-											:enabled="formData.socialProviders.facebook.login"
-										/>
+											v-on:toggle-input="(val) => updateSocialProviderOption('facebook', 'login', val)" :enabled="formData.socialProviders.facebook.login" />
 									</label>
 								</div>
 								<div class="option-item">
-									<span>Registration</span>
+									<span>{{ $t("Registration") }}</span>
 									<label class="toggle-switch">
 										<aio-login-toggle
 											id="facebook-registration"
 											name="facebook-registration"
-											v-on:toggle-input="(val) => updateSocialProviderOption('facebook', 'registration', val)"
-											:enabled="formData.socialProviders.facebook.registration"
-										/>
+											v-on:toggle-input="(val) => updateSocialProviderOption('facebook', 'registration', val)" :enabled="formData.socialProviders.facebook.registration" />
 									</label>
 								</div>
 								<div class="option-item">
-									<span>Checkout</span>
+									<span>{{ $t("Checkout") }}</span>
 									<label class="toggle-switch">
 										<aio-login-toggle
 											id="facebook-checkout"
 											name="facebook-checkout"
-											v-on:toggle-input="(val) => updateSocialProviderOption('facebook', 'checkout', val)"
-											:enabled="formData.socialProviders.facebook.checkout"
-										/>
+											v-on:toggle-input="(val) => updateSocialProviderOption('facebook', 'checkout', val)" :enabled="formData.socialProviders.facebook.checkout" />
 									</label>
 								</div>
 							</div>
@@ -273,40 +247,34 @@
 						<div class="provider-item">
 							<div class="provider-header">
 								<img :src="getProviderIcon('apple')" alt="Apple" class="provider-icon" />
-								<span class="provider-name">Apple</span>
+								<span class="provider-name">{{ $t("Apple") }}</span>
 							</div>
 							<div class="provider-options">
 								<div class="option-item">
-									<span>Login</span>
+									<span>{{ $t("Login") }}</span>
 									<label class="toggle-switch">
 										<aio-login-toggle
 											id="apple-login"
 											name="apple-login"
-											v-on:toggle-input="(val) => updateSocialProviderOption('apple', 'login', val)"
-											:enabled="formData.socialProviders.apple.login"
-										/>
+											v-on:toggle-input="(val) => updateSocialProviderOption('apple', 'login', val)" :enabled="formData.socialProviders.apple.login" />
 									</label>
 								</div>
 								<div class="option-item">
-									<span>Registration</span>
+									<span>{{ $t("Registration") }}</span>
 									<label class="toggle-switch">
 										<aio-login-toggle
 											id="apple-registration"
 											name="apple-registration"
-											v-on:toggle-input="(val) => updateSocialProviderOption('apple', 'registration', val)"
-											:enabled="formData.socialProviders.apple.registration"
-										/>
+											v-on:toggle-input="(val) => updateSocialProviderOption('apple', 'registration', val)" :enabled="formData.socialProviders.apple.registration" />
 									</label>
 								</div>
 								<div class="option-item">
-									<span>Checkout</span>
+									<span>{{ $t("Checkout") }}</span>
 									<label class="toggle-switch">
 										<aio-login-toggle
 											id="apple-checkout"
 											name="apple-checkout"
-											v-on:toggle-input="(val) => updateSocialProviderOption('apple', 'checkout', val)"
-											:enabled="formData.socialProviders.apple.checkout"
-										/>
+											v-on:toggle-input="(val) => updateSocialProviderOption('apple', 'checkout', val)" :enabled="formData.socialProviders.apple.checkout" />
 									</label>
 								</div>
 							</div>
@@ -316,7 +284,7 @@
 			</div>
 
 			<div class="popup-footer">
-				<button class="save-btn" @click="saveSettings">Save</button>
+				<button class="save-btn" @click="saveSettings">{{ $t("Save") }}</button>
 			</div>
 		</div>
 	</div>

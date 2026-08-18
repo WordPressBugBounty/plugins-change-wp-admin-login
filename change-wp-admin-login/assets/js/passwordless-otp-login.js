@@ -172,6 +172,14 @@
 		if (els.backToLoginWrap) {
 			els.backToLoginWrap.hidden = name === 'success';
 		}
+		if (panel) {
+			panel.classList.remove(
+				'aio-login-otp-panel--step-contact',
+				'aio-login-otp-panel--step-verify',
+				'aio-login-otp-panel--step-success'
+			);
+			panel.classList.add('aio-login-otp-panel--step-' + name);
+		}
 		if (name === 'verify' && els.otpCode) {
 			setTimeout(function () {
 				els.otpCode.focus();

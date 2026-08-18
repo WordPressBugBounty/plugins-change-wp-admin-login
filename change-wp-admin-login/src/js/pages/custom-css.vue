@@ -5,7 +5,7 @@
 			v-on:handle-submit="submitHandler"
 		>
 			<template v-slot:title>
-				<span>Custom CSS</span>
+				<span>{{ $t("Custom CSS") }}</span>
 				<aio-login-tooltip
 					:content="tooltipContent.customCss.content"
 					:title="tooltipContent.customCss.title"
@@ -16,12 +16,12 @@
 			<template v-slot:form-fields>
 				<tr>
 					<th>
-						<label for="custom-css">Custom CSS</label>
+						<label for="custom-css">{{ $t("Custom CSS") }}</label>
 					</th>
 
 					<td>
 						<p class="description">
-							<b>Enter custom CSS without using &lt;style&gt;&lt;/style&gt;</b>
+							<b>{{ $t("Enter custom CSS without using &lt;style&gt;&lt;/style&gt;") }}</b>
 						</p>
 
 						<textarea class="regular-text" v-model="form_data.custom_css"></textarea>

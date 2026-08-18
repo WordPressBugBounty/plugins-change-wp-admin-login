@@ -282,7 +282,8 @@ class User_Enumeration_Protection {
 	}
 
 	/**
-	 * Protect REST API user endpoints
+	 * Protect REST API user endpoints from public enumeration.
+	 * Do not block /users/me — WordPress admin (api-fetch) needs it.
 	 */
 	public function protect_rest_api( $result ) {
 		// If there's already an error, return it
@@ -290,16 +291,22 @@ class User_Enumeration_Protection {
 			return $result;
 		}
 
-		// Check if this is a user-related endpoint
-		$request_uri = $_SERVER['REQUEST_URI'] ?? '';
-		if ( strpos( $request_uri, '/wp-json/wp/v2/users' ) !== false ) {
-			// Only allow authenticated requests
-			if ( ! is_user_logged_in() ) {
-				return new \WP_Error( 'rest_forbidden', 'User enumeration not allowed.', array( 'status' => 403 ) );
-			}
+		// Authenticated requests are fine (and cookie auth may still be resolving).
+		if ( is_user_logged_in() ) {
+			return $result;
 		}
 
-		return $result;
+		$request_uri = isset( $_SERVER['REQUEST_URI'] ) ? (string) $_SERVER['REQUEST_URI'] : '';
+		if ( '' === $request_uri || false === strpos( $request_uri, '/wp-json/wp/v2/users' ) ) {
+			return $result;
+		}
+
+		// Current-user endpoint is not enumeration — used heavily by wp-admin.
+		if ( preg_match( '#/wp-json/wp/v2/users/me(?:/|\?|$)#', $request_uri ) ) {
+			return $result;
+		}
+
+		return new \WP_Error( 'rest_forbidden', 'User enumeration not allowed.', array( 'status' => 403 ) );
 	}
 
 	/**

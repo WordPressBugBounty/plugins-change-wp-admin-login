@@ -5,7 +5,7 @@
 				type="submit"
 				:class="class"
 				@click="( e ) => $emit('button-click', e )">
-			<slot>Save Changes</slot></button>
+			<slot>{{ $t('Save Changes') }}</slot></button>
 		</p>
 	</div>
 </template>
@@ -39,9 +39,9 @@ export default {
 	background-color: #9416de;
 	color: #fff;
 }
-
 .aio-login__primary:hover {
-	background-color: #9416de;
+	background-color: #7a12b8;
+	border-color: #7a12b8;
 	color: #fff;
 }
 </style>

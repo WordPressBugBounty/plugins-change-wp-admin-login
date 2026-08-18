@@ -32,9 +32,7 @@
 				@click="configureIntegration"
 				@mouseenter="onHover"
 				@mouseleave="onLeave"
-			>
-				Configure
-			</button>
+			>{{ $t("Configure") }}</button>
 		</div>
 
 		<!-- Pro Overlay for Free Users -->

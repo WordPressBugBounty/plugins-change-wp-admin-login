@@ -11,7 +11,7 @@
 			</div>
 		</template>
 		<template v-else>
-		<span v-if="showProMarketingBadge" class="aio-login__pro-tab">PRO</span>
+		<span v-if="showProMarketingBadge" class="aio-login__pro-tab">{{ $t("PRO") }}</span>
 		<div
 			v-if="statusBadge && hasPro"
 			class="configured-tag"
@@ -43,9 +43,7 @@
 				@click="configureIntegration"
 				@mouseenter="onHover"
 				@mouseleave="onLeave"
-			>
-				Configure
-			</button>
+			>{{ $t("Configure") }}</button>
 		</div>
 
 		<div v-if="!hasPro" class="aio-login-t-content-overflow" @click.stop="iWasTriggered"></div>

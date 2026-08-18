@@ -20,63 +20,176 @@ if (!class_exists('AIO_Login\\Helper\\Helper')) {
 		/**
 		 * Getting the IP address of the user
 		 *
-		 * SECURITY NOTE: This function now only trusts REMOTE_ADDR by default to prevent
-		 * header spoofing attacks. Proxy headers (X-Forwarded-For, etc.) are completely
-		 * ignored for security reasons. This prevents attackers from bypassing IP-based
-		 * security measures by manipulating HTTP headers.
+		 * Trusts REMOTE_ADDR by default, including private/reserved addresses (load balancers).
+		 * Proxy headers are ignored unless an operator configures a trusted proxy header.
 		 *
 		 * @return string
 		 */
 		public static function get_ip()
 		{
-			// SECURITY FIX: Only trust REMOTE_ADDR to prevent header spoofing attacks
-			$ipaddress = 'UNKNOWN';
-
-			// Always use REMOTE_ADDR for maximum security
+			$remote = '';
 			if (isset($_SERVER['REMOTE_ADDR'])) {
-				$ipaddress = sanitize_text_field(wp_unslash($_SERVER['REMOTE_ADDR']));
+				$remote = sanitize_text_field(wp_unslash($_SERVER['REMOTE_ADDR']));
 			}
 
-			// Handle IPv6 localhost
-			if ('::1' === $ipaddress) {
-				$ipaddress = '127.0.0.1';
+			if ('::1' === $remote) {
+				$remote = '127.0.0.1';
 			}
 
-			// Validate the final IP address
-			if (!self::is_valid_ip($ipaddress)) {
-				$ipaddress = 'UNKNOWN';
+			$header = (string) apply_filters(
+				'aio_login_trusted_proxy_header',
+				(string) get_option('aio_login_trusted_proxy_header', '')
+			);
+			$trust_proxy = (bool) apply_filters(
+				'aio_login_trust_proxy',
+				'' !== $header && self::is_trusted_proxy_peer($remote)
+			);
+
+			if ($trust_proxy && '' !== $header) {
+				$forwarded = self::ip_from_trusted_header($header);
+				if ('' !== $forwarded) {
+					return $forwarded;
+				}
 			}
 
-			return $ipaddress;
+			if (self::is_valid_ip($remote)) {
+				return $remote;
+			}
+
+			return '0.0.0.0';
 		}
 
 		/**
-		 * Validate if an IP address is valid
+		 * Validate if an IP address is valid (public, private, or reserved).
 		 *
 		 * @param string $ip IP address to validate.
 		 * @return bool
 		 */
 		private static function is_valid_ip($ip)
 		{
-			// Remove any whitespace
-			$ip = trim($ip);
+			$ip = trim((string) $ip);
+			if ('' === $ip || 'UNKNOWN' === $ip) {
+				return false;
+			}
 
-			// Check if it's a valid IPv4 or IPv6 address (excluding private and reserved ranges)
-			$is_valid = filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) !== false;
+			return false !== filter_var($ip, FILTER_VALIDATE_IP);
+		}
 
-			// Allow localhost only in development/testing environment
-			if (!$is_valid && ($ip === '127.0.0.1' || $ip === '::1')) {
-				// Only allow localhost if we're in a development environment
-				if (defined('WP_DEBUG') && WP_DEBUG) {
-					return true;
+		/**
+		 * Whether REMOTE_ADDR is a configured proxy (or private peer when a header is set).
+		 *
+		 * @param string $ip Connecting IP.
+		 * @return bool
+		 */
+		private static function is_trusted_proxy_peer($ip)
+		{
+			$ip = trim((string) $ip);
+			if ('' === $ip || !self::is_valid_ip($ip)) {
+				return false;
+			}
+
+			$proxies = apply_filters(
+				'aio_login_trusted_proxies',
+				array_filter(array_map('trim', explode(',', (string) get_option('aio_login_trusted_proxies', ''))))
+			);
+
+			if (!empty($proxies) && is_array($proxies)) {
+				foreach ($proxies as $proxy) {
+					if ($ip === $proxy || self::ip_in_cidr($ip, $proxy)) {
+						return true;
+					}
 				}
-				// Or if we're on localhost (simple check)
-				if (in_array($_SERVER['HTTP_HOST'] ?? '', ['localhost', '127.0.0.1', '::1'])) {
-					return true;
+				return false;
+			}
+
+			return false === filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE);
+		}
+
+		/**
+		 * Read client IP from a trusted $_SERVER header name (e.g. HTTP_CF_CONNECTING_IP).
+		 *
+		 * @param string $header Header key.
+		 * @return string
+		 */
+		private static function ip_from_trusted_header($header)
+		{
+			$header = strtoupper(str_replace('-', '_', trim((string) $header)));
+			if ('' === $header) {
+				return '';
+			}
+			if (0 !== strpos($header, 'HTTP_') && 'REMOTE_ADDR' !== $header) {
+				$header = 'HTTP_' . $header;
+			}
+
+			if (!isset($_SERVER[$header])) {
+				return '';
+			}
+
+			$raw = sanitize_text_field(wp_unslash($_SERVER[$header]));
+			$parts = preg_split('/\s*,\s*/', $raw);
+			if (!is_array($parts)) {
+				return '';
+			}
+
+			foreach ($parts as $part) {
+				$candidate = trim($part);
+				if (0 === strpos($candidate, '[')) {
+					$candidate = trim($candidate, '[]');
+				}
+				if (false !== strpos($candidate, ':') && substr_count($candidate, ':') === 1 && preg_match('/^(\d+\.\d+\.\d+\.\d+):\d+$/', $candidate, $m)) {
+					$candidate = $m[1];
+				}
+				if (self::is_valid_ip($candidate) && false !== filter_var($candidate, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) {
+					return $candidate;
 				}
 			}
 
-			return $is_valid;
+			foreach ($parts as $part) {
+				$candidate = trim($part);
+				if (self::is_valid_ip($candidate)) {
+					return $candidate;
+				}
+			}
+
+			return '';
+		}
+
+		/**
+		 * @param string $ip   IP.
+		 * @param string $cidr IP or CIDR.
+		 * @return bool
+		 */
+		private static function ip_in_cidr($ip, $cidr)
+		{
+			$cidr = trim((string) $cidr);
+			if ('' === $cidr) {
+				return false;
+			}
+			if (false === strpos($cidr, '/')) {
+				return $ip === $cidr;
+			}
+
+			list($subnet, $bits) = array_pad(explode('/', $cidr, 2), 2, '');
+			$bits = absint($bits);
+			$ip_bin = @inet_pton($ip); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged
+			$subnet_bin = @inet_pton($subnet); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged
+			if (false === $ip_bin || false === $subnet_bin || strlen($ip_bin) !== strlen($subnet_bin)) {
+				return false;
+			}
+
+			$max_bits = 8 * strlen($ip_bin);
+			if ($bits < 0 || $bits > $max_bits) {
+				return false;
+			}
+
+			$mask = str_repeat("\xff", (int) floor($bits / 8));
+			$rem = $bits % 8;
+			if ($rem > 0) {
+				$mask .= chr((0xff << (8 - $rem)) & 0xff);
+			}
+			$mask = str_pad($mask, strlen($ip_bin), "\x00");
+
+			return ($ip_bin & $mask) === ($subnet_bin & $mask);
 		}
 
 		/**
@@ -292,6 +405,32 @@ if (!class_exists('AIO_Login\\Helper\\Helper')) {
 			}
 
 			set_transient('aio_login__user_attempts_' . $ip, $attempts, 60 * 60);
+		}
+
+		/**
+		 * Atomic increment for Limit Login Attempts (OTP / magic-link share this budget).
+		 *
+		 * @param string $ip IP.
+		 * @return int New count.
+		 */
+		public static function increment_user_attempt_count_atomic($ip = '')
+		{
+			if (empty($ip)) {
+				$ip = self::get_ip();
+			}
+
+			global $wpdb;
+			$lock_name = 'aio_lla_' . md5($ip);
+			$wpdb->get_var($wpdb->prepare('SELECT GET_LOCK(%s, %d)', $lock_name, 5)); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+
+			try {
+				$attempts = (int) get_transient('aio_login__user_attempts_' . $ip);
+				++$attempts;
+				set_transient('aio_login__user_attempts_' . $ip, $attempts, 60 * 60);
+				return $attempts;
+			} finally {
+				$wpdb->get_var($wpdb->prepare('SELECT RELEASE_LOCK(%s)', $lock_name)); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+			}
 		}
 
 		/**

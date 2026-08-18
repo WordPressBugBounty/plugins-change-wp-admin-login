@@ -3,7 +3,7 @@
 		<!-- Logging Settings Section -->
 		<div class="aio-login-settings-section" style="margin-bottom: 30px;">
 			<h3 style="margin-bottom: 20px; color: #333; font-size: 18px; font-weight: 600;">
-				<span>Logging Settings</span>
+				<span>{{ $t("Logging Settings") }}</span>
 				<aio-login-tooltip
 					:content="tooltipContent.loggingSettings.content"
 					:title="tooltipContent.loggingSettings.title"
@@ -16,7 +16,7 @@
 					<table class="form-table" style="width: 100%; border-collapse: collapse;">
 						<tr>
 							<th style="width: 200px; text-align: left; padding: 12px 0; vertical-align: top;">
-								<label for="log_enumeration_attempts">Log Enumeration Attempts</label>
+								<label for="log_enumeration_attempts">{{ $t("Log Enumeration Attempts") }}</label>
 							</th>
 							<td style="padding: 12px 0;">
 								<aio-login-toggle
@@ -25,13 +25,13 @@
 									:enabled="form_data.log_enumeration_attempts"
 									v-on:toggle-input="handleLogEnumerationAttempts"
 								/>
-								<p class="description" style="margin: 8px 0 0 0; color: #666; font-size: 14px; font-weight: 600">Enable to monitor username discovery attempts securely.</p>
+								<p class="description" style="margin: 8px 0 0 0; color: #666; font-size: 14px; font-weight: 600">{{ $t("Enable to monitor username discovery attempts securely.") }}</p>
 							</td>
 						</tr>
 
 						<tr v-if="form_data.log_enumeration_attempts">
 							<th style="width: 200px; text-align: left; padding: 12px 0; vertical-align: top;">
-								<label for="log_enumeration_duration">Log Attempts Duration (Days)</label>
+								<label for="log_enumeration_duration">{{ $t("Log Attempts Duration (Days)") }}</label>
 							</th>
 							<td style="padding: 12px 0;">
 								<aio-login-text
@@ -40,7 +40,7 @@
 									v-model="form_data.log_enumeration_duration"
 									v-on:input="handleLogEnumerationDuration"
 								/>
-								<p class="description" style="margin: 8px 0 0 0; color: #666; font-size: 13px;">Number of days to keep enumeration attempt logs.</p>
+								<p class="description" style="margin: 8px 0 0 0; color: #666; font-size: 13px;">{{ $t("Number of days to keep enumeration attempt logs.") }}</p>
 							</td>
 						</tr>
 					</table>
@@ -55,7 +55,7 @@
 		<!-- Logs Display Section -->
 		<div class="aio-login-logs-section">
 			<h3 style="margin-bottom: 20px; color: #333; font-size: 18px; font-weight: 600;">
-				<span>Enumeration Attempts Logs</span>
+				<span>{{ $t("Enumeration Attempts Logs") }}</span>
 				<aio-login-tooltip
 					:content="tooltipContent.userEnumerationLogs.content"
 					:title="tooltipContent.userEnumerationLogs.title"
@@ -82,43 +82,43 @@
 			@close-popup="closeDeletePopup"
 		>
 			<template #popup-title>
-				<h3>Confirm Delete</h3>
+				<h3>{{ $t("Confirm Delete") }}</h3>
 			</template>
 			<template #popup-content>
 				<div>
-					<p style="margin: 0 0 8px 0; font-size: 16px; color: #333;">Are you sure you want to delete this log entry?</p>
-					<p style="margin: 0 0 20px 0; font-size: 14px; color: #dc3545; font-weight: 500;"><strong>This action cannot be undone.</strong></p>
+					<p style="margin: 0 0 8px 0; font-size: 16px; color: #333;">{{ $t("Are you sure you want to delete this log entry?") }}</p>
+					<p style="margin: 0 0 20px 0; font-size: 14px; color: #dc3545; font-weight: 500;"><strong>{{ $t("This action cannot be undone.") }}</strong></p>
 					
 					<div v-if="deleteLogDetails" style="margin-top: 20px; padding: 20px; background: #f8f9fa; border-radius: 8px; border: 1px solid #e9ecef;">
-					<h4 style="margin: 0 0 15px 0; color: #333; font-size: 16px; font-weight: 600;">Entry Details:</h4>
+					<h4 style="margin: 0 0 15px 0; color: #333; font-size: 16px; font-weight: 600;">{{ $t("Entry Details:") }}</h4>
 					<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 14px; line-height: 1.5;">
 						<div style="padding: 8px 0; border-bottom: 1px solid #e9ecef;">
-							<strong style="color: #495057;">ID:</strong><br>
+							<strong style="color: #495057;">{{ $t("ID:") }}</strong><br>
 							<span style="color: #333;">{{ deleteLogDetails.id }}</span>
 						</div>
 						<div style="padding: 8px 0; border-bottom: 1px solid #e9ecef;">
-							<strong style="color: #495057;">Username:</strong><br>
+							<strong style="color: #495057;">{{ $t("Username:") }}</strong><br>
 							<span style="color: #333;">{{ deleteLogDetails.username || '-' }}</span>
 						</div>
 						<div style="padding: 8px 0; border-bottom: 1px solid #e9ecef;">
-							<strong style="color: #495057;">IP Address:</strong><br>
+							<strong style="color: #495057;">{{ $t("IP Address:") }}</strong><br>
 							<span style="color: #333;">{{ deleteLogDetails.ip_address }}</span>
 						</div>
 						<div style="padding: 8px 0; border-bottom: 1px solid #e9ecef;">
-							<strong style="color: #495057;">Status:</strong><br>
+							<strong style="color: #495057;">{{ $t("Status:") }}</strong><br>
 							<span style="color: #333;">{{ deleteLogDetails.status }}</span>
 						</div>
 						<div style="padding: 8px 0; border-bottom: 1px solid #e9ecef;">
-							<strong style="color: #495057;">Date:</strong><br>
+							<strong style="color: #495057;">{{ $t("Date:") }}</strong><br>
 							<span style="color: #333;">{{ deleteLogDetails.created_at }}</span>
 						</div>
 						<div style="padding: 8px 0; border-bottom: 1px solid #e9ecef;">
-							<strong style="color: #495057;">Type:</strong><br>
+							<strong style="color: #495057;">{{ $t("Type:") }}</strong><br>
 							<span style="color: #333;">{{ deleteLogDetails.type || '-' }}</span>
 						</div>
 					</div>
 					<div style="margin-top: 15px; padding: 8px 0;">
-						<strong style="color: #495057;">User Agent:</strong><br>
+						<strong style="color: #495057;">{{ $t("User Agent:") }}</strong><br>
 						<span style="font-size: 13px; color: #666; word-break: break-all; line-height: 1.4; display: block; margin-top: 4px;">{{ deleteLogDetails.user_agent || '-' }}</span>
 					</div>
 				</div>
@@ -126,8 +126,8 @@
 			</template>
 			<template #popup-footer>
 				<div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 20px;">
-					<button @click="closeDeletePopup" style="padding: 10px 20px; background: #6c757d; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 500; transition: background-color 0.2s ease;">Cancel</button>
-					<button @click="confirmDelete" style="padding: 10px 20px; background: #dc3545; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 500; transition: background-color 0.2s ease;">Delete</button>
+					<button @click="closeDeletePopup" style="padding: 10px 20px; background: #6c757d; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 500; transition: background-color 0.2s ease;">{{ $t("Cancel") }}</button>
+					<button @click="confirmDelete" style="padding: 10px 20px; background: #dc3545; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 500; transition: background-color 0.2s ease;">{{ $t("Delete") }}</button>
 				</div>
 			</template>
 		</aio-login-popup>
@@ -149,6 +149,7 @@
 <script>
 import tooltipContent from '../tooltip-content.js';
 import resolveParentCurrentIsPro from '../resolve-parent-current-is-pro.js';
+import { t } from '../i18n.js';
 
 export default {
 	name: 'enumeration-protection-logs',
@@ -170,16 +171,16 @@ export default {
 			timeout: 3000,
 		},
 		headers: [
-			{ value: 'ID', key: 'id' },
-			{ value: 'User Login', key: 'user_login' },
-			{ value: 'Date & Time', key: 'time' },
-			{ value: 'Country', key: 'country' },
-			{ value: 'City', key: 'city' },
-			{ value: 'User Agent', key: 'user_agent' },
-			{ value: 'IP Address', key: 'ip_address' },
-			{ value: 'Status', key: 'status' },
-			{ value: 'Blocked Until', key: 'blocked_until' },
-			{ value: 'Actions', key: 'actions' },
+			{ value: t( 'ID' ), key: 'id' },
+			{ value: t( 'User Login' ), key: 'user_login' },
+			{ value: t( 'Date & Time' ), key: 'time' },
+			{ value: t( 'Country' ), key: 'country' },
+			{ value: t( 'City' ), key: 'city' },
+			{ value: t( 'User Agent' ), key: 'user_agent' },
+			{ value: t( 'IP Address' ), key: 'ip_address' },
+			{ value: t( 'Status' ), key: 'status' },
+			{ value: t( 'Blocked Until' ), key: 'blocked_until' },
+			{ value: t( 'Actions' ), key: 'actions' },
 		],
 
 		data: [

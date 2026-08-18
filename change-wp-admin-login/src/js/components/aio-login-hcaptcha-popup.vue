@@ -8,7 +8,7 @@
 						alt="hCaptcha"
 						class="popup-header-title__icon"
 					/>
-					<h2 class="popup-header-title__text">hCaptcha Configuration</h2>
+					<h2 class="popup-header-title__text">{{ $t("hCaptcha Configuration") }}</h2>
 				</div>
 				<button class="close-btn" @click="closePopup">&times;</button>
 			</div>
@@ -16,7 +16,7 @@
 			<!-- Step Indicators -->
 			<div class="popup-steps">
 				<div class="step-container">
-					<h4>Getting Started</h4>
+					<h4>{{ $t("Getting Started") }}</h4>
 					<div 
 						class="step" 
 						:class="{ active: currentStep >= 1 }" 
@@ -27,7 +27,7 @@
 				<div class="connector" :style="{ backgroundColor: currentStep >= 2 ? '#9516DF' : '#C9D2E3' }"></div>
 				
 				<div class="step-container">
-					<h4>Configuration</h4>
+					<h4>{{ $t("Configuration") }}</h4>
 					<div 
 						class="step" 
 						:class="{ active: currentStep >= 2 }" 
@@ -38,7 +38,7 @@
 				<div class="connector" :style="{ backgroundColor: currentStep >= 3 ? '#9516DF' : '#C9D2E3' }"></div>
 
 				<div class="step-container">
-					<h4>Settings</h4>
+					<h4>{{ $t("Settings") }}</h4>
 					<div 
 						class="step" 
 						:class="{ active: currentStep >= 3 }" 
@@ -51,23 +51,23 @@
 			<div class="popup-modal-body">
 			<!-- Step 1: Getting Started -->
 			<div v-if="currentStep === 1" class="aio-login-pro__first-step">
-				<h4 class="aio-login-pro__first-step__title">Getting Started</h4>
-				<p class="aio-login-pro__first-step__content">To protect your website from spam and bots, start by adding hCaptcha to your WordPress login page.</p>
-				<h5 class="aio-login-pro__first-step__instruction">Instruction:</h5>
-				<p class="aio-login-pro__first-step__instructions">1. Register your site and get the keys → <a href="https://dashboard.hcaptcha.com/signup" target="_blank" class="aio-login-pro__first-step__doc-link">Click Here</a></p>
-				<p class="aio-login-pro__first-step__instructions">2. Need help creating keys? → <a href="https://aiologin.com/docs/wordpress-login-security/setting-up-hcaptcha/" target="_blank" class="aio-login-pro__first-step__doc-link">Click Here</a></p>
-				<p class="aio-login-pro__first-step__next-step-note">3. Once you have your keys, click Next to enter them.</p>
+				<h4 class="aio-login-pro__first-step__title">{{ $t("Getting Started") }}</h4>
+				<p class="aio-login-pro__first-step__content">{{ $t("To protect your website from spam and bots, start by adding hCaptcha to your WordPress login page.") }}</p>
+				<h5 class="aio-login-pro__first-step__instruction">{{ $t("Instruction:") }}</h5>
+				<p class="aio-login-pro__first-step__instructions">{{ $t("1. Register your site and get the keys →") }} <a href="https://dashboard.hcaptcha.com/signup" target="_blank" class="aio-login-pro__first-step__doc-link">{{ $t("Click Here") }}</a></p>
+				<p class="aio-login-pro__first-step__instructions">{{ $t("2. Need help creating keys? →") }} <a href="https://aiologin.com/docs/wordpress-login-security/setting-up-hcaptcha/" target="_blank" class="aio-login-pro__first-step__doc-link">{{ $t("Click Here") }}</a></p>
+				<p class="aio-login-pro__first-step__next-step-note">{{ $t("3. Once you have your keys, click Next to enter them.") }}</p>
 			</div>
 
 			<!-- Step 2: Configuration -->
 			<div v-if="currentStep === 2" class="aio-login-pro__step2">
 				<p class="aio-login-pro__step2__description">
-					Enter your hCaptcha details.
+					{{ $t("Enter your hCaptcha details.") }}
 				</p>
 				<div class="aio-login-pro__inline-form">
 					<div class="aio-login-pro__form-group">
 						<label for="hcaptcha-site-key" class="aio-login-pro__form-label">
-							Site Key <span class="aio-login-pro__required">*</span>
+							{{ $t("Site Key") }} <span class="aio-login-pro__required">*</span>
 						</label>
 						<div class="input-with-delete">
 							<input
@@ -76,7 +76,7 @@
 								v-model="formData.siteKey"
 								class="aio-login-pro__form-input"
 								:class="{ 'aio-login-pro__error': showValidationError && !formData.siteKey.trim() }"
-								placeholder="Enter Site Key"
+								:placeholder="$t('Enter Site Key')"
 								autocomplete="off"
 							/>
 							<button v-if="formData.siteKey" @click="clearField('siteKey')" class="clear-btn">×</button>
@@ -85,12 +85,12 @@
 							v-if="showValidationError && !formData.siteKey.trim()" 
 							class="aio-login-pro__error-message"
 						>
-							This field is required
+							{{ $t("This field is required") }}
 						</span>
 					</div>
 					<div class="aio-login-pro__form-group">
 						<label for="hcaptcha-secret-key" class="aio-login-pro__form-label">
-							Secret Key <span class="aio-login-pro__required">*</span>
+							{{ $t("Secret Key") }} <span class="aio-login-pro__required">*</span>
 						</label>
 						<div class="input-with-delete">
 							<input
@@ -99,7 +99,7 @@
 								v-model="formData.secretKey"
 								class="aio-login-pro__form-input"
 								:class="{ 'aio-login-pro__error': showValidationError && !formData.secretKey.trim() }"
-								placeholder="Enter Secret Key"
+								:placeholder="$t('Enter Secret Key')"
 								autocomplete="new-password"
 							/>
 							<button v-if="formData.secretKey" @click="clearField('secretKey')" class="clear-btn">×</button>
@@ -108,7 +108,7 @@
 							v-if="showValidationError && !formData.secretKey.trim()" 
 							class="aio-login-pro__error-message"
 						>
-							This field is required
+							{{ $t("This field is required") }}
 						</span>
 					</div>
 				</div>
@@ -117,98 +117,99 @@
 			<!-- Step 3: Other Settings -->
 			<div v-if="currentStep === 3" class="aio-login-pro__step3">
 				<p class="aio-login-pro__step3__description">
-					These settings are not compulsory.
+					{{ $t("These settings are not compulsory.") }}
 				</p>
 				<div class="aio-login-pro__step3__layout">
 					<div class="aio-login-pro__step3__column">
 						<div class="aio-login-pro__form-group">
-							<label for="hcaptcha-language" class="aio-login-pro__form-label">Language for Captcha:</label>
+							<label for="hcaptcha-language" class="aio-login-pro__form-label">{{ $t("Language for Captcha:") }}</label>
 							<select id="hcaptcha-language" v-model="formData.language" class="aio-login-pro__form-input">
-								<option value="en">English</option>
-								<option value="ar">Arabic</option>
-								<option value="af">Afrikaans</option>
-								<option value="am">Amharic</option>
-								<option value="hy">Armenian</option>
-								<option value="az">Azerbaijani</option>
-								<option value="eu">Basque</option>
-								<option value="bn">Bengali</option>
-								<option value="bg">Bulgarian</option>
-								<option value="ca">Catalan</option>
-								<option value="zh-HK">Chinese (Hong Kong)</option>
-								<option value="zh-CN">Chinese (Simplified)</option>
-								<option value="zh-TW">Chinese (Traditional)</option>
-								<option value="hr">Croatian</option>
-								<option value="cs">Czech</option>
-								<option value="da">Danish</option>
-								<option value="nl">Dutch</option>
-								<option value="et">Estonian</option>
-								<option value="fil">Filipino</option>
-								<option value="fi">Finnish</option>
-								<option value="fr">French</option>
-								<option value="gl">Galician</option>
-								<option value="ka">Georgian</option>
-								<option value="de">German</option>
-								<option value="el">Greek</option>
-								<option value="gu">Gujarati</option>
-								<option value="iw">Hebrew</option>
-								<option value="hi">Hindi</option>
-								<option value="hu">Hungarian</option>
-								<option value="is">Icelandic</option>
-								<option value="id">Indonesian</option>
-								<option value="it">Italian</option>
-								<option value="ja">Japanese</option>
-								<option value="kn">Kannada</option>
-								<option value="ko">Korean</option>
-								<option value="lo">Lao</option>
-								<option value="lv">Latvian</option>
-								<option value="lt">Lithuanian</option>
-								<option value="ms">Malay</option>
-								<option value="ml">Malayalam</option>
-								<option value="mr">Marathi</option>
-								<option value="mn">Mongolian</option>
-								<option value="my">Myanmar</option>
-								<option value="ne">Nepali</option>
-								<option value="no">Norwegian</option>
-								<option value="fa">Persian</option>
-								<option value="pl">Polish</option>
-								<option value="pt">Portuguese</option>
-								<option value="ro">Romanian</option>
-								<option value="ru">Russian</option>
-								<option value="sr">Serbian</option>
-								<option value="si">Sinhalese</option>
-								<option value="sk">Slovak</option>
-								<option value="sl">Slovenian</option>
-								<option value="es">Spanish</option>
-								<option value="sw">Swahili</option>
-								<option value="sv">Swedish</option>
-								<option value="ta">Tamil</option>
-								<option value="te">Telugu</option>
-								<option value="th">Thai</option>
-								<option value="tr">Turkish</option>
-								<option value="uk">Ukrainian</option>
-								<option value="ur">Urdu</option>
-								<option value="vi">Vietnamese</option>
-								<option value="zu">Zulu</option>
+								<option value="en">{{ $t("English") }}</option>
+								<option value="ar">{{ $t("Arabic") }}</option>
+								<option value="af">{{ $t("Afrikaans") }}</option>
+								<option value="am">{{ $t("Amharic") }}</option>
+								<option value="hy">{{ $t("Armenian") }}</option>
+								<option value="az">{{ $t("Azerbaijani") }}</option>
+								<option value="eu">{{ $t("Basque") }}</option>
+								<option value="bn">{{ $t("Bengali") }}</option>
+								<option value="bg">{{ $t("Bulgarian") }}</option>
+								<option value="ca">{{ $t("Catalan") }}</option>
+								<option value="zh-HK">{{ $t("Chinese (Hong Kong)") }}</option>
+								<option value="zh-CN">{{ $t("Chinese (Simplified)") }}</option>
+								<option value="zh-TW">{{ $t("Chinese (Traditional)") }}</option>
+								<option value="hr">{{ $t("Croatian") }}</option>
+								<option value="cs">{{ $t("Czech") }}</option>
+								<option value="da">{{ $t("Danish") }}</option>
+								<option value="nl">{{ $t("Dutch") }}</option>
+								<option value="et">{{ $t("Estonian") }}</option>
+								<option value="fil">{{ $t("Filipino") }}</option>
+								<option value="fi">{{ $t("Finnish") }}</option>
+								<option value="fr">{{ $t("French") }}</option>
+								<option value="gl">{{ $t("Galician") }}</option>
+								<option value="ka">{{ $t("Georgian") }}</option>
+								<option value="de">{{ $t("German") }}</option>
+								<option value="el">{{ $t("Greek") }}</option>
+								<option value="gu">{{ $t("Gujarati") }}</option>
+								<option value="iw">{{ $t("Hebrew") }}</option>
+								<option value="hi">{{ $t("Hindi") }}</option>
+								<option value="hu">{{ $t("Hungarian") }}</option>
+								<option value="is">{{ $t("Icelandic") }}</option>
+								<option value="id">{{ $t("Indonesian") }}</option>
+								<option value="it">{{ $t("Italian") }}</option>
+								<option value="ja">{{ $t("Japanese") }}</option>
+								<option value="kn">{{ $t("Kannada") }}</option>
+								<option value="ko">{{ $t("Korean") }}</option>
+								<option value="lo">{{ $t("Lao") }}</option>
+								<option value="lv">{{ $t("Latvian") }}</option>
+								<option value="lt">{{ $t("Lithuanian") }}</option>
+								<option value="ms">{{ $t("Malay") }}</option>
+								<option value="ml">{{ $t("Malayalam") }}</option>
+								<option value="mr">{{ $t("Marathi") }}</option>
+								<option value="mn">{{ $t("Mongolian") }}</option>
+								<option value="my">{{ $t("Myanmar") }}</option>
+								<option value="ne">{{ $t("Nepali") }}</option>
+								<option value="no">{{ $t("Norwegian") }}</option>
+								<option value="fa">{{ $t("Persian") }}</option>
+								<option value="pl">{{ $t("Polish") }}</option>
+								<option value="pt">{{ $t("Portuguese") }}</option>
+								<option value="ro">{{ $t("Romanian") }}</option>
+								<option value="ru">{{ $t("Russian") }}</option>
+								<option value="sr">{{ $t("Serbian") }}</option>
+								<option value="si">{{ $t("Sinhalese") }}</option>
+								<option value="sk">{{ $t("Slovak") }}</option>
+								<option value="sl">{{ $t("Slovenian") }}</option>
+								<option value="es">{{ $t("Spanish") }}</option>
+								<option value="sw">{{ $t("Swahili") }}</option>
+								<option value="sv">{{ $t("Swedish") }}</option>
+								<option value="ta">{{ $t("Tamil") }}</option>
+								<option value="te">{{ $t("Telugu") }}</option>
+								<option value="th">{{ $t("Thai") }}</option>
+								<option value="tr">{{ $t("Turkish") }}</option>
+								<option value="uk">{{ $t("Ukrainian") }}</option>
+								<option value="ur">{{ $t("Urdu") }}</option>
+								<option value="vi">{{ $t("Vietnamese") }}</option>
+								<option value="zu">{{ $t("Zulu") }}</option>
 							</select>
 						</div>
 						<div class="aio-login-pro__form-group">
-							<label for="hcaptcha-theme" class="aio-login-pro__form-label">Theme:</label>
+							<label for="hcaptcha-theme" class="aio-login-pro__form-label">{{ $t("Theme:") }}</label>
 							<select id="hcaptcha-theme" v-model="formData.theme" class="aio-login-pro__form-input">
-								<option value="light">Light</option>
-								<option value="dark">Dark</option>
+								<option value="light">{{ $t("Light") }}</option>
+								<option value="dark">{{ $t("Dark") }}</option>
 							</select>
 						</div>
 						<div class="aio-login-pro__form-group">
-							<label for="hcaptcha-size" class="aio-login-pro__form-label">Size:</label>
+							<label for="hcaptcha-size" class="aio-login-pro__form-label">{{ $t("Size:") }}</label>
 							<select id="hcaptcha-size" v-model="formData.size" class="aio-login-pro__form-input">
-								<option value="normal">Normal</option>
-								<option value="compact">Compact</option>
+								<option value="normal">{{ $t("Normal") }}</option>
+								<option value="compact">{{ $t("Compact") }}</option>
 							</select>
 						</div>
 					</div>
 				</div>
 
 				<aio-login-captcha-verify
+					:key="'hcaptcha-verify-' + verifySessionKey"
 					:namespace="apiNamespace"
 					:nonce="apiNonce"
 					:payload="testPayload"
@@ -220,19 +221,21 @@
 
 			<!-- Navigation buttons -->
 			<div class="popup-footer">
-				<button v-if="currentStep === 2" @click="prevStep" class="back-btn">Back</button>
-				<button v-if="currentStep === 3" @click="prevStep" class="back-btn">Back</button>
+				<button v-if="currentStep === 2" @click="prevStep" class="back-btn">{{ $t("Back") }}</button>
+				<button v-if="currentStep === 3" @click="prevStep" class="back-btn">{{ $t("Back") }}</button>
 				<div class="popup-footer-left">
-					<button v-if="currentStep === 1" @click="nextStep" class="next-btn">Next</button>
+					<button v-if="currentStep === 1" @click="nextStep" class="next-btn">{{ $t("Next") }}</button>
 				</div>
-				<button v-if="currentStep === 2" @click="nextStep" class="next-btn">Next</button>
-				<button v-if="currentStep === 3" @click="finish" class="finish-btn" :disabled="!connectionVerified">Finished</button>
+				<button v-if="currentStep === 2" @click="nextStep" class="next-btn">{{ $t("Next") }}</button>
+				<button v-if="currentStep === 3" @click="finish" class="finish-btn" :disabled="!connectionVerified">{{ $t("Finished") }}</button>
 			</div>
 		</div>
 	</div>
 </template>
 
 <script>
+import { resetCaptchaEnvironment, isolateActiveCaptchaProvider } from '../captcha-dom-cleanup.js';
+
 export default {
 	name: 'aio-login-hcaptcha-popup',
 
@@ -261,6 +264,7 @@ export default {
 			popupHeaderIcon: aio_login__app_object.assets_url + 'images/icons/hcaptcha.svg',
 			currentStep: 1,
 			showValidationError: false,
+			verifySessionKey: 0,
 			formData: {
 				siteKey: '',
 				secretKey: '',
@@ -299,11 +303,12 @@ export default {
 				if (!this.formData.language) this.formData.language = 'en';
 				this.connectionVerified = !!this.initialData.validated;
 				this.showValidationError = false;
-				// Prevent body scroll when modal is open
+				this.verifySessionKey += 1;
+				isolateActiveCaptchaProvider( 'hcaptcha' );
 				document.body.style.overflow = 'hidden';
 				document.body.classList.add('aio-login-modal-open');
 			} else {
-				// Restore body scroll when modal is closed
+				resetCaptchaEnvironment();
 				document.body.style.overflow = '';
 				document.body.classList.remove('aio-login-modal-open');
 			}

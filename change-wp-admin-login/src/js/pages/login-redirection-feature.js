@@ -1,10 +1,12 @@
+import { t } from '../i18n.js';
 export default {
 	name: 'aio-login-login-redirection',
 	slug: 'login-redirection',
 	template: `<div v-if="page_loaded" class="aio-login-lr-wrapper">
+		<p v-if="loadError" class="aio-login-lr-load-error" role="alert">{{ loadError }}</p>
 		<aio-login-form :action="nonce" v-on:handle-submit="saveSettings">
 			<template v-slot:title>
-				<span>Login Redirection</span>
+				<span>${t("Login Redirection")}</span>
 				<aio-login-tooltip
 					:content="featureTooltip"
 					placement="bottom"
@@ -12,7 +14,7 @@ export default {
 			</template>
 			<template v-slot:form-fields>
 				<tr>
-					<th><label for="aio-login-redirection-enable">Enable Login Redirection</label></th>
+					<th><label for="aio-login-redirection-enable">${t("Enable Login Redirection")}</label></th>
 					<td>
 						<aio-login-toggle
 							id="aio-login-redirection-enable"
@@ -20,7 +22,7 @@ export default {
 							:enabled="settings.enabled"
 							v-on:toggle-input="toggleEnabled"
 						/>
-						<p class="desc"><strong>Enable to apply login & logout redirect rules.</strong></p>
+						<p class="desc"><strong>${t("Enable to apply login & logout redirect rules.")}</strong></p>
 					</td>
 				</tr>
 			</template>
@@ -28,7 +30,7 @@ export default {
 
 		<div v-if="savedRedirectionEnabled" class="aio-login-lr-rules">
 			<div class="aio-login-lr-rules-head">
-				<button type="button" class="button button-primary aio-login-lr-add-btn" @click="openModal">+ Add New</button>
+				<button type="button" class="button button-primary aio-login-lr-add-btn" @click="openModal">${t("+ Add New")}</button>
 			</div>
 			<div class="aio-login-lr-dt">
 				<div class="aio-login-lr-dt-toolbar">
@@ -36,10 +38,10 @@ export default {
 						<select v-model.number="tablePageSize" class="aio-login-lr-dt-select" aria-label="Rows per page">
 							<option v-for="n in tablePageSizeOptions" :key="n" :value="n">{{ n }}</option>
 						</select>
-						<span class="aio-login-lr-dt-length-label">entries per page</span>
+						<span class="aio-login-lr-dt-length-label">${t("entries per page")}</span>
 					</div>
 					<div class="aio-login-lr-dt-search">
-						<label for="aio-login-lr-search" class="aio-login-lr-dt-search-label">Search:</label>
+						<label for="aio-login-lr-search" class="aio-login-lr-dt-search-label">${t("Search:")}</label>
 						<input id="aio-login-lr-search" type="search" class="aio-login-lr-dt-search-input" v-model.trim="tableSearch" autocomplete="off" />
 					</div>
 				</div>
@@ -50,25 +52,30 @@ export default {
 							<col class="aio-login-lr-col aio-login-lr-col--url" />
 							<col class="aio-login-lr-col aio-login-lr-col--narrow" />
 							<col class="aio-login-lr-col aio-login-lr-col--value" />
-							<col v-if="showRuleOrder" class="aio-login-lr-col aio-login-lr-col--order" />
+							<col class="aio-login-lr-col aio-login-lr-col--order" />
 							<col class="aio-login-lr-col aio-login-lr-col--actions" />
 						</colgroup>
 						<thead>
 							<tr>
-								<th>Login URL</th>
-								<th>Logout URL</th>
-								<th>Condition</th>
-								<th>Condition Value</th>
-								<th v-if="showRuleOrder" class="col-order">Order</th>
-								<th class="col-actions">Actions</th>
+								<th>${t("Login URL")}</th>
+								<th>${t("Logout URL")}</th>
+								<th>${t("Condition")}</th>
+								<th>${t("Condition Value")}</th>
+								<th class="col-order">
+									<span class="aio-login-lr-order-th">
+										${t("Order")}
+										<span v-if="!ruleOrderUnlocked" class="aio-login-lr-condtype-pro">PRO</span>
+									</span>
+								</th>
+								<th class="col-actions">${t("Actions")}</th>
 							</tr>
 						</thead>
 						<tbody>
 							<tr v-if="!rules.length" class="aio-login-lr-table-empty">
-								<td :colspan="tableColspan">No rules found.</td>
+								<td :colspan="tableColspan">${t("No rules found.")}</td>
 							</tr>
 							<tr v-else-if="!filteredRules.length" class="aio-login-lr-table-empty">
-								<td :colspan="tableColspan">No matching entries.</td>
+								<td :colspan="tableColspan">${t("No matching entries.")}</td>
 							</tr>
 							<tr v-for="rule in paginatedRules" :key="rule.id">
 								<td class="cell-url"><span class="aio-login-lr-url-text">{{ renderTarget(rule.login_target_type, rule.login_target_value) }}</span></td>
@@ -82,26 +89,34 @@ export default {
 									</template>
 									<span v-else class="aio-login-lr-pill aio-login-lr-pill--value">{{ conditionValueLabel(rule) }}</span>
 								</td>
-								<td v-if="showRuleOrder" class="cell-order">{{ rule.order ?? '-' }}</td>
+								<td
+									class="cell-order"
+									:class="{ 'is-locked': !ruleOrderUnlocked }"
+									:title="!ruleOrderUnlocked ? $t('Upgrade to Pro to use rule priority order') : ''"
+									@click="!ruleOrderUnlocked && handleProFeatureClick()"
+								>
+									<template v-if="ruleOrderUnlocked">{{ rule.order ?? '-' }}</template>
+									<span v-else class="aio-login-lr-order-locked-cell" aria-hidden="true">—</span>
+								</td>
 								<td class="cell-actions">
 									<button v-if="advanced_conditions || rule.condition_type === 'all_users'" type="button" class="aio-login-lr-action-link aio-login-lr-action-edit" @click="editRule(rule)">
 										<span class="dashicons dashicons-edit" aria-hidden="true"></span>
-										Edit
+										${t("Edit")}
 									</button>
 									<button
 										v-else
 										type="button"
 										class="aio-login-lr-action-link aio-login-lr-action-edit aio-login-lr-action-edit--locked"
-										title="Upgrade to edit per-user or per-role rules"
+										:title="$t('Upgrade to edit per-user or per-role rules')"
 										@click="handleProFeatureClick"
 									>
 										<span class="dashicons dashicons-edit" aria-hidden="true"></span>
-										Edit
+										${t("Edit")}
 									</button>
 									<span class="aio-login-lr-action-sep" aria-hidden="true">|</span>
 									<button type="button" class="aio-login-lr-action-link aio-login-lr-action-delete" @click="openDeleteConfirm(rule.id)">
 										<span class="dashicons dashicons-trash" aria-hidden="true"></span>
-										Delete
+										${t("Delete")}
 									</button>
 								</td>
 							</tr>
@@ -109,10 +124,10 @@ export default {
 					</table>
 				</div>
 				<div class="aio-login-lr-dt-footer" v-if="rules.length">
-					<p class="aio-login-lr-dt-info">Showing {{ displayFrom }} to {{ displayTo }} of {{ totalFiltered }} entries</p>
-					<div class="aio-login-lr-dt-pager" role="navigation" aria-label="Table pagination">
-						<button type="button" class="aio-login-lr-dt-pager-btn" :disabled="!totalFiltered || tablePage <= 1" @click="goTablePage(1)" aria-label="First page">&laquo;</button>
-						<button type="button" class="aio-login-lr-dt-pager-btn" :disabled="!totalFiltered || tablePage <= 1" @click="goTablePage(tablePage - 1)" aria-label="Previous page">&lsaquo;</button>
+					<p class="aio-login-lr-dt-info">${t("Showing")} {{ displayFrom }} ${t("to")} {{ displayTo }} ${t("of")} {{ totalFiltered }} ${t("entries")}</p>
+					<div class="aio-login-lr-dt-pager" role="navigation" aria-label="${t('Table pagination')}">
+						<button type="button" class="aio-login-lr-dt-pager-btn" :disabled="!totalFiltered || tablePage <= 1" @click="goTablePage(1)" aria-label="${t('First page')}">&laquo;</button>
+						<button type="button" class="aio-login-lr-dt-pager-btn" :disabled="!totalFiltered || tablePage <= 1" @click="goTablePage(tablePage - 1)" aria-label="${t('Previous page')}">&lsaquo;</button>
 						<button
 							v-for="p in tablePageNumbers"
 							:key="'p-' + p"
@@ -122,8 +137,8 @@ export default {
 							:disabled="!totalFiltered"
 							@click="goTablePage(p)"
 						>{{ p }}</button>
-						<button type="button" class="aio-login-lr-dt-pager-btn" :disabled="!totalFiltered || tablePage >= totalTablePages" @click="goTablePage(tablePage + 1)" aria-label="Next page">&rsaquo;</button>
-						<button type="button" class="aio-login-lr-dt-pager-btn" :disabled="!totalFiltered || tablePage >= totalTablePages" @click="goTablePage(totalTablePages)" aria-label="Last page">&raquo;</button>
+						<button type="button" class="aio-login-lr-dt-pager-btn" :disabled="!totalFiltered || tablePage >= totalTablePages" @click="goTablePage(tablePage + 1)" aria-label="${t('Next page')}">&rsaquo;</button>
+						<button type="button" class="aio-login-lr-dt-pager-btn" :disabled="!totalFiltered || tablePage >= totalTablePages" @click="goTablePage(totalTablePages)" aria-label="${t('Last page')}">&raquo;</button>
 					</div>
 				</div>
 			</div>
@@ -132,8 +147,8 @@ export default {
 		<div v-if="savedRedirectionEnabled" class="aio-login-lr-fallback">
 			<div class="aio-login-lr-fallback-head">
 				<div class="aio-login-lr-fallback-titles">
-					<h3 class="aio-login-lr-fallback-title">Fallback Redirection</h3>
-					<p class="aio-login-lr-fallback-desc">Used when a rule&apos;s login/logout URL is invalid or unreachable. Not used when the rule has &quot;No logout redirect&quot; — WordPress default logout applies then.</p>
+					<h3 class="aio-login-lr-fallback-title">${t("Fallback Redirection")}</h3>
+					<p class="aio-login-lr-fallback-desc">${t("Used when a rule&apos;s login/logout URL is invalid or unreachable. Not used when the rule has &quot;No logout redirect&quot; — WordPress default logout applies then.")}</p>
 				</div>
 				<aio-login-toggle
 					id="aio-login-fallback-enable"
@@ -153,7 +168,7 @@ export default {
 						@change="onFallbackTypeRadiosChange"
 					/>
 					<span class="aio-login-lr-fallback-choice-text">
-						<span class="aio-login-lr-fallback-choice-label">Default Dashboard</span>
+						<span class="aio-login-lr-fallback-choice-label">${t("Default Dashboard")}</span>
 						<span class="aio-login-lr-fallback-choice-hint">{{ fallbackDashboardHint }}</span>
 					</span>
 				</label>
@@ -167,7 +182,7 @@ export default {
 						@change="onFallbackTypeRadiosChange"
 					/>
 					<span class="aio-login-lr-fallback-choice-text">
-						<span class="aio-login-lr-fallback-choice-label">Custom URL</span>
+						<span class="aio-login-lr-fallback-choice-label">${t("Custom URL")}</span>
 					</span>
 				</label>
 				<div v-if="settings.fallback_type === 'custom'" class="aio-login-lr-fallback-custom">
@@ -182,7 +197,7 @@ export default {
 						@blur="persistFallbackSettingsDebouncedFlush"
 					/>
 				</div>
-				<p v-if="persist_fallback_loading" class="aio-login-lr-fallback-saving">Saving…</p>
+				<p v-if="persist_fallback_loading" class="aio-login-lr-fallback-saving">${t("Saving…")}</p>
 			</div>
 		</div>
 
@@ -194,7 +209,7 @@ export default {
 				</div>
 				<div class="aio-login-lr-modal-body" @click.capture="onRuleModalBodyCapture">
 				<div class="aio-login-lr-grid">
-					<label id="aio-login-lr-condtype-label">Condition Type</label>
+					<label id="aio-login-lr-condtype-label">${t("Condition Type")}</label>
 					<div
 						ref="conditionTypeRoot"
 						class="aio-login-lr-condtype"
@@ -219,7 +234,7 @@ export default {
 							aria-labelledby="aio-login-lr-condtype-label"
 							@click.stop
 						>
-							<button type="button" class="aio-login-lr-condtype-item" role="option" @click="selectConditionType('all_users')">All Users</button>
+							<button type="button" class="aio-login-lr-condtype-item" role="option" @click="selectConditionType('all_users')">${t("All Users")}</button>
 							<button
 								type="button"
 								class="aio-login-lr-condtype-item"
@@ -228,7 +243,7 @@ export default {
 								:aria-disabled="!advanced_conditions ? 'true' : 'false'"
 								@click.stop="onConditionTypeItemClick('user_role')"
 							>
-								<span>User Role</span>
+								<span>${t("User Role")}</span>
 								<span v-if="!advanced_conditions" class="aio-login-lr-condtype-pro">PRO</span>
 							</button>
 							<button
@@ -239,15 +254,15 @@ export default {
 								:aria-disabled="!advanced_conditions ? 'true' : 'false'"
 								@click.stop="onConditionTypeItemClick('user')"
 							>
-								<span>Specific user</span>
+								<span>${t("Specific user")}</span>
 								<span v-if="!advanced_conditions" class="aio-login-lr-condtype-pro">PRO</span>
 							</button>
 						</div>
-						<p class="aio-login-lr-help">Choose what determines this redirect.</p>
+						<p class="aio-login-lr-help">${t("Choose what determines this redirect.")}</p>
 					</div>
 
 					<template v-if="draft.condition_type === 'user_role'">
-						<label id="aio-login-lr-role-ms-label">Select Roles</label>
+						<label id="aio-login-lr-role-ms-label">${t("Select Roles")}</label>
 						<div
 							ref="rolePickerRoot"
 							class="aio-login-lr-ms"
@@ -265,7 +280,7 @@ export default {
 							>
 								<div class="aio-login-lr-ms-pills">
 									<template v-if="!(draft.condition_role_slugs || []).length">
-										<span class="aio-login-lr-ms-trigger-placeholder">Choose roles...</span>
+										<span class="aio-login-lr-ms-trigger-placeholder">${t("Choose roles...")}</span>
 									</template>
 									<span
 										v-for="slug in draft.condition_role_slugs"
@@ -317,19 +332,19 @@ export default {
 											<span class="aio-login-lr-ms-option-label">{{ role.label }}</span>
 										</label>
 									</li>
-									<li v-if="!filteredRolesForPicker.length" class="aio-login-lr-ms-empty">No roles match your search.</li>
+									<li v-if="!filteredRolesForPicker.length" class="aio-login-lr-ms-empty">${t("No roles match your search.")}</li>
 								</ul>
 								<div class="aio-login-lr-ms-footer">
-									<span class="aio-login-lr-ms-footer-count">{{ (draft.condition_role_slugs || []).length }} selected</span>
-									<button type="button" class="aio-login-lr-ms-clear-all" @click.stop="clearAllRoles">Clear all</button>
+									<span class="aio-login-lr-ms-footer-count">{{ (draft.condition_role_slugs || []).length }} ${t("selected")}</span>
+									<button type="button" class="aio-login-lr-ms-clear-all" @click.stop="clearAllRoles">${t("Clear all")}</button>
 								</div>
 							</div>
-							<p class="aio-login-lr-help">Rule applies when the user has any of the selected roles.</p>
+							<p class="aio-login-lr-help">${t("Rule applies when the user has any of the selected roles.")}</p>
 							<p v-if="ruleFormErrors.role_condition" class="aio-login-lr-field-error">{{ ruleFormErrors.role_condition }}</p>
 						</div>
 					</template>
 					<template v-if="draft.condition_type === 'user'">
-						<label id="aio-login-lr-user-ms-label">Select Users</label>
+						<label id="aio-login-lr-user-ms-label">${t("Select Users")}</label>
 						<div
 							ref="userPickerRoot"
 							class="aio-login-lr-ms"
@@ -347,7 +362,7 @@ export default {
 							>
 								<div class="aio-login-lr-ms-pills">
 									<template v-if="!(draft.condition_user_ids || []).length">
-										<span class="aio-login-lr-ms-trigger-placeholder">Choose users...</span>
+										<span class="aio-login-lr-ms-trigger-placeholder">${t("Choose users...")}</span>
 									</template>
 									<span
 										v-for="uid in draft.condition_user_ids"
@@ -399,19 +414,19 @@ export default {
 											<span class="aio-login-lr-ms-option-label">{{ user.label }}</span>
 										</label>
 									</li>
-									<li v-if="!filteredUsersForPicker.length" class="aio-login-lr-ms-empty">No users match your search.</li>
+									<li v-if="!filteredUsersForPicker.length" class="aio-login-lr-ms-empty">${t("No users match your search.")}</li>
 								</ul>
 								<div class="aio-login-lr-ms-footer">
-									<span class="aio-login-lr-ms-footer-count">{{ (draft.condition_user_ids || []).length }} selected</span>
-									<button type="button" class="aio-login-lr-ms-clear-all" @click.stop="clearAllUsers">Clear all</button>
+									<span class="aio-login-lr-ms-footer-count">{{ (draft.condition_user_ids || []).length }} ${t("selected")}</span>
+									<button type="button" class="aio-login-lr-ms-clear-all" @click.stop="clearAllUsers">${t("Clear all")}</button>
 								</div>
 							</div>
-							<p class="aio-login-lr-help">Rule applies when any of the selected users logs in or out.</p>
+							<p class="aio-login-lr-help">${t("Rule applies when any of the selected users logs in or out.")}</p>
 							<p v-if="ruleFormErrors.user_condition" class="aio-login-lr-field-error">{{ ruleFormErrors.user_condition }}</p>
 						</div>
 					</template>
 
-					<label for="aio-login-lr-draft-login-target">Login Redirect URL</label>
+					<label for="aio-login-lr-draft-login-target">${t("Login Redirect URL")}</label>
 					<div>
 						<select
 							id="aio-login-lr-draft-login-target"
@@ -420,11 +435,11 @@ export default {
 							:class="{ 'aio-login-lr-input-error': ruleFormErrors.login_destination }"
 							@change="onLoginDestinationChange"
 						>
-							<option value="" disabled>Choose a destination...</option>
-							<option value="custom">Custom URL</option>
+							<option value="" disabled>${t("Choose a destination...")}</option>
+							<option value="custom">${t("Custom URL")}</option>
 							<option v-for="page in meta.pages" :key="'login-' + page.value" :value="'page:' + page.value">{{ page.label }}</option>
 						</select>
-						<p class="aio-login-lr-help">Pick an internal page or choose Custom URL to enter any external link.</p>
+						<p class="aio-login-lr-help">${t("Pick an internal page or choose Custom URL to enter any external link.")}</p>
 						<p v-if="ruleFormErrors.login_destination" class="aio-login-lr-field-error">{{ ruleFormErrors.login_destination }}</p>
 						<input
 							v-if="draft.login_target === 'custom'"
@@ -439,7 +454,7 @@ export default {
 						<p v-if="ruleFormErrors.login_custom" class="aio-login-lr-field-error">{{ ruleFormErrors.login_custom }}</p>
 					</div>
 
-					<label for="aio-login-lr-draft-logout-target">Logout Redirect URL <span class="description">(optional)</span></label>
+					<label for="aio-login-lr-draft-logout-target">${t("Logout Redirect URL")} <span class="description">${t("(optional)")}</span></label>
 					<div>
 						<select
 							id="aio-login-lr-draft-logout-target"
@@ -448,11 +463,11 @@ export default {
 							:class="{ 'aio-login-lr-input-error': ruleFormErrors.logout_destination }"
 							@change="onLogoutDestinationChange"
 						>
-							<option value="">No logout redirect</option>
-							<option value="custom">Custom URL</option>
+							<option value="">${t("No logout redirect")}</option>
+							<option value="custom">${t("Custom URL")}</option>
 							<option v-for="page in meta.pages" :key="'logout-' + page.value" :value="'page:' + page.value">{{ page.label }}</option>
 						</select>
-						<p class="aio-login-lr-help">Leave as &quot;No logout redirect&quot; to only apply this rule on login, or pick a page / custom URL for logout.</p>
+						<p class="aio-login-lr-help">${t("Leave as &quot;No logout redirect&quot; to only apply this rule on login, or pick a page / custom URL for logout.")}</p>
 						<p v-if="ruleFormErrors.logout_destination" class="aio-login-lr-field-error">{{ ruleFormErrors.logout_destination }}</p>
 						<input
 							v-if="draft.logout_target === 'custom'"
@@ -467,18 +482,34 @@ export default {
 						<p v-if="ruleFormErrors.logout_custom" class="aio-login-lr-field-error">{{ ruleFormErrors.logout_custom }}</p>
 					</div>
 
-					<template v-if="showRuleOrder">
-						<label>Order</label>
-						<div>
-							<input type="number" class="small-text aio-login-lr-order-input" v-model.number="draft.order" min="0" step="1" @blur="clampDraftOrder" />
-							<p class="aio-login-lr-help">Lower number = higher priority (1, 2, …). Use 0 for no priority — that rule only runs when no other rule on this site uses order 1 or higher.</p>
-						</div>
-					</template>
+					<label class="aio-login-lr-order-label">
+						<span>${t("Order")}</span>
+						<span v-if="!ruleOrderUnlocked" class="aio-login-lr-condtype-pro">PRO</span>
+					</label>
+					<div
+						class="aio-login-lr-order-control"
+						:class="{ 'is-locked': !ruleOrderUnlocked }"
+						@click="onOrderFieldClick"
+					>
+						<input
+							type="number"
+							class="small-text aio-login-lr-order-input"
+							v-model.number="draft.order"
+							min="0"
+							step="1"
+							:disabled="!ruleOrderUnlocked"
+							:readonly="!ruleOrderUnlocked"
+							:tabindex="ruleOrderUnlocked ? 0 : -1"
+							:aria-disabled="!ruleOrderUnlocked ? 'true' : 'false'"
+							@blur="clampDraftOrder"
+						/>
+						<p class="aio-login-lr-help">{{ orderHelpText }}</p>
+					</div>
 				</div>
 				</div>
 				<div class="aio-login-lr-modal-footer">
-					<button type="button" class="button aio-login-lr-btn-cancel" @click="show_modal = false">Cancel</button>
-					<button type="button" class="button button-primary aio-login-lr-btn-save" @click="saveRule">{{ is_edit_mode ? 'Update Rule' : 'Save Rule' }}</button>
+					<button type="button" class="button aio-login-lr-btn-cancel" @click="show_modal = false">${t("Cancel")}</button>
+					<button type="button" class="button button-primary aio-login-lr-btn-save" @click="saveRule">{{ is_edit_mode ? $t('Update Rule') : $t('Save Rule') }}</button>
 				</div>
 			</div>
 		</div>
@@ -486,12 +517,12 @@ export default {
 		<div v-if="show_delete_modal" class="aio-login-lr-modal-backdrop" @click.self="closeDeleteModal">
 			<div class="aio-login-lr-modal aio-login-lr-delete-confirm-modal" role="dialog" aria-modal="true" aria-labelledby="aio-login-lr-delete-title">
 				<div class="aio-login-lr-delete-confirm-body">
-					<h3 id="aio-login-lr-delete-title" class="aio-login-lr-delete-confirm-title">Delete this rule?</h3>
-					<p class="aio-login-lr-delete-confirm-text">This will permanently remove the redirect rule. This action cannot be undone.</p>
+					<h3 id="aio-login-lr-delete-title" class="aio-login-lr-delete-confirm-title">${t("Delete this rule?")}</h3>
+					<p class="aio-login-lr-delete-confirm-text">${t("This will permanently remove the redirect rule. This action cannot be undone.")}</p>
 				</div>
 				<div class="aio-login-lr-delete-confirm-footer">
-					<button type="button" class="button aio-login-lr-delete-confirm-cancel" @click="closeDeleteModal">Cancel</button>
-					<button type="button" class="button aio-login-lr-delete-confirm-submit" @click="confirmDeleteRule">Delete</button>
+					<button type="button" class="button aio-login-lr-delete-confirm-cancel" @click="closeDeleteModal">${t("Cancel")}</button>
+					<button type="button" class="button aio-login-lr-delete-confirm-submit" @click="confirmDeleteRule">${t("Delete")}</button>
 				</div>
 			</div>
 		</div>
@@ -504,10 +535,14 @@ export default {
 		/>
 	</div>`,
 	data: () => ({
-		featureTooltip: 'Login Redirection feature allows administrators to define simple, rule-based redirects for users on login and logout.',
+		featureTooltip: t( 'Login Redirection feature allows administrators to define simple, rule-based redirects for users on login and logout.' ),
+		orderHelpText: t( 'Set the rule priority order. Lower numbers have higher priority (1, 2, 3, etc.), while 0 disables priority-based ordering.' ),
 		nonce: '',
 		page_loaded: false,
+		loadError: '',
+		savedRedirectionEnabled: false,
 		advanced_conditions: false,
+		rule_order_allowed: false,
 		condition_type_menu_open: false,
 		show_modal: false,
 		show_delete_modal: false,
@@ -549,7 +584,7 @@ export default {
 		snackbar: {
 			message: '',
 			show: false,
-			timeout: 3000,
+			timeout: 6000,
 		},
 		tablePageSize: 10,
 		tablePage: 1,
@@ -574,15 +609,11 @@ export default {
 				this.ruleRowSearchBlob(r).includes(q)
 			);
 		},
-		showRuleOrder() {
-			if (typeof window === 'undefined' || !window.aio_login__app_object) {
-				return false;
-			}
-			const h = window.aio_login__app_object.has_pro;
-			return h === true || h === 'true' || h === 1 || h === '1';
+		ruleOrderUnlocked() {
+			return !!this.rule_order_allowed;
 		},
 		tableColspan() {
-			return this.showRuleOrder ? 6 : 5;
+			return 6;
 		},
 		totalFiltered() {
 			return this.filteredRules.length;
@@ -707,6 +738,18 @@ export default {
 				p = p.$parent;
 			}
 		},
+		onOrderFieldClick(event) {
+			if (this.ruleOrderUnlocked) {
+				return;
+			}
+			if (event && typeof event.preventDefault === 'function') {
+				event.preventDefault();
+			}
+			if (event && typeof event.stopPropagation === 'function') {
+				event.stopPropagation();
+			}
+			this.handleProFeatureClick();
+		},
 		/**
 		 * Re-fetch plan meta (e.g. after Freemius activation) so User / User Role unlock without full page reload.
 		 */
@@ -720,8 +763,10 @@ export default {
 					}
 					const meta = d.meta || {};
 					this.advanced_conditions = !!meta.advanced_conditions;
+					this.rule_order_allowed = !!meta.rule_order_allowed;
 					const metaRest = { ...meta };
 					delete metaRest.advanced_conditions;
+					delete metaRest.rule_order_allowed;
 					this.meta = Object.assign({}, this.meta, metaRest);
 				})
 				.catch(() => { });
@@ -768,7 +813,7 @@ export default {
 					? 'all users'
 					: this.conditionValueLabel(rule),
 			];
-			if (this.showRuleOrder) {
+			if (this.ruleOrderUnlocked) {
 				parts.push(String(rule.order ?? ''));
 			}
 			return parts.join(' ').toLowerCase();
@@ -1182,7 +1227,7 @@ export default {
 					? String(this.draft.login_target).replace(/^page:/, '')
 					: this.draft.login_custom,
 				...this.buildLogoutRulePayload(),
-				order: this.showRuleOrder
+				order: this.ruleOrderUnlocked
 					? this.normalizeOrderForSubmit(this.draft.order)
 					: 0,
 			};
@@ -1239,23 +1284,34 @@ export default {
 				settings: this.settings,
 			}).then((response) => {
 				this.savedRedirectionEnabled = !!this.settings.enabled;
-				this.snackbar.message = response.data.message || 'Settings saved successfully.';
+				this.snackbar.message = response.data.message || this.$t( "Settings saved successfully." );
 				this.snackbar.show = true;
 			});
 		},
 		loadComponent() {
 			axios.get('aio-login/login-redirection/get-settings').then((response) => {
-				this.nonce = response.data.nonce;
-				const meta = response.data.meta || {};
+				const data = (response && response.data) || {};
+				this.nonce = data.nonce || '';
+				const meta = data.meta || {};
 				this.advanced_conditions = !!meta.advanced_conditions;
+				this.rule_order_allowed = !!meta.rule_order_allowed;
 				const metaRest = { ...meta };
 				delete metaRest.advanced_conditions;
-				this.settings = response.data.settings || this.settings;
+				delete metaRest.rule_order_allowed;
+				this.settings = data.settings || this.settings;
 				this.savedRedirectionEnabled = !!this.settings.enabled;
-				this.rules = response.data.rules || [];
+				this.rules = data.rules || [];
 				this.meta = Object.assign({}, this.meta, metaRest);
 				this.tablePage = 1;
 				this.tableSearch = '';
+				this.loadError = '';
+				this.page_loaded = true;
+			}).catch((error) => {
+				const msg =
+					(error && error.response && error.response.data && error.response.data.message) ||
+					(error && error.message) ||
+					'Unable to load Login Redirection settings. Please refresh the page.';
+				this.loadError = msg;
 				this.page_loaded = true;
 			});
 		},

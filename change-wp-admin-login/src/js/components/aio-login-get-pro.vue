@@ -1,7 +1,7 @@
 <template>
 	<div class="aio-login__get-pro-shell">
 		<div class="aio-login__get-pro-content">
-			<h1>All-In-One Login <span>PRO</span> Features 👑</h1>
+			<h1>{{ $t("All-In-One Login") }} <span>{{ $t("PRO") }}</span> {{ $t("Features 👑") }}</h1>
 			<div class="aio-login__features-grid">
 				<div class="aio-login__feature" v-for="feature in features" :key="feature.title">
 					<div class="aio-login__feature-icon-wrap">
@@ -14,9 +14,11 @@
 			<div class="aio-login__cta-wrap">
 				<a
 					class="aio-login__get-pro-btn"
-					href="https://aiologin.com/pricing/?utm_source=plugin&utm_medium=get_pro_tab&utm_campaign=plugin"
+					href="https://aiologin.com/pricing/?utm_source=plugn-redirect&utm_medium=upgrade-to-pro&utm_campaign=get-pro&utm_id=plugin"
+					target="_blank"
+					rel="noopener noreferrer"
 				>
-					Get AIO Login Pro
+					{{ $t("Get Pro") }}
 				</a>
 			</div>
 		</div>

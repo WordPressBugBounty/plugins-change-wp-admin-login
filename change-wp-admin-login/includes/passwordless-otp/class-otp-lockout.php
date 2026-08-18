@@ -18,11 +18,14 @@ if ( ! class_exists( 'AIO_Login\\Passwordless_Otp\\OTP_Lockout' ) ) {
 	 */
 	final class OTP_Lockout {
 
-		private const SEND_COUNT_PREFIX        = 'aio_login_otp_send_count_';
-		private const VERIFY_LOCKOUT_PREFIX    = 'aio_login_otp_verify_lockout_until_';
-		private const SEND_LOCKOUT_PREFIX      = 'aio_login_otp_send_lockout_until_';
+		private const SEND_COUNT_PREFIX          = 'aio_login_otp_send_count_';
+		private const VERIFY_LOCKOUT_PREFIX      = 'aio_login_otp_verify_lockout_until_';
+		private const SEND_LOCKOUT_PREFIX        = 'aio_login_otp_send_lockout_until_';
 		private const LOCKOUT_CHANNEL_PREFIX     = 'aio_login_otp_lockout_channel_';
 		private const IDENTIFIER_LOCKOUT_PREFIX  = 'aio_login_otp_verify_lockout_id_';
+		private const IDENTIFIER_FAIL_PREFIX     = 'aio_login_otp_fail_id_';
+		private const IDENTIFIER_SEND_PREFIX     = 'aio_login_otp_send_id_';
+		private const ACTIVE_SESSION_PREFIX      = 'aio_login_otp_active_tok_';
 
 		/** Stored in login_lockouts.user_agent to distinguish OTP verify blocks from password login lockouts. */
 		private const LOCKOUT_ACTIVITY_PREFIX = 'aio-login-otp:';
@@ -92,6 +95,8 @@ if ( ! class_exists( 'AIO_Login\\Passwordless_Otp\\OTP_Lockout' ) ) {
 				return false;
 			}
 
+			self::sweep_expired_identifier_lockout_state( $identifier, $channel );
+
 			return self::get_identifier_lockout_until( $identifier, $channel ) > current_time( 'timestamp' ); // phpcs:ignore WordPress.DateTime.CurrentTimeTimestamp.Requested
 		}
 
@@ -112,6 +117,10 @@ if ( ! class_exists( 'AIO_Login\\Passwordless_Otp\\OTP_Lockout' ) ) {
 				return true;
 			}
 
+			if ( Helper::is_ip_blocked( $ip ) ) {
+				return true;
+			}
+
 			return self::is_identifier_blocked( $identifier, $channel );
 		}
 
@@ -129,6 +138,10 @@ if ( ! class_exists( 'AIO_Login\\Passwordless_Otp\\OTP_Lockout' ) ) {
 			}
 
 			if ( false !== self::is_ip_blocked( $ip, 'verify' ) ) {
+				return self::get_blocked_message( $ip, 'verify' );
+			}
+
+			if ( Helper::is_ip_blocked( $ip ) ) {
 				return self::get_blocked_message( $ip, 'verify' );
 			}
 
@@ -157,6 +170,7 @@ if ( ! class_exists( 'AIO_Login\\Passwordless_Otp\\OTP_Lockout' ) ) {
 			}
 
 			delete_transient( self::identifier_lockout_transient_key( $identifier, $channel ) );
+			self::clear_identifier_failures( $identifier, $channel );
 		}
 
 		/**
@@ -204,6 +218,247 @@ if ( ! class_exists( 'AIO_Login\\Passwordless_Otp\\OTP_Lockout' ) ) {
 			set_transient( $key, $count + 1, 15 * MINUTE_IN_SECONDS );
 
 			return true;
+		}
+
+		/**
+		 * Limit Login Attempts uses the same budget for password + passwordless auth.
+		 *
+		 * @return bool
+		 */
+		public static function is_limit_login_attempts_enabled() {
+			return 'on' === get_option( 'aio_login_limit_attempts_enable', 'off' );
+		}
+
+		/**
+		 * Shared verify attempt budget (LLA max when enabled, else OTP retries).
+		 *
+		 * @param string $channel email|sms.
+		 * @return int
+		 */
+		public static function get_verify_attempt_limit( $channel = 'email' ) {
+			if ( self::is_limit_login_attempts_enabled() ) {
+				$max = absint( get_option( 'aio_login_limit_attempts_maximum_attempts', 5 ) );
+				return max( 1, $max );
+			}
+
+			return OTP_Settings::get_max_retries( $channel );
+		}
+
+		/**
+		 * Shared verify lockout duration (LLA timeout when enabled).
+		 *
+		 * @param string $channel email|sms.
+		 * @return int Minutes.
+		 */
+		public static function get_verify_block_minutes( $channel = 'email' ) {
+			if ( self::is_limit_login_attempts_enabled() ) {
+				$minutes = absint( get_option( 'aio_login_limit_attempts_timeout', 5 ) );
+				return max( 1, $minutes > 0 ? $minutes : 5 );
+			}
+
+			return OTP_Settings::get_block_duration_minutes( $channel );
+		}
+
+		/**
+		 * Per-identifier send/resend cap (stops minting extra live codes for one account).
+		 *
+		 * @param string $identifier Email or phone.
+		 * @param string $channel    email|sms.
+		 * @return true|\WP_Error
+		 */
+		public static function record_identifier_send( $identifier, $channel = 'email' ) {
+			$identifier = self::normalize_lockout_identifier( $identifier, $channel );
+			if ( '' === $identifier ) {
+				return true;
+			}
+
+			$key   = self::identifier_send_transient_key( $identifier, $channel );
+			$max   = max( 1, OTP_Settings::get_max_send_requests() );
+			$count = (int) get_transient( $key );
+
+			if ( $count >= $max ) {
+				return new \WP_Error(
+					'ip_blocked',
+					__( 'Too many verification code requests. Please try again after some time.', 'change-wp-admin-login' )
+				);
+			}
+
+			set_transient( $key, $count + 1, 15 * MINUTE_IN_SECONDS );
+
+			return true;
+		}
+
+		/**
+		 * Keep a single live OTP session per identifier; drop the previous token.
+		 *
+		 * @param string $identifier Email or phone.
+		 * @param string $channel    email|sms.
+		 * @param string $token      New session token.
+		 */
+		public static function adopt_active_session( $identifier, $channel, $token ) {
+			$identifier = self::normalize_lockout_identifier( $identifier, $channel );
+			$token      = OTP_Service::normalize_session_token( $token );
+			if ( '' === $identifier || strlen( $token ) < 20 ) {
+				return;
+			}
+
+			$key = self::active_session_transient_key( $identifier, $channel );
+			$old = (string) get_transient( $key );
+			if ( '' !== $old && $old !== $token ) {
+				OTP_Service::destroy_session( $old );
+			}
+
+			set_transient( $key, $token, 30 * MINUTE_IN_SECONDS );
+		}
+
+		/**
+		 * @param string $identifier Email or phone.
+		 * @param string $channel    email|sms.
+		 * @param string $token      Session token that succeeded or was discarded.
+		 */
+		public static function clear_active_session( $identifier, $channel, $token = '' ) {
+			$identifier = self::normalize_lockout_identifier( $identifier, $channel );
+			if ( '' === $identifier ) {
+				return;
+			}
+
+			$key = self::active_session_transient_key( $identifier, $channel );
+			if ( '' !== $token ) {
+				$current = (string) get_transient( $key );
+				if ( $current !== OTP_Service::normalize_session_token( $token ) ) {
+					return;
+				}
+			}
+
+			delete_transient( $key );
+		}
+
+		/**
+		 * Increment identifier failures. Call inside with_identifier_lock() for verify.
+		 *
+		 * @param string $identifier Email or phone.
+		 * @param string $channel    email|sms.
+		 * @return int New count.
+		 */
+		public static function increment_identifier_failure( $identifier, $channel = 'email' ) {
+			$identifier = self::normalize_lockout_identifier( $identifier, $channel );
+			if ( '' === $identifier ) {
+				return 0;
+			}
+
+			self::sweep_expired_identifier_lockout_state( $identifier, $channel );
+
+			$key   = self::identifier_fail_transient_key( $identifier, $channel );
+			$count = (int) get_transient( $key );
+			++$count;
+			// Keep the in-progress attempt budget at least as long as the verify block window.
+			$ttl = max( 15, self::get_verify_block_minutes( $channel ) ) * MINUTE_IN_SECONDS;
+			set_transient( $key, $count, $ttl );
+
+			return $count;
+		}
+
+		/**
+		 * Locked increment for callers that do not already hold the identifier lock.
+		 *
+		 * @param string $identifier Email or phone.
+		 * @param string $channel    email|sms.
+		 * @return int|\WP_Error
+		 */
+		public static function increment_identifier_failure_atomic( $identifier, $channel = 'email' ) {
+			return self::with_identifier_lock(
+				$identifier,
+				$channel,
+				static function () use ( $identifier, $channel ) {
+					return self::increment_identifier_failure( $identifier, $channel );
+				}
+			);
+		}
+
+		/**
+		 * @param string $identifier Email or phone.
+		 * @param string $channel    email|sms.
+		 * @return int
+		 */
+		public static function get_identifier_failure_count( $identifier, $channel = 'email' ) {
+			$identifier = self::normalize_lockout_identifier( $identifier, $channel );
+			if ( '' === $identifier ) {
+				return 0;
+			}
+
+			self::sweep_expired_identifier_lockout_state( $identifier, $channel );
+
+			return (int) get_transient( self::identifier_fail_transient_key( $identifier, $channel ) );
+		}
+
+		/**
+		 * @param string $identifier Email or phone.
+		 * @param string $channel    email|sms.
+		 */
+		public static function clear_identifier_failures( $identifier, $channel = 'email' ) {
+			$identifier = self::normalize_lockout_identifier( $identifier, $channel );
+			if ( '' === $identifier ) {
+				return;
+			}
+
+			delete_transient( self::identifier_fail_transient_key( $identifier, $channel ) );
+		}
+
+		/**
+		 * Serialize verify/guess work per account so attempt counters cannot race.
+		 *
+		 * @param string   $identifier Email or phone.
+		 * @param string   $channel    email|sms.
+		 * @param callable $callback   Runs while the MySQL lock is held.
+		 * @return mixed|\WP_Error
+		 */
+		public static function with_identifier_lock( $identifier, $channel, $callback ) {
+			$identifier = self::normalize_lockout_identifier( $identifier, $channel );
+			if ( '' === $identifier || ! is_callable( $callback ) ) {
+				return is_callable( $callback ) ? $callback() : new \WP_Error( 'invalid_lock', __( 'Please try again.', 'change-wp-admin-login' ) );
+			}
+
+			global $wpdb;
+
+			$lock_name = 'aio_otp_' . md5( $channel . '|' . $identifier );
+			$got       = $wpdb->get_var( $wpdb->prepare( 'SELECT GET_LOCK(%s, %d)', $lock_name, 10 ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+
+			if ( '1' !== (string) $got ) {
+				return new \WP_Error( 'lock_busy', __( 'Please try again.', 'change-wp-admin-login' ) );
+			}
+
+			try {
+				return $callback();
+			} finally {
+				$wpdb->get_var( $wpdb->prepare( 'SELECT RELEASE_LOCK(%s)', $lock_name ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+			}
+		}
+
+		/**
+		 * Count OTP/magic-link failures toward Limit Login Attempts (IP budget).
+		 *
+		 * @param string $ip IP.
+		 * @return int New IP attempt count, or 0 when LLA is off.
+		 */
+		public static function record_shared_password_limiter_failure( $ip = '' ) {
+			if ( ! self::is_limit_login_attempts_enabled() ) {
+				return 0;
+			}
+
+			if ( empty( $ip ) ) {
+				$ip = Helper::get_ip();
+			}
+
+			Helper::increment_user_attempt_count_atomic( $ip );
+			$count = Helper::get_user_attempt_count( $ip );
+			$max   = self::get_verify_attempt_limit( 'email' );
+
+			if ( $count >= $max && ! Helper::is_ip_blocked( $ip ) ) {
+				Helper::block_ip( $ip );
+				Helper::update_user_attempt_count( $ip, true );
+			}
+
+			return $count;
 		}
 
 		/**
@@ -312,7 +567,7 @@ if ( ! class_exists( 'AIO_Login\\Passwordless_Otp\\OTP_Lockout' ) ) {
 			}
 
 			$channel = 'sms' === $channel ? 'sms' : 'email';
-			$minutes = OTP_Settings::get_block_duration_minutes( $channel );
+			$minutes = self::get_verify_block_minutes( $channel );
 			$until   = current_time( 'timestamp' ) + ( $minutes * MINUTE_IN_SECONDS ); // phpcs:ignore WordPress.DateTime.CurrentTimeTimestamp.Requested
 
 			set_transient( self::verify_lockout_transient_key( $ip ), $until, $minutes * MINUTE_IN_SECONDS );
@@ -337,7 +592,7 @@ if ( ! class_exists( 'AIO_Login\\Passwordless_Otp\\OTP_Lockout' ) ) {
 			}
 
 			$channel = 'sms' === $channel ? 'sms' : 'email';
-			$minutes = OTP_Settings::get_block_duration_minutes( $channel );
+			$minutes = self::get_verify_block_minutes( $channel );
 			$until   = current_time( 'timestamp' ) + ( $minutes * MINUTE_IN_SECONDS ); // phpcs:ignore WordPress.DateTime.CurrentTimeTimestamp.Requested
 
 			set_transient(
@@ -345,6 +600,48 @@ if ( ! class_exists( 'AIO_Login\\Passwordless_Otp\\OTP_Lockout' ) ) {
 				$until,
 				$minutes * MINUTE_IN_SECONDS
 			);
+
+			// Attempt budget must start fresh after this block expires (AIOL-694).
+			// Failures outlived short block windows (TTL was max(15, block minutes)).
+			self::clear_identifier_failures( $identifier, $channel );
+		}
+
+		/**
+		 * Drop leftover OTP failure budget once a verify lockout is no longer active.
+		 *
+		 * Without this, max failures from the previous block cycle remain and the next
+		 * wrong (or even correct) OTP immediately re-applies the lockout.
+		 *
+		 * @param string $identifier Email or phone.
+		 * @param string $channel    email|sms.
+		 */
+		private static function sweep_expired_identifier_lockout_state( $identifier, $channel ) {
+			$identifier = self::normalize_lockout_identifier( $identifier, $channel );
+			if ( '' === $identifier ) {
+				return;
+			}
+
+			$channel     = 'sms' === $channel ? 'sms' : 'email';
+			$lockout_key = self::identifier_lockout_transient_key( $identifier, $channel );
+			$until       = (int) get_transient( $lockout_key );
+			$now         = current_time( 'timestamp' ); // phpcs:ignore WordPress.DateTime.CurrentTimeTimestamp.Requested
+
+			if ( $until > $now ) {
+				return;
+			}
+
+			if ( $until > 0 ) {
+				delete_transient( $lockout_key );
+				self::clear_identifier_failures( $identifier, $channel );
+				return;
+			}
+
+			// Lockout transient already gone, but failure counter may still be at/above max.
+			$max   = self::get_verify_attempt_limit( $channel );
+			$fails = (int) get_transient( self::identifier_fail_transient_key( $identifier, $channel ) );
+			if ( $fails >= $max ) {
+				self::clear_identifier_failures( $identifier, $channel );
+			}
 		}
 
 		/**
@@ -442,7 +739,7 @@ if ( ! class_exists( 'AIO_Login\\Passwordless_Otp\\OTP_Lockout' ) ) {
 			$channel = self::get_lockout_channel( $ip );
 			return array(
 				'ip_address' => $ip,
-				'time'       => $until - ( OTP_Settings::get_block_duration_minutes( $channel ) * MINUTE_IN_SECONDS ),
+				'time'       => $until - ( self::get_verify_block_minutes( $channel ) * MINUTE_IN_SECONDS ),
 				'until'      => $until,
 			);
 		}
@@ -514,7 +811,7 @@ if ( ! class_exists( 'AIO_Login\\Passwordless_Otp\\OTP_Lockout' ) ) {
 			$timestamp = (int) $row['time'];
 			if ( self::is_otp_lockout_row( $row ) ) {
 				$channel = self::get_channel_from_otp_lockout_row( $row );
-				$timeout = $timestamp + ( OTP_Settings::get_block_duration_minutes( $channel ) * MINUTE_IN_SECONDS );
+				$timeout = $timestamp + ( self::get_verify_block_minutes( $channel ) * MINUTE_IN_SECONDS );
 			} else {
 				$minutes = (int) get_option( 'aio_login_limit_attempts_timeout', 0 );
 				if ( $minutes <= 0 ) {
@@ -634,6 +931,36 @@ if ( ! class_exists( 'AIO_Login\\Passwordless_Otp\\OTP_Lockout' ) ) {
 		private static function identifier_lockout_transient_key( $identifier, $channel ) {
 			$channel = 'sms' === $channel ? 'sms' : 'email';
 			return self::IDENTIFIER_LOCKOUT_PREFIX . $channel . '_' . md5( $identifier );
+		}
+
+		/**
+		 * @param string $identifier Normalized identifier.
+		 * @param string $channel    email|sms.
+		 * @return string
+		 */
+		private static function identifier_fail_transient_key( $identifier, $channel ) {
+			$channel = 'sms' === $channel ? 'sms' : 'email';
+			return self::IDENTIFIER_FAIL_PREFIX . $channel . '_' . md5( $identifier );
+		}
+
+		/**
+		 * @param string $identifier Normalized identifier.
+		 * @param string $channel    email|sms.
+		 * @return string
+		 */
+		private static function identifier_send_transient_key( $identifier, $channel ) {
+			$channel = 'sms' === $channel ? 'sms' : 'email';
+			return self::IDENTIFIER_SEND_PREFIX . $channel . '_' . md5( $identifier );
+		}
+
+		/**
+		 * @param string $identifier Normalized identifier.
+		 * @param string $channel    email|sms.
+		 * @return string
+		 */
+		private static function active_session_transient_key( $identifier, $channel ) {
+			$channel = 'sms' === $channel ? 'sms' : 'email';
+			return self::ACTIVE_SESSION_PREFIX . $channel . '_' . md5( $identifier );
 		}
 	}
 }

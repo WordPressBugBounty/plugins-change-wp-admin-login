@@ -6,7 +6,7 @@
 				v-on:handle-submit="handleSubmit"
 			>
 				<template v-slot:title>
-					<span>Password Strength Checker</span>
+					<span>{{ $t('Password Strength Checker') }}</span>
 					<aio-login-tooltip
 						:content="tooltipContent.passwordStrengthChecker.content"
 						:title="tooltipContent.passwordStrengthChecker.title"
@@ -17,7 +17,7 @@
 				<template v-slot:form-fields>
 					<tr>
 						<th>
-							<label for="enable">Enable</label>
+							<label for="enable">{{ $t('Enable') }}</label>
 						</th>
 						<td>
 							<aio-login-toggle
@@ -28,7 +28,7 @@
 							/>
 							<p class="desc">
 								<strong>
-									Enable to set rules to improve user password security.
+									{{ $t('Enable to set rules to improve user password security.') }}
 								</strong>
 							</p>
 						</td>

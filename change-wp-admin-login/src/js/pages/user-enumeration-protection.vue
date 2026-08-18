@@ -5,7 +5,7 @@
 			v-on:handle-submit="handleSubmit"
 		>
 			<template v-slot:title>
-				<span>User Enumeration Protection</span>
+				<span>{{ $t("User Enumeration Protection") }}</span>
 				<aio-login-tooltip
 					:content="tooltipContent.userEnumerationProtection.content"
 					:title="tooltipContent.userEnumerationProtection.title"
@@ -16,7 +16,7 @@
 			<template v-slot:form-fields>
 				<tr>
 					<th>
-						<label for="enable_protection">Enable Protection</label>
+						<label for="enable_protection">{{ $t("Enable Protection") }}</label>
 					</th>
 					<td>
 						<aio-login-toggle
@@ -26,16 +26,14 @@
 							v-on:toggle-input="handleEnableProtection"
 						/>
 						<p class="desc">
-							<strong>
-								Enable to hide usernames to strengthen site security.
-							</strong>
+							<strong>{{ $t("Enable to hide usernames to strengthen site security.") }}</strong>
 						</p>
 					</td>
 				</tr>
 
 				<tr v-if="form_data.enable_protection">
 					<th>
-						<label for="stop_oembed_calls">Stop oEmbed Calls Revealing User IDs</label>
+						<label for="stop_oembed_calls">{{ $t("Stop oEmbed Calls Revealing User IDs") }}</label>
 					</th>
 					<td>
 						<aio-login-toggle
@@ -44,13 +42,13 @@
 							:enabled="form_data.stop_oembed_calls"
 							v-on:toggle-input="handleStopOembedCalls"
 						/>
-						<p class="description">Prevents WordPress from exposing login IDs through embedded author links.</p>
+						<p class="description">{{ $t("Prevents WordPress from exposing login IDs through embedded author links.") }}</p>
 					</td>
 				</tr>
 
 				<tr v-if="form_data.enable_protection">
 					<th>
-						<label for="disable_author_sitemaps">Disable WP Core Author Sitemaps</label>
+						<label for="disable_author_sitemaps">{{ $t("Disable WP Core Author Sitemaps") }}</label>
 					</th>
 					<td>
 						<aio-login-toggle
@@ -59,13 +57,13 @@
 							:enabled="form_data.disable_author_sitemaps"
 							v-on:toggle-input="handleDisableAuthorSitemaps"
 						/>
-						<p class="description">Removes author-based sitemaps to prevent automated exposure of usernames.</p>
+						<p class="description">{{ $t("Removes author-based sitemaps to prevent automated exposure of usernames.") }}</p>
 					</td>
 				</tr>
 
 				<tr v-if="form_data.enable_protection">
 					<th>
-						<label for="remove_comment_numbers">Prevent Username from Comment Authors</label>
+						<label for="remove_comment_numbers">{{ $t("Prevent Username from Comment Authors") }}</label>
 					</th>
 					<td>
 						<aio-login-toggle
@@ -74,13 +72,13 @@
 							:enabled="form_data.remove_comment_numbers"
 							v-on:toggle-input="handleRemoveCommentNumbers"
 						/>
-						<p class="description">Obfuscates comment author names to prevent username enumeration through comments.</p>
+						<p class="description">{{ $t("Obfuscates comment author names to prevent username enumeration through comments.") }}</p>
 					</td>
 				</tr>
 
 				<tr v-if="form_data.enable_protection">
 					<th>
-						<label for="protect_rest_api">Protect REST API User Endpoints</label>
+						<label for="protect_rest_api">{{ $t("Protect REST API User Endpoints") }}</label>
 					</th>
 					<td>
 						<aio-login-toggle
@@ -89,13 +87,13 @@
 							:enabled="form_data.protect_rest_api"
 							v-on:toggle-input="handleProtectRestApi"
 						/>
-						<p class="description">Blocks unauthorized access to WordPress REST API user endpoints.</p>
+						<p class="description">{{ $t("Blocks unauthorized access to WordPress REST API user endpoints.") }}</p>
 					</td>
 				</tr>
 
 				<tr v-if="form_data.enable_protection">
 					<th>
-						<label for="login_registration_errors">Generic Login & Registration Errors</label>
+						<label for="login_registration_errors">{{ $t("Generic Login & Registration Errors") }}</label>
 					</th>
 					<td>
 						<aio-login-toggle
@@ -104,7 +102,7 @@
 							:enabled="form_data.login_registration_errors"
 							v-on:toggle-input="handleLoginRegistrationErrors"
 						/>
-						<p class="description">Provides generic error messages to prevent username enumeration through login/registration forms.</p>
+						<p class="description">{{ $t("Provides generic error messages to prevent username enumeration through login/registration forms.") }}</p>
 					</td>
 				</tr>
 
@@ -114,7 +112,7 @@
 
 		<div class="aio-login__note-section">
 			<div class="aio-login__note">
-				<p><strong>Note:</strong> This protection does not apply on admin pages to avoid conflicts. It's recommended to use with a firewall or IP blocking tool (e.g., Fail2Ban) for better security on VPS or dedicated servers.</p>
+				<p><strong>{{ $t("Note:") }}</strong> {{ $t("This protection does not apply on admin pages to avoid conflicts. It's recommended to use with a firewall or IP blocking tool (e.g., Fail2Ban) for better security on VPS or dedicated servers.") }}</p>
 			</div>
 		</div>
 

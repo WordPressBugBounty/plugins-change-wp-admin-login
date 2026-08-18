@@ -1,7 +1,7 @@
 <template>
 	<div>
 		<h1>
-			<span>Lockouts</span>
+			<span>{{ $t("Lockouts") }}</span>
 			<aio-login-tooltip
 				:content="tooltipContent.loginAttemptLogs.content"
 				:title="tooltipContent.loginAttemptLogs.title"
@@ -18,6 +18,7 @@
 
 <script>
 import tooltipContent from '../tooltip-content.js';
+import { t } from '../i18n.js';
 
 export default {
 	name: 'lockouts',
@@ -27,11 +28,11 @@ export default {
 		namespace: 'aio-login/logs/lockouts',
 
 		headers: [
-			{ key: 'time', value: 'Date & Time' },
-			{ key: 'country', value: 'Country' },
-			{ key: 'city', value: 'City' },
-			{ key: 'user_agent', value: 'User Agent' },
-			{ key: 'ip_address', value: 'IP Address' },
+			{ key: 'time', value: t( 'Date & Time' ) },
+			{ key: 'country', value: t( 'Country' ) },
+			{ key: 'city', value: t( 'City' ) },
+			{ key: 'user_agent', value: t( 'User Agent' ) },
+			{ key: 'ip_address', value: t( 'IP Address' ) },
 		],
 
 		data: [],

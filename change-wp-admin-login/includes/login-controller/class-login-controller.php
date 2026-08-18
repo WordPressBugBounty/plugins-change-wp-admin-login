@@ -47,16 +47,43 @@ if ( ! class_exists( 'AIO_Login\\Login_Controller\\Login_Controller' ) ) {
 		private $lockout_message = '';
 
 		/**
+		 * Get the translated default lockout message.
+		 *
+		 * @return string
+		 */
+		private function get_default_lockout_message() {
+			return // translators: %d: Remaining minutes.
+				__( 'You have been blocked due to too many unsuccessful login attempts. Please try again in %d minutes.', 'change-wp-admin-login' );
+		}
+
+		/**
+		 * Preserve custom lockout messages, but localize the built-in defaults.
+		 *
+		 * @param string $message Lockout message from storage/defaults.
+		 * @return string
+		 */
+		private function maybe_localize_lockout_message( $message ) {
+			$default_messages = array(
+				'You have been blocked due to too many unsuccessful login attempts. Please try again in %d minutes.',
+				'You have been locked out due to too many login attempts.',
+			);
+
+			if ( empty( $message ) || in_array( $message, $default_messages, true ) ) {
+				return $this->get_default_lockout_message();
+			}
+
+			return $message;
+		}
+
+		/**
 		 * Login_Controller constructor.
 		 */
 		private function __construct() {
 			$this->limit_attempts_enabled          = get_option( 'aio_login_limit_attempts_enable', 'off' );
 			$this->limit_attempts_maximum_attempts = get_option( 'aio_login_limit_attempts_maximum_attempts', 5 );
 			$this->limit_attempts_timeout          = get_option( 'aio_login_limit_attempts_timeout', 5 );
-			$this->lockout_message                 = get_option(
-				'aio_login_limit_attempts_lockout_message',
-				'You have been blocked due to too many unsuccessful login attempts. Please try again in %d minutes.'
-			);
+			// Store raw option only — do not call __() before init (WP 6.7+ textdomain notice).
+			$this->lockout_message                 = get_option( 'aio_login_limit_attempts_lockout_message', '' );
 
 			/**
 			 * Setting the default values for each field.
@@ -76,14 +103,10 @@ if ( ! class_exists( 'AIO_Login\\Login_Controller\\Login_Controller' ) ) {
 		}
 
 		/**
-		 * After init.
-		 * Fixed error notice for translation.
+		 * After init — localize lockout message once textdomain is available.
 		 */
 		public function after_init() {
-			if ( empty( $this->lockout_message ) ) {
-				$this->lockout_message = // translators: %d: Remaining minutes.
-					__( 'You have been blocked due to too many unsuccessful login attempts. Please try again in %d minutes.', 'change-wp-admin-login' );
-			}
+			$this->lockout_message = $this->maybe_localize_lockout_message( $this->lockout_message );
 		}
 
 		/**
@@ -341,10 +364,7 @@ if ( ! class_exists( 'AIO_Login\\Login_Controller\\Login_Controller' ) ) {
                     $timeout = 5;
                 }
 
-                if ( empty( $lockout_message ) ) {
-                    $lockout_message = // translators: %d: Remaining minutes.
-                        __( 'You have been blocked due to too many unsuccessful login attempts. Please try again in %d minutes.', 'change-wp-admin-login' );
-                }
+                $lockout_message = $this->maybe_localize_lockout_message( $lockout_message );
 
                 update_option( 'aio_login_limit_attempts_enable', $enabled );
                 update_option( 'aio_login_limit_attempts_maximum_attempts', $max_attempts );

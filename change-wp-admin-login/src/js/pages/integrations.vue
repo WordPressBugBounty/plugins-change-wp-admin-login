@@ -4,8 +4,8 @@
 			<!-- WooCommerce Required Notice -->
 			<div v-if="!woocommerceActive && !showSettings" class="woocommerce-admin-notice notice notice-warning is-dismissible">
 				<p>
-					<strong>WooCommerce Integration:</strong>
-					To use WooCommerce Integration you have to install & activate WooCommerce.
+					<strong>{{ $t("WooCommerce Integration:") }}</strong>
+					{{ $t("To use WooCommerce Integration you have to install & activate WooCommerce.") }}
 					<button 
 						@click="handleInstallActivateWooCommerce" 
 						class="button button-primary" 
@@ -23,7 +23,7 @@
 			<div v-if="!showSettings">
 				<div>
 					<h3>
-						<span>Integrations</span>
+						<span>{{ $t("Integrations") }}</span>
 					</h3>
 				</div>
 				<div class="aio-login-pro__social-login">
@@ -43,9 +43,9 @@
 				<div class="settings-header">
 					<div class="settings-title">
 						<img :src="getWooCommerceIcon()" alt="WooCommerce" class="woocommerce-icon" />
-						<h2>WooCommerce Integration Settings</h2>
+						<h2>{{ $t("WooCommerce Integration Settings") }}</h2>
 					</div>
-					<a href="#" class="back-link" @click.prevent="goBack">← Back</a>
+					<a href="#" class="back-link" @click.prevent="goBack">{{ $t("← Back") }}</a>
 				</div>
 
 				<div class="woocommerce-settings">
@@ -54,7 +54,7 @@
 						<div class="section-header">
 							<div class="section-title-row">
 								<h3>
-									<span>WooCommerce Integration</span>
+									<span>{{ $t("WooCommerce Integration") }}</span>
 								</h3>
 								<label class="toggle-switch" :class="{ 'disabled': !woocommerceActive }">
 									<aio-login-toggle
@@ -66,9 +66,9 @@
 									/>
 								</label>
 							</div>
-							<p class="section-description">Enable WooCommerce integration to secure user interactions with Social Login and CAPTCHA.</p>
+							<p class="section-description">{{ $t("Enable WooCommerce integration to secure user interactions with Social Login and CAPTCHA.") }}</p>
 							<div v-if="!woocommerceActive" class="woocommerce-notice notice notice-warning inline">
-								<p><strong>WooCommerce is required for this integration.</strong> Please install and activate the WooCommerce plugin to use this feature.</p>
+								<p><strong>{{ $t("WooCommerce is required for this integration.") }}</strong> {{ $t("Please install and activate the WooCommerce plugin to use this feature.") }}</p>
 							</div>
 						</div>
 					</div>
@@ -78,7 +78,7 @@
 						<div class="section-header">
 							<div class="section-title-row">
 								<h3>
-									<span>Captcha</span>
+									<span>{{ $t("Captcha") }}</span>
 								</h3>
 								<label class="toggle-switch">
 									<aio-login-toggle
@@ -90,8 +90,8 @@
 								</label>
 							</div>
 							<p class="section-description">
-								To protect forms from bots and spam by adding Captcha, 
-								<a href="#" class="link-text" @click.prevent="goToCaptcha">click here</a>.
+								{{ $t("To protect forms from bots and spam by adding Captcha,") }} 
+								<a href="#" class="link-text" @click.prevent="goToCaptcha">{{ $t("click here") }}</a>.
 							</p>
 						</div>
 						
@@ -109,14 +109,14 @@
 							</div>
 						</div>
 						<div v-if="providersLoaded.captcha && !providersLoading.captcha && configuredProviders.captcha.length === 0" class="no-providers-message">
-							<p>No Captcha providers are configured. Please configure a Captcha provider first by going to the <a href="#" class="link-text" @click.prevent="goToCaptcha">Captcha settings</a>.</p>
+							<p>{{ $t("No Captcha providers are configured. Please configure a Captcha provider first by going to the") }} <a href="#" class="link-text" @click.prevent="goToCaptcha">{{ $t("Captcha settings") }}</a>.</p>
 						</div>
 						<table v-else-if="providersLoaded.captcha && !providersLoading.captcha" class="settings-table">
 							<thead>
 								<tr>
-									<th>Provider</th>
-									<th>Login</th>
-									<th>Registration</th>
+									<th>{{ $t("Provider") }}</th>
+									<th>{{ $t("Login") }}</th>
+									<th>{{ $t("Registration") }}</th>
 								</tr>
 							</thead>
 							<tbody>
@@ -130,7 +130,7 @@
 												class="provider-icon" 
 												@error="handleIconError($event, 'grecaptcha')"
 											/>
-											<span class="provider-name">Recaptcha</span>
+											<span class="provider-name">{{ $t("Recaptcha") }}</span>
 										</div>
 									</td>
 									<td>
@@ -138,9 +138,7 @@
 											<aio-login-toggle
 												id="recaptcha-login"
 												name="recaptcha-login"
-												v-on:toggle-input="(val) => updateProviderOption('recaptcha', 'login', val)"
-												:enabled="settingsData.providers.recaptcha.login"
-											/>
+												v-on:toggle-input="(val) => updateProviderOption('recaptcha', 'login', val)" :enabled="settingsData.providers.recaptcha.login" />
 										</label>
 									</td>
 									<td>
@@ -148,9 +146,7 @@
 											<aio-login-toggle
 												id="recaptcha-registration"
 												name="recaptcha-registration"
-												v-on:toggle-input="(val) => updateProviderOption('recaptcha', 'registration', val)"
-												:enabled="settingsData.providers.recaptcha.registration"
-											/>
+												v-on:toggle-input="(val) => updateProviderOption('recaptcha', 'registration', val)" :enabled="settingsData.providers.recaptcha.registration" />
 										</label>
 									</td>
 								</tr>
@@ -164,7 +160,7 @@
 												class="provider-icon" 
 												@error="handleIconError($event, 'hcaptcha')"
 											/>
-											<span class="provider-name">Hcaptcha</span>
+											<span class="provider-name">{{ $t("Hcaptcha") }}</span>
 										</div>
 									</td>
 									<td>
@@ -172,9 +168,7 @@
 											<aio-login-toggle
 												id="hcaptcha-login"
 												name="hcaptcha-login"
-												v-on:toggle-input="(val) => updateProviderOption('hcaptcha', 'login', val)"
-												:enabled="settingsData.providers.hcaptcha.login"
-											/>
+												v-on:toggle-input="(val) => updateProviderOption('hcaptcha', 'login', val)" :enabled="settingsData.providers.hcaptcha.login" />
 										</label>
 									</td>
 									<td>
@@ -182,9 +176,7 @@
 											<aio-login-toggle
 												id="hcaptcha-registration"
 												name="hcaptcha-registration"
-												v-on:toggle-input="(val) => updateProviderOption('hcaptcha', 'registration', val)"
-												:enabled="settingsData.providers.hcaptcha.registration"
-											/>
+												v-on:toggle-input="(val) => updateProviderOption('hcaptcha', 'registration', val)" :enabled="settingsData.providers.hcaptcha.registration" />
 										</label>
 									</td>
 								</tr>
@@ -193,11 +185,11 @@
 										<div class="provider-cell">
 											<img 
 												:src="getProviderIcon('turnstile')" 
-												alt="Cloudflare Turnstile" 
+												:alt="$t('Cloudflare turnstile')" 
 												class="provider-icon" 
 												@error="handleIconError($event, 'turnstile')"
 											/>
-											<span class="provider-name">Turnstile</span>
+											<span class="provider-name">{{ $t("Turnstile") }}</span>
 										</div>
 									</td>
 									<td>
@@ -205,9 +197,7 @@
 											<aio-login-toggle
 												id="turnstile-login"
 												name="turnstile-login"
-												v-on:toggle-input="(val) => updateProviderOption('turnstile', 'login', val)"
-												:enabled="settingsData.providers.turnstile.login"
-											/>
+												v-on:toggle-input="(val) => updateProviderOption('turnstile', 'login', val)" :enabled="settingsData.providers.turnstile.login" />
 										</label>
 									</td>
 									<td>
@@ -215,9 +205,7 @@
 											<aio-login-toggle
 												id="turnstile-registration"
 												name="turnstile-registration"
-												v-on:toggle-input="(val) => updateProviderOption('turnstile', 'registration', val)"
-												:enabled="settingsData.providers.turnstile.registration"
-											/>
+												v-on:toggle-input="(val) => updateProviderOption('turnstile', 'registration', val)" :enabled="settingsData.providers.turnstile.registration" />
 										</label>
 									</td>
 								</tr>
@@ -231,7 +219,7 @@
 						<div class="section-header">
 							<div class="section-title-row">
 								<h3>
-									<span>Social Login</span>
+									<span>{{ $t("Social Login") }}</span>
 								</h3>
 								<label class="toggle-switch">
 									<aio-login-toggle
@@ -243,8 +231,8 @@
 								</label>
 							</div>
 							<p class="section-description">
-								To allow users to log in with their social accounts, 
-								<a href="#" class="link-text" @click.prevent="goToSocialLogin">click here</a>.
+								{{ $t("To allow users to log in with their social accounts,") }} 
+								<a href="#" class="link-text" @click.prevent="goToSocialLogin">{{ $t("click here") }}</a>.
 							</p>
 						</div>
 						
@@ -264,15 +252,15 @@
 							</div>
 						</div>
 						<div v-if="providersLoaded.social && !providersLoading.social && configuredProviders.social.length === 0" class="no-providers-message">
-							<p>No Social Login providers are configured. Please configure a Social Login provider first by going to the <a href="#" class="link-text" @click.prevent="goToSocialLogin">Social Login settings</a>.</p>
+							<p>{{ $t("No Social Login providers are configured. Please configure a Social Login provider first by going to the") }} <a href="#" class="link-text" @click.prevent="goToSocialLogin">{{ $t("Social Login settings") }}</a>.</p>
 						</div>
 						<table v-else-if="providersLoaded.social && !providersLoading.social" class="settings-table">
 							<thead>
 								<tr>
-									<th>Provider</th>
-									<th>Login</th>
-									<th>Registration</th>
-									<th>Checkout</th>
+									<th>{{ $t("Provider") }}</th>
+									<th>{{ $t("Login") }}</th>
+									<th>{{ $t("Registration") }}</th>
+									<th>{{ $t("Checkout") }}</th>
 								</tr>
 							</thead>
 							<tbody>
@@ -295,9 +283,7 @@
 											<aio-login-toggle
 												:id="`${provider.key}-login`"
 												:name="`${provider.key}-login`"
-												v-on:toggle-input="(val) => updateSocialProviderOption(provider.key, 'login', val)"
-												:enabled="settingsData.socialProviders[provider.key] && settingsData.socialProviders[provider.key].login"
-											/>
+												v-on:toggle-input="(val) => updateSocialProviderOption(provider.key, 'login', val)" :enabled="settingsData.socialProviders[provider.key] && settingsData.socialProviders[provider.key].login" />
 										</label>
 									</td>
 									<td>
@@ -305,9 +291,7 @@
 											<aio-login-toggle
 												:id="`${provider.key}-registration`"
 												:name="`${provider.key}-registration`"
-												v-on:toggle-input="(val) => updateSocialProviderOption(provider.key, 'registration', val)"
-												:enabled="settingsData.socialProviders[provider.key] && settingsData.socialProviders[provider.key].registration"
-											/>
+												v-on:toggle-input="(val) => updateSocialProviderOption(provider.key, 'registration', val)" :enabled="settingsData.socialProviders[provider.key] && settingsData.socialProviders[provider.key].registration" />
 										</label>
 									</td>
 									<td>
@@ -315,9 +299,7 @@
 											<aio-login-toggle
 												:id="`${provider.key}-checkout`"
 												:name="`${provider.key}-checkout`"
-												v-on:toggle-input="(val) => updateSocialProviderOption(provider.key, 'checkout', val)"
-												:enabled="settingsData.socialProviders[provider.key] && settingsData.socialProviders[provider.key].checkout"
-											/>
+												v-on:toggle-input="(val) => updateSocialProviderOption(provider.key, 'checkout', val)" :enabled="settingsData.socialProviders[provider.key] && settingsData.socialProviders[provider.key].checkout" />
 										</label>
 									</td>
 									</tr>
@@ -332,8 +314,8 @@
 						<div class="section-header">
 							<div class="section-title-row">
 								<h3>
-									<span>Login With Link</span>
-									<span class="aio-login-wc-new-badge">NEW</span>
+									<span>{{ $t("Login With Link") }}</span>
+									<span class="aio-login-wc-new-badge">{{ $t("NEW") }}</span>
 								</h3>
 								<label class="toggle-switch">
 									<aio-login-toggle
@@ -345,25 +327,25 @@
 								</label>
 							</div>
 							<p class="section-description">
-								Allow passwordless sign-in via email link on WooCommerce login, registration, and checkout. New customers can be created automatically when they request a link. Configure expiration in
-								<a href="#" class="link-text" @click.prevent="goToPasswordlessLoginLink">Passwordless Authentication Settings</a>.
+								{{ $t("Allow passwordless sign-in via email link on WooCommerce login, registration, and checkout. New customers can be created automatically when they request a link. Configure expiration in") }}
+								<a href="#" class="link-text" @click.prevent="goToPasswordlessLoginLink">{{ $t("Passwordless Authentication Settings") }}</a>.
 							</p>
 						</div>
 
 						<div v-if="settingsData.magicLinkEnabled" class="social-providers magic-link-providers">
 							<div v-if="!magicLinkConfigured" class="no-providers-message">
 								<p>
-									Login Link is not enabled yet. Turn it on in
-									<a href="#" class="link-text" @click.prevent="goToPasswordlessLoginLink">Passwordless Authentication → Login Link</a>.
+									{{ $t("Login Link is not enabled yet. Turn it on in") }}
+									<a href="#" class="link-text" @click.prevent="goToPasswordlessLoginLink">{{ $t("Passwordless Authentication → Login Link") }}</a>.
 								</p>
 							</div>
 							<table v-else class="settings-table">
 								<thead>
 									<tr>
-										<th>Provider</th>
-										<th>Login</th>
-										<th>Registration</th>
-										<th>Checkout</th>
+										<th>{{ $t("Provider") }}</th>
+										<th>{{ $t("Login") }}</th>
+										<th>{{ $t("Registration") }}</th>
+										<th>{{ $t("Checkout") }}</th>
 									</tr>
 								</thead>
 								<tbody>
@@ -376,7 +358,7 @@
 														<path d="M3 7.5l8.65 5.77a1.5 1.5 0 001.7 0L22 7.5" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
 													</svg>
 												</span>
-												<span class="provider-name">Email Login Link</span>
+												<span class="provider-name">{{ $t("Email Login Link") }}</span>
 											</div>
 										</td>
 										<td>
@@ -384,9 +366,7 @@
 												<aio-login-toggle
 													id="magic-link-login"
 													name="magic-link-login"
-													v-on:toggle-input="(val) => updateMagicLinkContextOption('login', val)"
-													:enabled="settingsData.magicLinkContexts.login"
-												/>
+													v-on:toggle-input="(val) => updateMagicLinkContextOption('login', val)" :enabled="settingsData.magicLinkContexts.login" />
 											</label>
 										</td>
 										<td>
@@ -394,9 +374,7 @@
 												<aio-login-toggle
 													id="magic-link-registration"
 													name="magic-link-registration"
-													v-on:toggle-input="(val) => updateMagicLinkContextOption('registration', val)"
-													:enabled="settingsData.magicLinkContexts.registration"
-												/>
+													v-on:toggle-input="(val) => updateMagicLinkContextOption('registration', val)" :enabled="settingsData.magicLinkContexts.registration" />
 											</label>
 										</td>
 										<td>
@@ -404,9 +382,7 @@
 												<aio-login-toggle
 													id="magic-link-checkout"
 													name="magic-link-checkout"
-													v-on:toggle-input="(val) => updateMagicLinkContextOption('checkout', val)"
-													:enabled="settingsData.magicLinkContexts.checkout"
-												/>
+													v-on:toggle-input="(val) => updateMagicLinkContextOption('checkout', val)" :enabled="settingsData.magicLinkContexts.checkout" />
 											</label>
 										</td>
 									</tr>
@@ -417,7 +393,7 @@
 				</div>
 
 				<p class="submit">
-					<button type="button" class="button aio-login__primary" @click="saveSettings">Save Changes</button>
+					<button type="button" class="button aio-login__primary" @click="saveSettings">{{ $t("Save Changes") }}</button>
 				</p>
 			</div>
 		</div>

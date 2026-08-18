@@ -2,14 +2,14 @@
 	<nav
 		class="aio-login__tabs-nav"
 		:class="{ 'has-scroll-controls': showScrollControls }"
-		aria-label="AIO Login sections"
+		:aria-label="$t('AIO Login sections')"
 	>
 		<button
 			v-show="showScrollControls"
 			type="button"
 			class="aio-login__scroll-btn aio-login__scroll-btn--prev"
 			:disabled="!canScrollLeft"
-			aria-label="Scroll tabs left"
+			:aria-label="$t('Scroll tabs left')"
 			@click="scrollTabs( -1 )"
 		>
 			<span class="dashicons dashicons-arrow-left-alt2" aria-hidden="true"></span>
@@ -40,9 +40,7 @@
 						alt=""
 						:src="assetsUrl + 'images/pro-crown.svg'"
 					/>
-					<span class="aio-login__pro-tab" v-if="tab['is-pro'] && ! hasPro">
-						PRO
-					</span>
+					<span class="aio-login__pro-tab" v-if="tab['is-pro'] && ! hasPro">{{ $t("PRO") }}</span>
 				</a>
 			</div>
 		</div>
@@ -51,7 +49,7 @@
 			type="button"
 			class="aio-login__scroll-btn aio-login__scroll-btn--next"
 			:disabled="!canScrollRight"
-			aria-label="Scroll tabs right"
+			:aria-label="$t('Scroll tabs right')"
 			@click="scrollTabs( 1 )"
 		>
 			<span class="dashicons dashicons-arrow-right-alt2" aria-hidden="true"></span>
@@ -89,7 +87,6 @@ export default {
 
 	watch: {
 		test_tab() {
-			// Main tab + active sub-tab (router) both drive overlay; keep logic in aio-login-app.
 			if ( this.$parent && typeof this.$parent.syncCurrentTabAccess === 'function' ) {
 				this.$parent.syncCurrentTabAccess();
 			}

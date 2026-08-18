@@ -2,20 +2,20 @@
 	<div class="aio-login__meta-container">
 		<div>
 			<aio-login-metadata
-				title="Custom Login URL"
-				description="Attackers often try exploits on /wp-login or /wp-admin as a default login URL for WordPress. Change it to avoid these attacks and have an easily memorizable login URL."
+				:title="$t('Custom Login URL')"
+				:description="$t('Attackers often try exploits on /wp-login or /wp-admin as a default login URL for WordPress. Change it to avoid these attacks and have an easily memorizable login URL.')"
 			>
 				<template v-slot:configuration>
 					<div class="aio-login__configuration-switch aio-login-configuration-btn-wrapper">
-						<a class="aio-login-configuration-btn" :href="adminURL + '&tab=login-protection'">Configure</a>
+						<a class="aio-login-configuration-btn" :href="adminURL + '&tab=login-protection'">{{ $t("Configure") }}</a>
 					</div>
 				</template>
 			</aio-login-metadata>
 		</div>
 		<div>
 			<aio-login-metadata
-				title="Limit Login Attempts"
-				description="Limit the number of times a user IP can attempt to log in to your wp-admin with incorrect credentials. Once the login attempt limit is reached, the IP from which the attempts have originated will be blocked for default period of time."
+				:title="$t('Limit Login Attempts')"
+				:description="$t('Limit the number of times a user IP can attempt to log in to your wp-admin with incorrect credentials. Once the login attempt limit is reached, the IP from which the attempts have originated will be blocked for default period of time.')"
 				@click="iWasTriggered"
 			>
 				<template v-slot:configuration>
@@ -28,8 +28,8 @@
 							@mousedown="handleLimitLoginSelectInteraction"
 							@click="handleLimitLoginSelectInteraction"
 						>
-							<option value="on">On</option>
-							<option value="off">Off</option>
+							<option value="on">{{ $t("On") }}</option>
+							<option value="off">{{ $t("Off") }}</option>
 						</select>
 					</div>
 				</template>
@@ -37,8 +37,8 @@
 		</div>
 		<div>
 			<aio-login-metadata
-				title="Two Factor Authentication"
-				description="Two-factor authentication forces admin users to login only after providing a token, generated from the Authenticator applications. When you enable this option, all admin users will be asked to configure their two-factor authentication in the Authenticator app on their next login."
+				:title="$t('Two Factor Authentication')"
+				:description="$t('Two-factor authentication forces admin users to login only after providing a token, generated from the Authenticator applications. When you enable this option, all admin users will be asked to configure their two-factor authentication in the Authenticator app on their next login.')"
 				@click="handleTwoFactorCardClick"
 			>
 				<template v-slot:configuration>
@@ -58,8 +58,8 @@
 		</div>
 		<div>
 			<aio-login-metadata
-				title="Block IP Address"
-				description="By default your WordPress login can be accessed by any IP or user. You can use this feature to allow login only for specific IPs or users in order to prevent brute-force attacks or malicious login attempts."
+				:title="$t('Block IP Address')"
+				:description="$t('By default your WordPress login can be accessed by any IP or user. You can use this feature to allow login only for specific IPs or users in order to prevent brute-force attacks or malicious login attempts.')"
 				@click="iWasTriggered"
 			>
 				<template v-slot:configuration>
@@ -105,7 +105,7 @@ export default {
 		block_ip_address: false,
 
 		snackbar: {
-			message: 'Settings saved successfully',
+			message: '',
 			duration: 3000,
 			show: false
 		},

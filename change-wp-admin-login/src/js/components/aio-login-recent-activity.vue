@@ -2,7 +2,7 @@
 	<div>
 		<div class="aio-login__recent-activity-wrapper">
 			<h2>
-				<span>Recent Activity</span>
+				<span>{{ $t("Recent Activity") }}</span>
 				<aio-login-tooltip
 					:content="tooltipContent.recentActivity.content"
 					:title="tooltipContent.recentActivity.title"
@@ -40,7 +40,7 @@
 							</td>
 						</tr>
 						<tr v-else>
-							<td colspan="5">No lockouts found</td>
+							<td colspan="5">{{ $t("No lockouts found") }}</td>
 						</tr>
 					</table>
 				</div>
@@ -62,7 +62,7 @@
 						</tr>
 
 						<tr v-else>
-							<td colspan="7">No failed logins found</td>
+							<td colspan="7">{{ $t("No failed logins found") }}</td>
 						</tr>
 					</table>
 				</div>
@@ -74,13 +74,14 @@
 			<a
 				:href="view_all_activity_logs"
 				class="aio-login__view-all-activity"
-			>View All Activity</a>
+			>{{ $t("View All Activity") }}</a>
 		</div>
 	</div>
 </template>
 
 <script>
 import tooltipContent from '../tooltip-content.js';
+import { t } from '../i18n.js';
 
 export default {
 	name: 'aio-login-recent-activity',
@@ -91,13 +92,13 @@ export default {
 
 		tabs: [
 			{
-				title: 'Lockouts',
+				title: t( 'Lockouts' ),
 				slug: 'lockouts',
 				url: '',
 				active: true,
 			},
 			{
-				title: 'Failed Logins',
+				title: t( 'Failed Logins' ),
 				slug: 'failed-logins',
 				url: '',
 				active: false,
@@ -105,22 +106,22 @@ export default {
 		],
 
 		lockout_headers: [
-			{ title: 'Date & Time', value: 'time' },
-			{ title: 'Country', value: 'country' },
-			{ title: 'City', value: 'city' },
-			{ title: 'User Agent', value: 'user_agent' },
-			{ title: 'IP Address', value: 'ip_address' },
+			{ title: t( 'Date & Time' ), value: 'time' },
+			{ title: t( 'Country' ), value: 'country' },
+			{ title: t( 'City' ), value: 'city' },
+			{ title: t( 'User Agent' ), value: 'user_agent' },
+			{ title: t( 'IP Address' ), value: 'ip_address' },
 		],
 		lockouts: [],
 
 		failed_login_headers: [
-			{ title: 'ID', value: 'id' },
-			{ title: 'User login', value: 'user_login' },
-			{ title: 'Date & Time', value: 'time' },
-			{ title: 'Country', value: 'country' },
-			{ title: 'City', value: 'city' },
-			{ title: 'User Agent', value: 'user_agent' },
-			{ title: 'IP Address', value: 'ip_address' },
+			{ title: t( 'ID' ), value: 'id' },
+			{ title: t( 'User Login' ), value: 'user_login' },
+			{ title: t( 'Date & Time' ), value: 'time' },
+			{ title: t( 'Country' ), value: 'country' },
+			{ title: t( 'City' ), value: 'city' },
+			{ title: t( 'User Agent' ), value: 'user_agent' },
+			{ title: t( 'IP Address' ), value: 'ip_address' },
 		],
 		failed_logins: [],
 

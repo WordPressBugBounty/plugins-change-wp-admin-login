@@ -77,6 +77,7 @@ if ( ! class_exists( 'AIO_Login\\AIO_Login' ) ) {
 		private function include_files() {
 			require_once AIO_LOGIN__DIR_PATH . 'includes/class-helper.php';
 			require_once AIO_LOGIN__DIR_PATH . 'includes/captcha/class-captcha-validation.php';
+			require_once AIO_LOGIN__DIR_PATH . 'includes/admin/class-admin-i18n.php';
 			require_once AIO_LOGIN__DIR_PATH . 'includes/admin/class-admin.php';
 			require_once AIO_LOGIN__DIR_PATH . 'includes/change-wp-admin-login/class-change-wp-admin-login.php';
 			require_once AIO_LOGIN__DIR_PATH . 'includes/google-recaptcha/class-google-recaptcha.php';
@@ -131,7 +132,8 @@ if ( ! class_exists( 'AIO_Login\\AIO_Login' ) ) {
 			register_activation_hook( AIO_LOGIN__FILE, array( $this, 'activate_plugin' ) );
 			register_uninstall_hook( AIO_LOGIN__FILE, array( self::class, 'uninstall_plugin' ) );
 
-			add_action( 'init', array( $this, 'load_textdomain' ) );
+			// Priority -10 so domain is loaded before other init callbacks that call __().
+			add_action( 'init', array( $this, 'load_textdomain' ), -10 );
 			add_action( 'init', array( $this, 'if_activation_hook_not_triggered' ) );
 
 			if ( is_multisite() ) {
@@ -241,7 +243,11 @@ if ( ! class_exists( 'AIO_Login\\AIO_Login' ) ) {
 		 * Load textdomain.
 		 */
 		public function load_textdomain() {
-			load_plugin_textdomain( 'change-wp-admin-login', false, AIO_LOGIN__DIR_PATH . '/languages' );
+			load_plugin_textdomain(
+				'change-wp-admin-login',
+				false,
+				dirname( plugin_basename( AIO_LOGIN__FILE ) ) . '/languages'
+			);
 		}
 
 		/**

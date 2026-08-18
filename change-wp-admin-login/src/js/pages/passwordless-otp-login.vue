@@ -12,11 +12,11 @@
 					</span>
 					<div class="aio-login-2fa-methods__content">
 						<h2 class="aio-login-2fa-methods__title">
-							Email OTP Login
+							{{ $t("Email OTP Login") }}
 							<aio-login-tooltip :content="tooltipContent.passwordlessEmailOtp.content" />
 						</h2>
 						<div v-if="isCardExpanded('email')" class="aio-login-2fa-methods__desc">
-							Allow users to sign in with a one-time verification code sent to their email address.
+							{{ $t("Allow users to sign in with a one-time verification code sent to their email address.") }}
 						</div>
 					</div>
 					<div class="aio-login-2fa-methods__controls">
@@ -25,7 +25,7 @@
 							class="aio-login-2fa-methods__expand-btn"
 							@click="toggleCard('email')"
 							:aria-expanded="isCardExpanded('email')"
-							aria-label="Toggle Email OTP Login settings"
+							:aria-label="$t('Toggle Email OTP Login settings')"
 						>
 							<span class="aio-login-2fa-methods__chevron" :class="{ 'is-expanded': isCardExpanded('email') }"></span>
 						</button>
@@ -42,32 +42,32 @@
 					<div class="aio-login-2fa-methods__grid aio-login-2fa-methods__grid--four">
 						<div>
 							<label class="aio-login-2fa-methods__label" for="email_length">
-								OTP Length
+								{{ $t("OTP Length") }}
 								<aio-login-tooltip :content="tooltipContent.passwordlessOtpLength.content" />
 							</label>
 							<select id="email_length" v-model="form.email_length" class="aio-login-2fa-methods__input" :disabled="!form.email_enable">
-								<option value="4">4 digits</option>
-								<option value="6">6 digits</option>
-								<option value="8">8 digits</option>
+								<option value="4">{{ $t("4 digits") }}</option>
+								<option value="6">{{ $t("6 digits") }}</option>
+								<option value="8">{{ $t("8 digits") }}</option>
 							</select>
 						</div>
 						<div>
 							<label class="aio-login-2fa-methods__label" for="email_expiration">
-								OTP Expiration (minutes)
+								{{ $t("OTP Expiration (minutes)") }}
 								<aio-login-tooltip :content="tooltipContent.passwordlessOtpExpiration.content" />
 							</label>
 							<input id="email_expiration" type="number" min="1" max="60" v-model="form.email_expiration" :disabled="!form.email_enable" class="aio-login-2fa-methods__input" />
 						</div>
 						<div>
 							<label class="aio-login-2fa-methods__label" for="email_resend">
-								Resend timer (seconds)
+								{{ $t("Resend timer (seconds)") }}
 								<aio-login-tooltip :content="tooltipContent.passwordlessOtpResend.content" />
 							</label>
 							<input id="email_resend" type="number" min="30" max="600" v-model="form.email_resend_timer" :disabled="!form.email_enable" class="aio-login-2fa-methods__input" />
 						</div>
 						<div>
 							<label class="aio-login-2fa-methods__label" for="email_retries">
-								Maximum retry attempts
+								{{ $t("Maximum retry attempts") }}
 								<aio-login-tooltip :content="tooltipContent.passwordlessOtpRetries.content" />
 							</label>
 							<input id="email_retries" type="number" min="1" max="20" v-model="form.email_max_retries" :disabled="!form.email_enable" class="aio-login-2fa-methods__input" />
@@ -76,18 +76,18 @@
 
 					<div class="aio-login-2fa-methods__field aio-login-otp-login__field--half">
 						<label class="aio-login-2fa-methods__label" for="email_block_duration">
-								Block duration (minutes)
+								{{ $t("Block duration (minutes)") }}
 								<aio-login-tooltip :content="tooltipContent.passwordlessOtpBlockDuration.content" />
 							</label>
 							<input id="email_block_duration" type="number" min="1" max="1440" v-model="form.email_block_duration" :disabled="!form.email_enable" class="aio-login-2fa-methods__input" />
-						<p class="aio-login-2fa-methods__help">How long the IP stays blocked after too many failed email OTP attempts. Shown under Activity Log → Lockouts.</p>
+						<p class="aio-login-2fa-methods__help">{{ $t("How long the IP stays blocked after too many failed email OTP attempts. Shown under Activity Log → Lockouts.") }}</p>
 					</div>
-					<div class="aio-login-otp-login__toggle-field">
+					<div v-if="has_pro" class="aio-login-otp-login__toggle-field">
 						<label class="aio-login-2fa-methods__label">
-							Skip 2FA for Email login
+							{{ $t("Skip 2FA for Email login") }}
 								<aio-login-tooltip :content="tooltipContent.passwordlessOtpSkip2fa.content" />
 							</label>
-							<p class="aio-login-2fa-methods__help">When enabled, users who sign in with email OTP are not prompted for AIO Login two-factor authentication.</p>
+							<p class="aio-login-2fa-methods__help">{{ $t("When enabled, users who sign in with email OTP are not prompted for AIO Login two-factor authentication.") }}</p>
 							<aio-login-toggle
 								id="email_skip_2fa"
 								name="email_skip_2fa"
@@ -113,11 +113,11 @@
 					</span>
 					<div class="aio-login-2fa-methods__content">
 						<h2 class="aio-login-2fa-methods__title">
-							SMS OTP Login 
+							{{ $t("SMS OTP Login") }} 
 							<aio-login-tooltip :content="tooltipContent.passwordlessSmsOtp.content" />
 						</h2>
 						<div v-if="has_pro && form.sms_enable && isCardExpanded('sms')" class="aio-login-2fa-methods__desc">
-							Allow users to sign in with a one-time verification code sent via SMS (requires Twilio).
+							{{ $t("Allow users to sign in with a one-time verification code sent via SMS (requires Twilio).") }}
 						</div>
 					</div>
 					<div class="aio-login-2fa-methods__controls">
@@ -126,7 +126,7 @@
 							class="aio-login-2fa-methods__expand-btn"
 							@click.stop="toggleCard('sms')"
 							:aria-expanded="isCardExpanded('sms')"
-							aria-label="Toggle SMS OTP Login settings"
+							:aria-label="$t('Toggle SMS OTP Login settings')"
 							:disabled="!has_pro || !form.sms_enable"
 						>
 							<span class="aio-login-2fa-methods__chevron" :class="{ 'is-expanded': isCardExpanded('sms') }"></span>
@@ -152,35 +152,73 @@
 									<path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
 								</svg>
 							</span>
-							<h3 class="aio-login-otp-login__twilio-box-title">Twilio Configuration</h3>
+							<h3 class="aio-login-otp-login__twilio-box-title">{{ $t("Twilio Configuration") }}</h3>
 						</div>
 						<div class="aio-login-2fa-methods__grid">
 						<div>
-							<label class="aio-login-2fa-methods__label" for="twilio_sid">Account SID</label>
-							<input id="twilio_sid" type="text" v-model="form.twilio_account_sid" class="aio-login-2fa-methods__input" :disabled="smsFieldsDisabled" />
+							<label class="aio-login-2fa-methods__label" for="twilio_sid">
+								{{ $t("Account SID") }} <span class="aio-login-pro__required">*</span>
+							</label>
+							<input
+								id="twilio_sid"
+								type="text"
+								v-model="form.twilio_account_sid"
+								class="aio-login-2fa-methods__input"
+								:class="{ 'aio-login-lr-input-error': !!twilio_errors.account_sid }"
+								:disabled="smsFieldsDisabled"
+								:required="form.sms_enable"
+								autocomplete="off"
+								@input="clearTwilioError('account_sid')"
+							/>
+							<p v-if="twilio_errors.account_sid" class="aio-login-lr-field-error">{{ twilio_errors.account_sid }}</p>
 						</div>
 						<div>
 							<label class="aio-login-2fa-methods__label" for="twilio_token">
-								Auth Token
+								{{ $t("Auth Token") }} <span class="aio-login-pro__required">*</span>
 								<aio-login-tooltip :content="tooltipContent.passwordlessTwilioToken.content" />
 							</label>
-							<input id="twilio_token" type="password" v-model="form.twilio_auth_token" class="aio-login-2fa-methods__input" :disabled="smsFieldsDisabled" placeholder="Leave blank to keep existing" />
+							<input
+								id="twilio_token"
+								type="password"
+								v-model="form.twilio_auth_token"
+								class="aio-login-2fa-methods__input"
+								:class="{ 'aio-login-lr-input-error': !!twilio_errors.auth_token }"
+								:disabled="smsFieldsDisabled"
+								:required="form.sms_enable && !twilio_auth_token_stored"
+								:placeholder="twilio_auth_token_stored ? 'Leave blank to keep existing' : ''"
+								autocomplete="new-password"
+								@input="clearTwilioError('auth_token')"
+							/>
+							<p v-if="twilio_errors.auth_token" class="aio-login-lr-field-error">{{ twilio_errors.auth_token }}</p>
 						</div>
 					</div>
 					<div class="aio-login-2fa-methods__grid">
 						<div>
-							<label class="aio-login-2fa-methods__label" for="twilio_from">Sender number</label>
-							<input id="twilio_from" type="text" v-model="form.twilio_sender_number" class="aio-login-2fa-methods__input" :disabled="smsFieldsDisabled" />
+							<label class="aio-login-2fa-methods__label" for="twilio_from">
+								{{ $t("Sender number") }} <span class="aio-login-pro__required">*</span>
+							</label>
+							<input
+								id="twilio_from"
+								type="text"
+								v-model="form.twilio_sender_number"
+								class="aio-login-2fa-methods__input"
+								:class="{ 'aio-login-lr-input-error': !!twilio_errors.sender_number }"
+								:disabled="smsFieldsDisabled"
+								:required="form.sms_enable"
+								autocomplete="off"
+								@input="clearTwilioError('sender_number')"
+							/>
+							<p v-if="twilio_errors.sender_number" class="aio-login-lr-field-error">{{ twilio_errors.sender_number }}</p>
 						</div>
 						<div>
-							<label class="aio-login-2fa-methods__label" for="default_country">Default country code</label>
+							<label class="aio-login-2fa-methods__label" for="default_country">{{ $t("Default country code") }}</label>
 							<select id="default_country" v-model="form.sms_default_country_iso" class="aio-login-2fa-methods__input" :disabled="smsFieldsDisabled">
 								<option v-for="c in countryCodes" :key="c.iso" :value="c.iso">{{ c.label }}</option>
 							</select>
 						</div>
 					</div>
 					<div class="aio-login-2fa-methods__field aio-login-otp-login__twilio-box-field">
-						<label id="sms-allowed-countries-label" class="aio-login-2fa-methods__label">Allowed countries</label>
+						<label id="sms-allowed-countries-label" class="aio-login-2fa-methods__label">{{ $t("Allowed countries") }}</label>
 						<div
 							ref="countryPickerRoot"
 							class="aio-login-lr-ms aio-login-otp-login__country-ms"
@@ -199,7 +237,7 @@
 							>
 								<div class="aio-login-lr-ms-pills">
 									<template v-if="!form.sms_allowed_countries.length">
-										<span class="aio-login-lr-ms-trigger-placeholder">Choose countries...</span>
+										<span class="aio-login-lr-ms-trigger-placeholder">{{ $t("Choose countries...") }}</span>
 									</template>
 									<span
 										v-for="iso in form.sms_allowed_countries"
@@ -268,60 +306,60 @@
 											<span class="aio-login-lr-ms-option-label">{{ c.label }} ({{ c.iso }})</span>
 										</label>
 									</li>
-									<li v-if="!filteredAllowedCountries.length" class="aio-login-lr-ms-empty">No countries match your search.</li>
+									<li v-if="!filteredAllowedCountries.length" class="aio-login-lr-ms-empty">{{ $t("No countries match your search.") }}</li>
 								</ul>
 								<div class="aio-login-lr-ms-footer aio-login-lr-ms-footer--actions">
-									<span class="aio-login-lr-ms-footer-count">{{ form.sms_allowed_countries.length }} selected</span>
+									<span class="aio-login-lr-ms-footer-count">{{ form.sms_allowed_countries.length }} {{ $t('selected') }}</span>
 									<span class="aio-login-lr-ms-footer-buttons">
-										<button type="button" class="aio-login-lr-ms-clear-all" @click.stop="selectAllAllowedCountries">Select all</button>
-										<button type="button" class="aio-login-lr-ms-clear-all" @click.stop="clearAllAllowedCountries">Clear all</button>
+										<button type="button" class="aio-login-lr-ms-clear-all" @click.stop="selectAllAllowedCountries">{{ $t("Select all") }}</button>
+										<button type="button" class="aio-login-lr-ms-clear-all" @click.stop="clearAllAllowedCountries">{{ $t("Clear all") }}</button>
 									</span>
 								</div>
 							</div>
 						</div>
 						<p v-if="allowed_countries_error" class="aio-login-lr-field-error">{{ allowed_countries_error }}</p>
-						<p class="aio-login-2fa-methods__help">Only phone numbers from selected countries can request SMS OTP login. At least one country is required.</p>
+						<p class="aio-login-2fa-methods__help">{{ $t("Only phone numbers from selected countries can request SMS OTP login. At least one country is required.") }}</p>
 					</div>
 					</div>
 
-					<h3 class="aio-login-otp-login__section-title aio-login-otp-login__section-title--sms">SMS OTP</h3>
+					<h3 class="aio-login-otp-login__section-title aio-login-otp-login__section-title--sms">{{ $t("SMS OTP") }}</h3>
 					<div class="aio-login-2fa-methods__grid aio-login-2fa-methods__grid--four">
 						<div>
-							<label class="aio-login-2fa-methods__label" for="sms_length">OTP Length</label>
+							<label class="aio-login-2fa-methods__label" for="sms_length">{{ $t("OTP Length") }}</label>
 							<select id="sms_length" v-model="form.sms_length" class="aio-login-2fa-methods__input" :disabled="smsFieldsDisabled">
-								<option value="4">4 digits</option>
-								<option value="6">6 digits</option>
-								<option value="8">8 digits</option>
+								<option value="4">{{ $t("4 digits") }}</option>
+								<option value="6">{{ $t("6 digits") }}</option>
+								<option value="8">{{ $t("8 digits") }}</option>
 							</select>
 						</div>
 						<div>
-							<label class="aio-login-2fa-methods__label" for="sms_expiration">Expiration (minutes)</label>
+							<label class="aio-login-2fa-methods__label" for="sms_expiration">{{ $t("Expiration (minutes)") }}</label>
 							<input id="sms_expiration" type="number" min="1" max="60" v-model="form.sms_expiration" :disabled="smsFieldsDisabled" class="aio-login-2fa-methods__input" />
 						</div>
 						<div>
-							<label class="aio-login-2fa-methods__label" for="sms_resend">Resend timer (seconds)</label>
+							<label class="aio-login-2fa-methods__label" for="sms_resend">{{ $t("Resend timer (seconds)") }}</label>
 							<input id="sms_resend" type="number" min="30" max="600" v-model="form.sms_resend_timer" :disabled="smsFieldsDisabled" class="aio-login-2fa-methods__input" />
 						</div>
 						<div>
-							<label class="aio-login-2fa-methods__label" for="sms_retries">Max retries</label>
+							<label class="aio-login-2fa-methods__label" for="sms_retries">{{ $t("Max retries") }}</label>
 							<input id="sms_retries" type="number" min="1" max="20" v-model="form.sms_max_retries" :disabled="smsFieldsDisabled" class="aio-login-2fa-methods__input" />
 						</div>
 					</div>
 
 					<div class="aio-login-2fa-methods__field aio-login-otp-login__field--half">
 						<label class="aio-login-2fa-methods__label" for="sms_block_duration">
-								Block duration (minutes)
+								{{ $t("Block duration (minutes)") }}
 								<aio-login-tooltip :content="tooltipContent.passwordlessOtpBlockDuration.content" />
 							</label>
 							<input id="sms_block_duration" type="number" min="1" max="1440" v-model="form.sms_block_duration" :disabled="smsFieldsDisabled" class="aio-login-2fa-methods__input" />
-						<p class="aio-login-2fa-methods__help">How long the IP stays blocked after too many failed SMS OTP attempts. Shown under Activity Log → Lockouts.</p>
+						<p class="aio-login-2fa-methods__help">{{ $t("How long the IP stays blocked after too many failed SMS OTP attempts. Shown under Activity Log → Lockouts.") }}</p>
 					</div>
 					<div class="aio-login-otp-login__toggle-field">
 						<label class="aio-login-2fa-methods__label">
-							Skip 2FA for SMS login
+							{{ $t("Skip 2FA for SMS login") }}
 							<aio-login-tooltip :content="tooltipContent.passwordlessOtpSkip2fa.content" />
 						</label>
-						<p class="aio-login-2fa-methods__help">When enabled, users who sign in with SMS OTP are not prompted for AIO Login two-factor authentication.</p>
+						<p class="aio-login-2fa-methods__help">{{ $t("When enabled, users who sign in with SMS OTP are not prompted for AIO Login two-factor authentication.") }}</p>
 						<aio-login-toggle
 							id="sms_skip_2fa"
 							name="sms_skip_2fa"
@@ -336,7 +374,7 @@
 
 		<div class="aio-login-2fa-methods__actions">
 			<button type="button" class="button button-primary aio-login-otp-login__save-btn" @click="saveSettings" :disabled="saving">
-				{{ saving ? 'Saving…' : 'Save Changes' }}
+				{{ saving ? $t('Saving…') : $t('Save Changes') }}
 			</button>
 		</div>
 
@@ -368,16 +406,22 @@ export default {
 		country_picker_open: false,
 		country_picker_search: '',
 		allowed_countries_error: '',
+		twilio_auth_token_stored: false,
+		twilio_errors: {
+			account_sid: '',
+			auth_token: '',
+			sender_number: '',
+		},
 		form: {
-			email_enable: true,
+			email_enable: false,
 			email_block_duration: '15',
-			email_length: '4',
+			email_length: '6',
 			email_expiration: '10',
 			email_resend_timer: '60',
 			email_max_retries: '5',
 			email_skip_2fa: true,
 			sms_enable: false,
-			sms_length: '4',
+			sms_length: '6',
 			sms_expiration: '10',
 			sms_resend_timer: '60',
 			sms_max_retries: '5',
@@ -467,6 +511,58 @@ export default {
 	methods: {
 		setAllowedCountriesError() {
 			this.allowed_countries_error = 'Select at least one allowed country for SMS login.';
+		},
+		clearTwilioError(field) {
+			if (field && this.twilio_errors[field] !== undefined) {
+				this.twilio_errors[field] = '';
+			}
+		},
+		clearTwilioErrors() {
+			this.twilio_errors = {
+				account_sid: '',
+				auth_token: '',
+				sender_number: '',
+			};
+		},
+		validateTwilioConfig() {
+			this.clearTwilioErrors();
+			if (!this.has_pro || !this.form.sms_enable) {
+				return true;
+			}
+
+			const sid = String(this.form.twilio_account_sid || '').trim();
+			const sender = String(this.form.twilio_sender_number || '').trim();
+			const token = String(this.form.twilio_auth_token || '').trim();
+			const hasNewToken = token !== '' && token !== '••••••••••••';
+			const hasStoredToken = !!this.twilio_auth_token_stored;
+
+			if (!sid) {
+				this.twilio_errors.account_sid = 'Account SID is required.';
+			}
+			if (!hasStoredToken && !hasNewToken) {
+				this.twilio_errors.auth_token = 'Auth Token is required.';
+			}
+			if (!sender) {
+				this.twilio_errors.sender_number = 'Sender number is required.';
+			}
+
+			const firstError = this.twilio_errors.account_sid
+				|| this.twilio_errors.auth_token
+				|| this.twilio_errors.sender_number;
+			if (firstError) {
+				this.expandedCards.sms = true;
+				this.$nextTick(() => {
+					const focusId = this.twilio_errors.account_sid
+						? 'twilio_sid'
+						: (this.twilio_errors.auth_token ? 'twilio_token' : 'twilio_from');
+					const el = document.getElementById(focusId);
+					if (el && typeof el.focus === 'function') {
+						el.focus();
+					}
+				});
+				return false;
+			}
+			return true;
 		},
 		validateAllowedCountries() {
 			if ( ! this.has_pro || ! this.form.sms_enable ) {
@@ -585,7 +681,7 @@ export default {
 				this.nonce = d.nonce;
 				this.countryCodes = d.country_codes || [];
 				this.form.email_enable = !!d.email_enable;
-				this.form.email_length = String(d.email_length || '4');
+				this.form.email_length = String(d.email_length || '6');
 				this.form.email_expiration = String(d.email_expiration || '10');
 				this.form.email_resend_timer = String(d.email_resend_timer || '60');
 				this.form.email_max_retries = String(d.email_max_retries || '5');
@@ -598,22 +694,33 @@ export default {
 				} else {
 					this.expandedCards.sms = false;
 				}
-				this.form.sms_length = String(d.sms_length || '4');
+				this.form.sms_length = String(d.sms_length || '6');
 				this.form.sms_expiration = String(d.sms_expiration || '10');
 				this.form.sms_resend_timer = String(d.sms_resend_timer || '60');
 				this.form.sms_max_retries = String(d.sms_max_retries || '5');
 				this.form.sms_block_duration = String(d.sms_block_duration || '15');
 				this.form.sms_skip_2fa = !!d.sms_skip_2fa;
 				this.form.twilio_account_sid = d.twilio_account_sid || '';
-				this.form.twilio_auth_token = d.twilio_auth_token_stored ? '••••••••••••' : '';
+				this.twilio_auth_token_stored = !!d.twilio_auth_token_stored;
+				this.form.twilio_auth_token = this.twilio_auth_token_stored ? '••••••••••••' : '';
 				this.form.twilio_sender_number = d.twilio_sender_number || '';
 				this.form.sms_default_country_iso = d.sms_default_country_iso || 'US';
 				this.form.sms_allowed_countries = Array.isArray(d.sms_allowed_countries) ? d.sms_allowed_countries : [];
 				this.allowed_countries_error = '';
+				this.clearTwilioErrors();
 				this.page_loaded = true;
 			});
 		},
 		saveSettings() {
+			if ( !this.validateTwilioConfig() ) {
+				const msg = this.twilio_errors.account_sid
+					|| this.twilio_errors.auth_token
+					|| this.twilio_errors.sender_number
+					|| 'Please fill in all required Twilio fields.';
+				this.snackbar.message = msg;
+				this.snackbar.show = true;
+				return;
+			}
 			if ( !this.validateAllowedCountries() ) {
 				this.snackbar.message = this.allowed_countries_error;
 				this.snackbar.show = true;
@@ -654,11 +761,24 @@ export default {
 			}).catch((err) => {
 				this.saving = false;
 				const msg = err?.response?.data?.message || 'Save failed';
+				const code = err?.response?.data?.code || '';
 				this.snackbar.message = msg;
 				this.snackbar.show = true;
-				if ( err?.response?.data?.code === 'sms_allowed_countries_required' ) {
+				if ( code === 'sms_allowed_countries_required' ) {
 					this.allowed_countries_error = msg;
 					this.country_picker_open = true;
+				}
+				if ( code === 'twilio_account_sid_required' ) {
+					this.twilio_errors.account_sid = msg;
+					this.expandedCards.sms = true;
+				}
+				if ( code === 'twilio_auth_token_required' ) {
+					this.twilio_errors.auth_token = msg;
+					this.expandedCards.sms = true;
+				}
+				if ( code === 'twilio_sender_number_required' ) {
+					this.twilio_errors.sender_number = msg;
+					this.expandedCards.sms = true;
 				}
 			});
 		},

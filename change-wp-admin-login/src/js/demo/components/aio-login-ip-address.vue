@@ -7,7 +7,7 @@
 				v-on:handle-submit="handleSubmit"
 			>
 				<template v-slot:title>
-					<span>Block IP Address</span>
+					<span>{{ $t('Block IP Address') }}</span>
 					<aio-login-tooltip
 						:content="tooltipContent.blockIpAddresses.content"
 						:title="tooltipContent.blockIpAddresses.title"
@@ -18,7 +18,7 @@
 				<template v-slot:form-fields>
 					<tr>
 						<th>
-							<label for="enable">Enable</label>
+							<label for="enable">{{ $t('Enable') }}</label>
 						</th>
 						<td>
 							<aio-login-toggle
@@ -29,7 +29,7 @@
 							></aio-login-toggle>
 							<p class="desc">
 								<strong>
-									Enable to control access using whitelist or blacklist.
+									{{ $t('Enable to control access using whitelist or blacklist.') }}
 								</strong>
 							</p>
 						</td>

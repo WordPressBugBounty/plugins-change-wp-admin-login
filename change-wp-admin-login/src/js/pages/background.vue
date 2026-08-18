@@ -3,7 +3,7 @@
 
 		<aio-login-form :action="nonce" v-on:handle-submit="submitHandler">
 			<template v-slot:title>
-				<span>Background</span>
+				<span>{{ $t("Background") }}</span>
 				<aio-login-tooltip
 					:content="tooltipContent.background.content"
 					:title="tooltipContent.background.title"
@@ -13,7 +13,7 @@
 			<template v-slot:form-fields>
 				<tr>
 					<th scope="row">
-						<label for="bg_color">Background Color</label>
+						<label for="bg_color">{{ $t("Background Color") }}</label>
 					</th>
 					<td>
 						<aio-login-color-picker id="bg_color" v-model="form_data.bg_color" />
@@ -22,12 +22,12 @@
 
 				<tr>
 					<th scope="row">
-						<label for="bg_image">Background Image</label>
+						<label for="bg_image">{{ $t("Background Image") }}</label>
 					</th>
 					<td>
 						<aio-login-media
 							id="bg_image"
-							title="Upload Image"
+							:title="$t('Upload Image')"
 							:image="bg_image"
 							default-image=""
 							v-on:image-updated="imageUpdated"

@@ -7,29 +7,29 @@
 					<template v-if="isAppSumoPopup">
 						<div class="aio-login-appsumo-popup">
 							<div class="aio-login-appsumo-popup__logo-wrap">
-								<img :src="appsumoImageBase + 'logo.svg'" alt="AIO Login" class="aio-login-appsumo-popup__logo">
+								<img :src="appsumoImageBase + 'logo.svg'" :alt="$t('AIO Login')" class="aio-login-appsumo-popup__logo">
 							</div>
 
 							<div class="aio-login-appsumo-popup__headline">
 								<div class="aio-login-appsumo-popup__title-row">
-									<h2 class="aio-login-appsumo-popup__title">Go Unlimited with AIO Login</h2>
+									<h2 class="aio-login-appsumo-popup__title">{{ $t("Go Unlimited with AIO Login") }}</h2>
 									<img :src="appsumoImageBase + 'infinity.svg'" alt="" class="aio-login-appsumo-popup__infinity" aria-hidden="true">
 								</div>
-								<p class="aio-login-appsumo-popup__subtitle">Unlimited Sites + Lifetime Access</p>
+								<p class="aio-login-appsumo-popup__subtitle">{{ $t("Unlimited Sites + Lifetime Access") }}</p>
 							</div>
 
 							<div class="aio-login-appsumo-popup__features">
 								<div class="aio-login-appsumo-popup__feature">
 									<img :src="appsumoImageBase + 'feature-2fa.svg'" alt="" aria-hidden="true">
-									<span>2FA Authenticator</span>
+									<span>{{ $t("2FA Authenticator") }}</span>
 								</div>
 								<div class="aio-login-appsumo-popup__feature">
 									<img :src="appsumoImageBase + 'feature-ip.svg'" alt="" aria-hidden="true">
-									<span>IP Protection</span>
+									<span>{{ $t("IP Protection") }}</span>
 								</div>
 								<div class="aio-login-appsumo-popup__feature">
 									<img :src="appsumoImageBase + 'feature-social.svg'" alt="" aria-hidden="true">
-									<span>Social Login</span>
+									<span>{{ $t("Social Login") }}</span>
 									<span class="aio-login-appsumo-popup__social-icons">
 										<img :src="appsumoImageBase + 'social-discord.svg'" alt="" aria-hidden="true">
 										<img :src="appsumoImageBase + 'social-apple.svg'" alt="" aria-hidden="true">
@@ -37,20 +37,20 @@
 								</div>
 								<div class="aio-login-appsumo-popup__feature">
 									<img :src="appsumoImageBase + 'feature-cloudflare.svg'" alt="" aria-hidden="true">
-									<span>Cloudflare turnstile</span>
+									<span>{{ $t("Cloudflare turnstile") }}</span>
 								</div>
 								<div class="aio-login-appsumo-popup__feature">
 									<img :src="appsumoImageBase + 'feature-woo.svg'" alt="" aria-hidden="true">
-									<span>WooCommerce Integration</span>
+									<span>{{ $t("WooCommerce Integration") }}</span>
 								</div>
 								<div class="aio-login-appsumo-popup__feature">
 									<img :src="appsumoImageBase + 'feature-customizer.svg'" alt="" aria-hidden="true">
-									<span>Login Page Customizer</span>
+									<span>{{ $t("Login Page Customizer") }}</span>
 								</div>
 							</div>
 
 							<a class="aio-login-appsumo-popup__cta" href="https://appsumo.com/products/aiologin/?p=1#pricePlans" target="_blank" rel="noopener noreferrer">
-								Upgrade Now
+								{{ $t("Upgrade Now") }}
 							</a>
 						</div>
 					</template>
@@ -58,19 +58,19 @@
 						<div class="aio-login-freemius-popup__logo-wrap">
 							<img :src="assets_url + 'images/logo.svg'" alt="AIO Login" class="aio-login-freemius-popup__logo">
 						</div>
-						<h2 class="aio-login-freemius-popup__title">To access more features and options</h2>
+						<h2 class="aio-login-freemius-popup__title">{{ $t("To access more features and options") }}</h2>
 						<div class="aio-login-freemius-popup__features">
 							<div class="aio-login-freemius-popup__feature">
 								<img :src="assets_url + 'images/feature-2fa.svg'" alt="" aria-hidden="true">
-								<span>2FA Authenticator</span>
+								<span>{{ $t("2FA Authenticator") }}</span>
 							</div>
 							<div class="aio-login-freemius-popup__feature">
 								<img :src="assets_url + 'images/feature-ip.svg'" alt="" aria-hidden="true">
-								<span>IP Protection</span>
+								<span>{{ $t("IP Protection") }}</span>
 							</div>
 							<div class="aio-login-freemius-popup__feature">
 								<img :src="assets_url + 'images/feature-social.svg'" alt="" aria-hidden="true">
-								<span>Social Login</span>
+								<span>{{ $t("Social Login") }}</span>
 								<span class="aio-login-freemius-popup__social-icons">
 									<img :src="assets_url + 'images/social-discord.svg'" alt="" aria-hidden="true">
 									<img :src="assets_url + 'images/social-apple.svg'" alt="" aria-hidden="true">
@@ -79,7 +79,7 @@
 							</div>
 							<div class="aio-login-freemius-popup__feature">
 								<img :src="assets_url + 'images/feature-customizer.svg'" alt="" aria-hidden="true">
-								<span>Security Notification</span>
+								<span>{{ $t("Security Notification") }}</span>
 								<span class="aio-login-freemius-popup__social-icons">
 									<span class="aio-login-freemius-popup__notify-pill">
 										<img :src="assets_url + 'images/icons/notification-slack.svg'" class="aio-login-freemius-popup__notify-icon" alt="" aria-hidden="true">
@@ -91,11 +91,11 @@
 							</div>
 							<div class="aio-login-freemius-popup__feature">
 								<img :src="assets_url + 'images/feature-woo.svg'" alt="" aria-hidden="true">
-								<span>WooCommerce Integration</span>
+								<span>{{ $t("WooCommerce Integration") }}</span>
 							</div>
 							<div class="aio-login-freemius-popup__feature">
 								<img :src="assets_url + 'images/feature-cloudflare.svg'" alt="" aria-hidden="true">
-								<span>Cloudflare turnstile</span>
+								<span>{{ $t("Cloudflare turnstile") }}</span>
 							</div>
 						</div>
 						<a class="aio-login-freemius-popup__cta" target="_blank" href="https://aiologin.com/pricing/?utm_source=plugin&utm_medium=pro_pop_up&utm_campaign=plugin">{{ popupCtaLabel }}</a>

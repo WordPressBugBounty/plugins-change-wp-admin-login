@@ -13,7 +13,7 @@
 			:style="displayRemoveImage"
 			@click="handleRemoveImage"
 			class="button button-secondary"
-		>Remove</button>
+		>{{ $t("Remove") }}</button>
 	</div>
 </template>
 

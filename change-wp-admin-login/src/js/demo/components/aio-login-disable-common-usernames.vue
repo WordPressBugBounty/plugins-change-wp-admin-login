@@ -6,7 +6,7 @@
 				v-on:handle-submit="handleSubmit"
 			>
 				<template v-slot:title>
-					<span>Disable Common Usernames</span>
+					<span>{{ $t('Disable Common Usernames') }}</span>
 					<aio-login-tooltip
 						:content="tooltipContent.disableCommonUsernames.content"
 						:title="tooltipContent.disableCommonUsernames.title"
@@ -17,7 +17,7 @@
 				<template v-slot:form-fields>
 					<tr>
 						<th>
-							<label for="enable">Enable</label>
+							<label for="enable">{{ $t('Enable') }}</label>
 						</th>
 						<td>
 							<aio-login-toggle
@@ -28,7 +28,7 @@
 							/>
 							<p class="desc">
 								<strong>
-									Enable to prevent use of common usernames.
+									{{ $t('Enable to prevent use of common usernames.') }}
 								</strong>
 							</p>
 						</td>
@@ -36,7 +36,7 @@
 
 					<tr v-if="form_data.enabled">
 						<th>
-							<label for="disable-usernames">Usernames to disable</label>
+							<label for="disable-usernames">{{ $t('Usernames to disable') }}</label>
 						</th>
 						<td>
 							<textarea

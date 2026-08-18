@@ -9,7 +9,7 @@
 				type="button"
 				class="aio-login__scroll-btn aio-login__scroll-btn--prev"
 				:disabled="!canScrollLeft"
-				aria-label="Scroll sub-tabs left"
+				:aria-label="$t('Scroll sub-tabs left')"
 				@click="scrollSubTabs( -1 )"
 			>
 				<span class="dashicons dashicons-arrow-left-alt2" aria-hidden="true"></span>
@@ -29,7 +29,7 @@
 						role="tab"
 					>
 						<span class="aio-login__subtab-label">{{ subTab.title }}</span>
-						<span class="aio-login__pro-tab" v-if="subTab['is-pro'] && ! hasPro">PRO</span>
+						<span class="aio-login__pro-tab" v-if="subTab['is-pro'] && ! hasPro">{{ $t("PRO") }}</span>
 					</router-link>
 				</div>
 			</div>
@@ -38,7 +38,7 @@
 				type="button"
 				class="aio-login__scroll-btn aio-login__scroll-btn--next"
 				:disabled="!canScrollRight"
-				aria-label="Scroll sub-tabs right"
+				:aria-label="$t('Scroll sub-tabs right')"
 				@click="scrollSubTabs( 1 )"
 			>
 				<span class="dashicons dashicons-arrow-right-alt2" aria-hidden="true"></span>

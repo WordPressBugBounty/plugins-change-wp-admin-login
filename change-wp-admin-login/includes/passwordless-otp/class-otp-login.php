@@ -109,7 +109,11 @@ if ( ! class_exists( 'AIO_Login\\Passwordless_Otp\\OTP_Login' ) ) {
 			} elseif ( ! empty( $captcha['provider'] ) && 'hcaptcha' === $captcha['provider'] ) {
 				wp_enqueue_script( 'hcaptcha', 'https://js.hcaptcha.com/1/api.js', array(), null, true ); // phpcs:ignore WordPress.WP.EnqueuedResourceParameters.MissingVersion
 			} elseif ( ! empty( $captcha['provider'] ) && 'turnstile' === $captcha['provider'] ) {
-				wp_enqueue_script( 'cloudflare-turnstile', 'https://challenges.cloudflare.com/turnstile/v0/api.js', array(), null, true ); // phpcs:ignore WordPress.WP.EnqueuedResourceParameters.MissingVersion
+				if ( wp_script_is( 'aio-login-turnstile', 'registered' ) ) {
+					wp_enqueue_script( 'aio-login-turnstile' );
+				} else {
+					wp_enqueue_script( 'cloudflare-turnstile', 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit', array(), null, true ); // phpcs:ignore WordPress.WP.EnqueuedResourceParameters.MissingVersion
+				}
 			}
 
 			$sms_default = OTP_Settings::get_login_sms_default_country();
@@ -289,6 +293,14 @@ if ( ! class_exists( 'AIO_Login\\Passwordless_Otp\\OTP_Login' ) ) {
 
 				/** Same hook as username/password login — required for 2FA policy redirects. */
 				do_action( 'wp_login', $user->user_login, $user );
+
+				// Drop prior 2FA completion cookie so Skip-2FA-off always re-challenges.
+				if ( class_exists( '\AIO_Login_Pro\Two_Factor\Two_Factor_Auth' ) ) {
+					$tfa = \AIO_Login_Pro\Two_Factor\Two_Factor_Auth::get_instance();
+					if ( $tfa && method_exists( $tfa, 'clear_login_challenge_cookie' ) ) {
+						$tfa->clear_login_challenge_cookie();
+					}
+				}
 
 				if ( $this->passwordless_login_requires_2fa( $user ) ) {
 					$default_redirect = admin_url();

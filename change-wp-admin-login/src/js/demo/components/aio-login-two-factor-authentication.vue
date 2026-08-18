@@ -1,7 +1,7 @@
 <template>
 	<div class="aio-login-2fa-methods">
 		<p class="aio-login-2fa-methods__method-note">
-			Only one site-wide method can be active: turn on either Email OTP or Authenticator App, not both.
+			{{ $t('Only one site-wide method can be active: turn on either Email OTP or Authenticator App, not both.') }}
 		</p>
 
 		<div class="aio-login-2fa-methods__list">
@@ -15,10 +15,10 @@
 					</span>
 					<div class="aio-login-2fa-methods__content">
 						<h2 class="aio-login-2fa-methods__title">
-							Email One-Time Code
+							{{ $t('Email One-Time Code') }}
 							<aio-login-tooltip :content="tooltipContent.twoFactorEmailOtp.content" />
 						</h2>
-						<div class="aio-login-2fa-methods__desc">Send a one-time verification code to users via email during login.</div>
+						<div class="aio-login-2fa-methods__desc">{{ $t('Send a one-time verification code to users via email during login.') }}</div>
 					</div>
 					<div class="aio-login-2fa-methods__controls">
 						<button type="button" class="aio-login-2fa-methods__expand-btn" disabled tabindex="-1" aria-hidden="true">
@@ -40,10 +40,10 @@
 					</span>
 					<div class="aio-login-2fa-methods__content">
 						<h2 class="aio-login-2fa-methods__title">
-							Authenticator App (TOTP)
+							{{ $t('Authenticator App (TOTP)') }}
 							<aio-login-tooltip :content="tooltipContent.twoFactorTotp.content" />
 						</h2>
-						<div class="aio-login-2fa-methods__desc">Allow users to verify login using an authenticator app such as Google Authenticator.</div>
+						<div class="aio-login-2fa-methods__desc">{{ $t('Allow users to verify login using an authenticator app such as Google Authenticator.') }}</div>
 					</div>
 					<div class="aio-login-2fa-methods__controls">
 						<button type="button" class="aio-login-2fa-methods__expand-btn" disabled tabindex="-1" aria-hidden="true">
@@ -64,10 +64,10 @@
 					</span>
 					<div class="aio-login-2fa-methods__content">
 						<h2 class="aio-login-2fa-methods__title">
-							Remember Device
+							{{ $t('Remember Device') }}
 							<aio-login-tooltip :content="tooltipContent.twoFactorRememberDevice.content" />
 						</h2>
-						<div class="aio-login-2fa-methods__desc">Skip OTP verification on trusted browsers for a specific duration.</div>
+						<div class="aio-login-2fa-methods__desc">{{ $t('Skip OTP verification on trusted browsers for a specific duration.') }}</div>
 					</div>
 					<div class="aio-login-2fa-methods__controls">
 						<button type="button" class="aio-login-2fa-methods__expand-btn" disabled tabindex="-1" aria-hidden="true">

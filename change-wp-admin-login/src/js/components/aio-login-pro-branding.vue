@@ -2,17 +2,17 @@
 	<div class="aio-login__pro-branding-container">
 		<div class="aio-login__pro-flex">
 			<div>
-				<h2>Get the Most Powerful WordPress Login Plugin Today</h2>
+				<h2>{{ $t("Get the Most Powerful WordPress Login Plugin Today") }}</h2>
 				<p>
-					Join over 90K smart website owners who use AIO Login to improve their
+					{{ $t("Join over 90K smart website owners who use AIO Login to improve their") }}
 					<br />
-					WordPress admin login security and customization
+					{{ $t("WordPress admin login security and customization") }}
 				</p>
 			</div>
 			<div class="aio-login__button-wrapper">
 				<a
 					href="https://aiologin.com/pricing/?utm_source=plugin&utm_medium=dashboard_pro_banner&utm_campaign=plugin"
-				>Get AIO Login Pro</a>
+				>{{ $t("Get AIO Login Pro") }}</a>
 			</div>
 		</div>
 	</div>

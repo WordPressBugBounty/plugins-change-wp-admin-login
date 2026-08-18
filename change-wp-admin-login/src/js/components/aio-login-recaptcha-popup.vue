@@ -5,10 +5,10 @@
 				<div class="popup-header-title">
 					<img
 						:src="popupHeaderIcon"
-						alt="Google reCAPTCHA"
+						:alt="$t('Google reCAPTCHA')"
 						class="popup-header-title__icon"
 					/>
-					<h2 class="popup-header-title__text">Google reCAPTCHA Configuration</h2>
+					<h2 class="popup-header-title__text">{{ $t("Google reCAPTCHA Configuration") }}</h2>
 				</div>
 				<button class="close-btn" @click="closePopup">&times;</button>
 			</div>
@@ -16,7 +16,7 @@
 			<!-- Step Indicators -->
 			<div class="popup-steps">
 				<div class="step-container">
-					<h4>Getting Started</h4>
+					<h4>{{ $t("Getting Started") }}</h4>
 					<div 
 						class="step" 
 						:class="{ active: currentStep >= 1 }" 
@@ -27,7 +27,7 @@
 				<div class="connector" :style="{ backgroundColor: currentStep >= 2 ? '#9516DF' : '#C9D2E3' }"></div>
 				
 				<div class="step-container">
-					<h4>Configuration</h4>
+					<h4>{{ $t("Configuration") }}</h4>
 					<div 
 						class="step" 
 						:class="{ active: currentStep >= 2 }" 
@@ -38,7 +38,7 @@
 				<div class="connector" :style="{ backgroundColor: currentStep >= 3 ? '#9516DF' : '#C9D2E3' }"></div>
 
 				<div class="step-container">
-					<h4>Settings</h4>
+					<h4>{{ $t("Settings") }}</h4>
 					<div 
 						class="step" 
 						:class="{ active: currentStep >= 3 }" 
@@ -51,34 +51,34 @@
 			<div class="popup-modal-body">
 			<!-- Step 1: Getting Started -->
 			<div v-if="currentStep === 1" class="aio-login-pro__first-step">
-				<h4 class="aio-login-pro__first-step__title">Getting Started</h4>
-				<p class="aio-login-pro__first-step__content">To protect your website from spam and bots, start by adding Google reCAPTCHA to your WordPress login page. First, register your site to generate your Site Key and Secret Key. After getting the keys, continue the setup to secure your site.</p>
-				<h5 class="aio-login-pro__first-step__instruction">Instruction:</h5>
-				<p class="aio-login-pro__first-step__instructions">1. Register your site and get the keys → <a href="https://www.google.com/recaptcha/admin" target="_blank" class="aio-login-pro__first-step__doc-link">Click Here</a></p>
-				<p class="aio-login-pro__first-step__instructions">2. Need help creating keys? → <a href="https://aiologin.com/docs/wordpress-login-security/setting-up-google-recaptcha/" target="_blank" class="aio-login-pro__first-step__doc-link">Click Here</a></p>
-				<p class="aio-login-pro__first-step__next-step-note">3. After getting the Google reCAPTCHA Site Key and Secret Key, click Next to input these credentials.</p>
+				<h4 class="aio-login-pro__first-step__title">{{ $t("Getting Started") }}</h4>
+				<p class="aio-login-pro__first-step__content">{{ $t("To protect your website from spam and bots, start by adding Google reCAPTCHA to your WordPress login page. First, register your site to generate your Site Key and Secret Key. After getting the keys, continue the setup to secure your site.") }}</p>
+				<h5 class="aio-login-pro__first-step__instruction">{{ $t("Instruction:") }}</h5>
+				<p class="aio-login-pro__first-step__instructions">{{ $t("1. Register your site and get the keys →") }} <a href="https://www.google.com/recaptcha/admin" target="_blank" class="aio-login-pro__first-step__doc-link">{{ $t("Click Here") }}</a></p>
+				<p class="aio-login-pro__first-step__instructions">{{ $t("2. Need help creating keys? →") }} <a href="https://aiologin.com/docs/wordpress-login-security/setting-up-google-recaptcha/" target="_blank" class="aio-login-pro__first-step__doc-link">{{ $t("Click Here") }}</a></p>
+				<p class="aio-login-pro__first-step__next-step-note">{{ $t("3. After getting the Google reCAPTCHA Site Key and Secret Key, click Next to input these credentials.") }}</p>
 			</div>
 
 			<!-- Step 2: Configuration -->
 			<div v-if="currentStep === 2" class="aio-login-pro__step2">
 				<p class="aio-login-pro__step2__description">
-					Enter your credentials for Google reCAPTCHA to authenticate and configure the login process.
+					{{ $t("Enter your credentials for Google reCAPTCHA to authenticate and configure the login process.") }}
 				</p>
 				<div class="aio-login-pro__inline-form">
 					<div class="aio-login-pro__form-group">
 						<label for="recaptcha-version" class="aio-login-pro__form-label">
-							Choose reCAPTCHA version:
+							{{ $t("Choose reCAPTCHA version:") }}
 						</label>
 						<select id="recaptcha-version" v-model="formData.version" @change="onVersionChange" class="aio-login-pro__form-input">
-							<option value="v2">V2</option>
-							<option value="v3">V3</option>
+							<option value="v2">{{ $t("V2") }}</option>
+							<option value="v3">{{ $t("V3") }}</option>
 						</select>
 					</div>
 				</div>
 				<div class="aio-login-pro__inline-form">
 					<div class="aio-login-pro__form-group">
 						<label for="site-key" class="aio-login-pro__form-label">
-							Site Key <span class="aio-login-pro__required">*</span>
+							{{ $t("Site Key") }} <span class="aio-login-pro__required">*</span>
 						</label>
 						<div class="input-with-delete">
 							<input
@@ -87,7 +87,7 @@
 								v-model="formData.siteKey"
 								class="aio-login-pro__form-input"
 								:class="{ 'aio-login-pro__error': showValidationError && !formData.siteKey.trim() }"
-								placeholder="Enter Site Key"
+								:placeholder="$t('Enter Site Key')"
 								autocomplete="off"
 							/>
 							<button v-if="formData.siteKey" @click="clearField('siteKey')" class="clear-btn">×</button>
@@ -96,12 +96,12 @@
 							v-if="showValidationError && !formData.siteKey.trim()" 
 							class="aio-login-pro__error-message"
 						>
-							This field is required
+							{{ $t("This field is required") }}
 						</span>
 					</div>
 					<div class="aio-login-pro__form-group">
 						<label for="secret-key" class="aio-login-pro__form-label">
-							Secret Key <span class="aio-login-pro__required">*</span>
+							{{ $t("Secret Key") }} <span class="aio-login-pro__required">*</span>
 						</label>
 						<div class="input-with-delete">
 							<input
@@ -110,7 +110,7 @@
 								v-model="formData.secretKey"
 								class="aio-login-pro__form-input"
 								:class="{ 'aio-login-pro__error': showValidationError && !formData.secretKey.trim() }"
-								placeholder="Enter Secret Key"
+								:placeholder="$t('Enter Secret Key')"
 								autocomplete="new-password"
 							/>
 							<button v-if="formData.secretKey" @click="clearField('secretKey')" class="clear-btn">×</button>
@@ -119,7 +119,7 @@
 							v-if="showValidationError && !formData.secretKey.trim()" 
 							class="aio-login-pro__error-message"
 						>
-							This field is required
+							{{ $t("This field is required") }}
 						</span>
 					</div>
 				</div>
@@ -128,29 +128,29 @@
 			<!-- Step 3: Settings -->
 			<div v-if="currentStep === 3" class="aio-login-pro__step3">
 				<p class="aio-login-pro__step3__description">
-					Configure the settings for your Google reCAPTCHA integration.
+					{{ $t("Configure the settings for your Google reCAPTCHA integration.") }}
 				</p>
 				<div class="aio-login-pro__step3__layout">
 					<!-- Settings Column -->
 					<div class="aio-login-pro__step3__column">
 						<!-- V2 Settings -->
 						<div v-if="formData.version === 'v2'" class="aio-login-pro__form-group">
-							<label for="theme" class="aio-login-pro__form-label">Theme:</label>
+							<label for="theme" class="aio-login-pro__form-label">{{ $t("Theme:") }}</label>
 							<select id="theme" v-model="formData.theme" class="aio-login-pro__form-input">
-								<option value="light">Light</option>
-								<option value="dark">Dark</option>
+								<option value="light">{{ $t("Light") }}</option>
+								<option value="dark">{{ $t("Dark") }}</option>
 							</select>
 						</div>
 
 						<!-- V3 Settings -->
 						<div v-if="formData.version === 'v3'" class="aio-login-pro__form-group">
-							<label for="threshold" class="aio-login-pro__form-label">Threshold Score:</label>
+							<label for="threshold" class="aio-login-pro__form-label">{{ $t("Threshold Score:") }}</label>
 							<select id="threshold" v-model="formData.threshold" class="aio-login-pro__form-input">
 								<option value="0.1">0.1</option>
 								<option value="0.2">0.2</option>
 								<option value="0.3">0.3</option>
 								<option value="0.4">0.4</option>
-								<option value="0.5">0.5 (Default)</option>
+								<option value="0.5">{{ $t("0.5 (Default)") }}</option>
 								<option value="0.6">0.6</option>
 								<option value="0.7">0.7</option>
 								<option value="0.8">0.8</option>
@@ -161,6 +161,7 @@
 				</div>
 
 				<aio-login-captcha-verify
+					:key="'recaptcha-verify-' + verifySessionKey"
 					:namespace="apiNamespace"
 					:nonce="apiNonce"
 					:payload="testPayload"
@@ -172,19 +173,21 @@
 
 			<!-- Navigation buttons -->
 			<div class="popup-footer">
-				<button v-if="currentStep === 2" @click="prevStep" class="back-btn">Back</button>
-				<button v-if="currentStep === 3" @click="prevStep" class="back-btn">Back</button>
+				<button v-if="currentStep === 2" @click="prevStep" class="back-btn">{{ $t("Back") }}</button>
+				<button v-if="currentStep === 3" @click="prevStep" class="back-btn">{{ $t("Back") }}</button>
 				<div class="popup-footer-left">
-					<button v-if="currentStep === 1" @click="nextStep" class="next-btn">Next</button>
+					<button v-if="currentStep === 1" @click="nextStep" class="next-btn">{{ $t("Next") }}</button>
 				</div>
-				<button v-if="currentStep === 2" @click="nextStep" class="next-btn">Next</button>
-				<button v-if="currentStep === 3" @click="finish" class="finish-btn" :disabled="!connectionVerified">Finished</button>
+				<button v-if="currentStep === 2" @click="nextStep" class="next-btn">{{ $t("Next") }}</button>
+				<button v-if="currentStep === 3" @click="finish" class="finish-btn" :disabled="!connectionVerified">{{ $t("Finished") }}</button>
 			</div>
 		</div>
 	</div>
 </template>
 
 <script>
+import { resetCaptchaEnvironment, isolateActiveCaptchaProvider } from '../captcha-dom-cleanup.js';
+
 export default {
 	name: 'aio-login-recaptcha-popup',
 
@@ -213,6 +216,7 @@ export default {
 			popupHeaderIcon: aio_login__app_object.assets_url + 'images/icons/grecaptcha.png',
 			currentStep: 1,
 			showValidationError: false,
+			verifySessionKey: 0,
 			formData: {
 				version: 'v2',
 				siteKey: '',
@@ -256,11 +260,12 @@ export default {
 				this.formData = { ...this.initialData };
 				this.connectionVerified = !!this.initialData.validated;
 				this.showValidationError = false;
-				// Prevent body scroll when modal is open
+				this.verifySessionKey += 1;
+				isolateActiveCaptchaProvider( 'recaptcha' );
 				document.body.style.overflow = 'hidden';
 				document.body.classList.add('aio-login-modal-open');
 			} else {
-				// Restore body scroll when modal is closed
+				resetCaptchaEnvironment();
 				document.body.style.overflow = '';
 				document.body.classList.remove('aio-login-modal-open');
 			}
@@ -531,7 +536,12 @@ export default {
 	font-weight: 400;
 }
 
-/* Step 2 Styling */
+/* Step 2 Styling (match aio-login-pro popup spacing when Pro CSS is not loaded) */
+.aio-login-pro__step2 {
+	margin-bottom: 50px;
+	width: 100%;
+}
+
 .aio-login-pro__step2__description {
 	color: #606C80;
 	font-size: 14px;
@@ -540,8 +550,9 @@ export default {
 
 .aio-login-pro__inline-form {
 	display: flex;
+	flex-wrap: wrap;
 	gap: 20px;
-	margin-top: 10px;
+	margin-top: 30px;
 }
 
 .aio-login-pro__form-group {

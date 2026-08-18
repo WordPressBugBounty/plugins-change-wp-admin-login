@@ -20,7 +20,7 @@
 						@click="updateDays"
 						checked
 					>
-					Today
+					{{ $t("Today") }}
 				</label>
 			</div>
 			<div>
@@ -32,7 +32,7 @@
 						value="last_7_days"
 						@click="updateDays"
 					>
-					Last 7 days
+					{{ $t("Last 7 days") }}
 				</label>
 			</div>
 			<div>
@@ -44,7 +44,7 @@
 						value="last_14_days"
 						@click="updateDays"
 					>
-					Last 14 days
+					{{ $t("Last 14 days") }}
 				</label>
 			</div>
 			<div>
@@ -56,7 +56,7 @@
 						value="last_month"
 						@click="updateDays"
 					>
-					Last month
+					{{ $t("Last month") }}
 				</label>
 			</div>
 		</div>
@@ -64,6 +64,8 @@
 </template>
 
 <script>
+import { t } from '../i18n.js';
+
 export default {
 	name: 'aio-login-days-selector',
 
@@ -75,13 +77,13 @@ export default {
 	},
 
 	data: () => ( {
-		title: 'Today',
+		title: t( 'Today' ),
 		days_selector: false,
 		days: {
-			'last_month': 'Last month',
-			'last_14_days': 'Last 14 days',
-			'last_7_days': 'Last 7 days',
-			'today': 'Today',
+			'last_month': t( 'Last month' ),
+			'last_14_days': t( 'Last 14 days' ),
+			'last_7_days': t( 'Last 7 days' ),
+			'today': t( 'Today' ),
 		},
 	} ),
 

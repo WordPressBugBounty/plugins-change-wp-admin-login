@@ -41,6 +41,62 @@ if (!class_exists('AIO_Login\Admin\Admin')) {
 			add_filter('woocommerce_prevent_admin_access', array($this, 'allow_subscriber_admin_access'), 99);
 
 			add_action('rest_api_init', array($this, 'rest_api_init'));
+
+			$plugin_basename = plugin_basename(AIO_LOGIN__FILE);
+			add_filter('plugin_action_links_' . $plugin_basename, array($this, 'plugin_action_links'), 99);
+			add_filter('network_admin_plugin_action_links_' . $plugin_basename, array($this, 'plugin_action_links'), 99);
+		}
+
+		/**
+		 * Plugins list "Get Pro" link (AIOL-695).
+		 *
+		 * @param array $links Existing action links.
+		 * @return array
+		 */
+		public function plugin_action_links($links)
+		{
+			if (!is_array($links)) {
+				$links = array();
+			}
+
+			$get_pro_html = '<a href="' . esc_url($this->get_pro_pricing_url()) . '" target="_blank" rel="noopener noreferrer">' . esc_html__('Get Pro', 'change-wp-admin-login') . '</a>';
+
+			unset($links['upgrade'], $links['get-pro']);
+
+			foreach ($links as $key => $link) {
+				if (!is_string($link)) {
+					continue;
+				}
+
+				$text = trim(wp_strip_all_tags($link));
+				if (
+					false !== stripos($text, 'Get Pro Bundle')
+					|| 0 === strcasecmp($text, 'Upgrade')
+					|| 0 === strcasecmp($text, 'Get Pro')
+				) {
+					unset($links[$key]);
+				}
+			}
+
+			if ($this->should_show_get_pro_tab()) {
+				$links['get-pro'] = $get_pro_html;
+			}
+
+			return $links;
+		}
+
+		/**
+		 * Pricing URL used by the Get Pro plugin action link.
+		 *
+		 * @return string
+		 */
+		private function get_pro_pricing_url()
+		{
+			if (defined('AIO_LOGIN_GET_PRO_URL') && '' !== AIO_LOGIN_GET_PRO_URL) {
+				return AIO_LOGIN_GET_PRO_URL;
+			}
+
+			return 'https://aiologin.com/pricing/?utm_source=plugn-redirect&utm_medium=upgrade-to-pro&utm_campaign=get-pro&utm_id=plugin';
 		}
 
 		/**
@@ -262,7 +318,7 @@ if (!class_exists('AIO_Login\Admin\Admin')) {
 				),
 				'login_customizer_url' => $login_customizer_url,
 				'nonce' => wp_create_nonce('wp_rest'),
-				'rest_url' => rest_url(),
+				'rest_url' => is_ssl() ? set_url_scheme( rest_url(), 'https' ) : rest_url(),
 				'ajax_url' => admin_url('admin-ajax.php'),
 				'has_pro' => (\AIO_Login\Aio_Login::has_pro()) ? 'true' : 'false',
 				'site_url' => site_url(),
@@ -276,6 +332,15 @@ if (!class_exists('AIO_Login\Admin\Admin')) {
 				'upgrade_popup_variant' => ( function_exists( 'aiologin_pro_is_custom_license_runtime' ) && aiologin_pro_is_custom_license_runtime() )
 					? 'appsumo'
 					: 'freemius',
+				'appsumo_deal_url'      => 'https://appsumo.8odi.net/DWbJmq',
+				'show_appsumo_hello_bar' => 'false',
+				'hello_bar_headline'          => __( 'Good News!', 'change-wp-admin-login' ),
+				'hello_bar_message_before'    => __( 'All In One Login is live on ', 'change-wp-admin-login' ),
+				'hello_bar_message_highlight' => __( 'AppSumo', 'change-wp-admin-login' ),
+				'hello_bar_cta_label'         => __( 'Get Lifetime Deal Now', 'change-wp-admin-login' ),
+				'hello_bar_aria_label'        => __( 'AppSumo promotion', 'change-wp-admin-login' ),
+				'hello_bar_dismiss_label'     => __( 'Dismiss promotion', 'change-wp-admin-login' ),
+				'i18n'                        => class_exists( '\\AIO_Login\\Admin\\Admin_I18n' ) ? \AIO_Login\Admin\Admin_I18n::strings() : array(),
 			);
 
 			if ($is_limited_user) {
@@ -312,10 +377,20 @@ if (!class_exists('AIO_Login\Admin\Admin')) {
 				$dependencies[] = 'aio-login-pro__app';
 			}
 
-			wp_register_style('aio-login__app', AIO_LOGIN__DIR_URL . 'assets/css/app.css', array('wp-color-picker', 'dashicons'), AIO_LOGIN__VERSION, 'all');
-			wp_register_script('aio-login__app', AIO_LOGIN__DIR_URL . 'assets/js/app.js', $dependencies, AIO_LOGIN__VERSION, true);
+			wp_register_style('aio-login__app', AIO_LOGIN__DIR_URL . 'assets/css/app.css', array('wp-color-picker', 'dashicons'), ( file_exists( AIO_LOGIN__DIR_PATH . 'assets/css/app.css' ) ? (string) filemtime( AIO_LOGIN__DIR_PATH . 'assets/css/app.css' ) : AIO_LOGIN__VERSION ), 'all');
+			$app_js_path = AIO_LOGIN__DIR_PATH . 'assets/js/app.js';
+			$app_js_ver  = file_exists( $app_js_path ) ? (string) filemtime( $app_js_path ) : AIO_LOGIN__VERSION;
+			wp_register_script('aio-login__app', AIO_LOGIN__DIR_URL . 'assets/js/app.js', $dependencies, $app_js_ver, true);
 
 			if ('toplevel_page_aio-login' === $hook) {
+				wp_register_script(
+					'aio-login-turnstile-explicit',
+					'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit',
+					array(),
+					null,
+					true
+				);
+				wp_enqueue_script('aio-login-turnstile-explicit');
 				wp_enqueue_media();
 
 				wp_enqueue_style('aio-login__app');

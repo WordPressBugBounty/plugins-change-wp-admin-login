@@ -1,6 +1,6 @@
 <template>
 	<div v-if="page_loaded" class="aio-login-t-wrapper" @click="iWasTriggered">
-		<h3>Social Login Settings</h3>
+		<h3>{{ $t('Social Login Settings') }}</h3>
             <div class="aio-login-pro__social-login">
                 <div v-for="provider in providers" :key="provider.id" class="aio-login-pro__social-login__card">
                 <!-- Top Section -->
@@ -19,7 +19,7 @@
                     />
                     </label>
                     <button class="configure-btn" @click="configureProvider(provider.id)">
-                    Configure
+                    {{ $t('Configure') }}
                     </button>
                 </div>
                 </div>

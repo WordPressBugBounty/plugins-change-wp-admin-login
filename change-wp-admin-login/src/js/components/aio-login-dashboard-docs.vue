@@ -1,18 +1,18 @@
 <template>
 	<section class="aio-login-dashboard-docs">
 		<div class="aio-login-dashboard-docs__head">
-			<h2>Guides and Documentation</h2>
-			<a :href="docsBaseUrl" target="_blank" rel="noopener noreferrer">View All</a>
+			<h2>{{ $t("Guides and Documentation") }}</h2>
+			<a :href="docsBaseUrl" target="_blank" rel="noopener noreferrer">{{ $t("View All") }}</a>
 		</div>
 		<div class="aio-login-dashboard-docs__grid">
 			<article v-for="section in docSections" :key="section.title" class="aio-login-dashboard-docs__card">
-				<h3>{{ section.title }}</h3>
+				<h3>{{ $t(section.title) }}</h3>
 				<ul>
 					<li v-for="item in section.items" :key="item.label">
-						<a :href="item.url" target="_blank" rel="noopener noreferrer">{{ item.label }}</a>
+						<a :href="item.url" target="_blank" rel="noopener noreferrer">{{ $t(item.label) }}</a>
 					</li>
 				</ul>
-				<a class="aio-login-dashboard-docs__more" :href="section.moreUrl" target="_blank" rel="noopener noreferrer">More →</a>
+				<a class="aio-login-dashboard-docs__more" :href="section.moreUrl" target="_blank" rel="noopener noreferrer">{{ $t("More →") }}</a>
 			</article>
 		</div>
 	</section>

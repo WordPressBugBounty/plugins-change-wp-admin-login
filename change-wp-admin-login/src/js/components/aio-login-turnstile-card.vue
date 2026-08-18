@@ -1,6 +1,6 @@
 <template>
 	<div v-if="page_loaded" class="aio-login-pro__social-login__card">
-		<span v-if="showProMarketingBadge" class="aio-login__pro-tab">PRO</span>
+		<span v-if="showProMarketingBadge" class="aio-login__pro-tab">{{ $t("PRO") }}</span>
 
 		<div
 			v-if="statusBadge && hasPro"
@@ -13,7 +13,7 @@
 		<div class="aio-login-pro__social-login__card__top">
 			<img :src="getSrc('turnstile')" :alt="'Cloudflare Turnstile'" />
 			<p>
-				<span>Cloudflare Turnstile</span>
+				<span>{{ $t("Cloudflare Turnstile") }}</span>
 			</p>
 		</div>
 
@@ -33,9 +33,7 @@
 				@click="configureCaptcha"
 				@mouseenter="onHover"
 				@mouseleave="onLeave"
-			>
-				Configure
-			</button>
+			>{{ $t("Configure") }}</button>
 		</div>
 
 		<div v-if="!hasPro" class="aio-login-t-content-overflow" @click.stop="iWasTriggered"></div>
@@ -43,6 +41,7 @@
 		<aio-login-turnstile-popup
 			:show="showPopup"
 			:initial-data="popupData"
+			:api-namespace="apiNamespace"
 			:api-nonce="apiNonce"
 			@close="closePopup"
 			@save="saveSettings"
@@ -71,6 +70,10 @@ export default {
 			type: String,
 			default: '',
 		},
+		apiNamespace: {
+			type: String,
+			default: 'aio-login/turnstile',
+		},
 	},
 
 	data: () => ({
@@ -90,20 +93,14 @@ export default {
 			return ! this.hasPro && ! this.proPluginActive;
 		},
 		statusBadge() {
-			if (this.enabled && this.hasValidKeys() && this.configData.validated) {
-				return 'green';
-			} else if (this.hasValidKeys()) {
-				return 'orange';
+			if ( ! this.hasValidKeys() ) {
+				return null;
 			}
-			return null;
+			// Configured + enabled = green; configured but disabled = orange.
+			return this.enabled ? 'green' : 'orange';
 		},
 		statusBadgeText() {
-			if (this.statusBadge === 'green') {
-				return 'Verified';
-			} else if (this.statusBadge === 'orange') {
-				return 'Needs Test';
-			}
-			return '';
+			return this.statusBadge ? 'Configured' : '';
 		}
 	},
 

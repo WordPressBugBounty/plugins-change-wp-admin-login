@@ -1,7 +1,7 @@
 <template>
 	<div>
 		<h1>
-			<span>Failed Logins</span>
+			<span>{{ $t("Failed Logins") }}</span>
 			<aio-login-tooltip
 				:content="tooltipContent.failedLoginAttempts.content"
 				:title="tooltipContent.failedLoginAttempts.title"
@@ -18,6 +18,7 @@
 
 <script>
 import tooltipContent from '../tooltip-content.js';
+import { t } from '../i18n.js';
 
 export default {
 	name: 'failed-logins',
@@ -27,13 +28,13 @@ export default {
 		namespace: 'aio-login/logs/failed-login',
 
 		headers: [
-			{ value: 'ID', key: 'id' },
-			{ value: 'User Login', key: 'user_login' },
-			{ value: 'Date & Time', key: 'time' },
-			{ value: 'Country', key: 'country' },
-			{ value: 'City', key: 'city' },
-			{ value: 'User Agent', key: 'user_agent' },
-			{ value: 'IP Address', key: 'ip_address' },
+			{ value: t( 'ID' ), key: 'id' },
+			{ value: t( 'User Login' ), key: 'user_login' },
+			{ value: t( 'Date & Time' ), key: 'time' },
+			{ value: t( 'Country' ), key: 'country' },
+			{ value: t( 'City' ), key: 'city' },
+			{ value: t( 'User Agent' ), key: 'user_agent' },
+			{ value: t( 'IP Address' ), key: 'ip_address' },
 		],
 
 		data: [],

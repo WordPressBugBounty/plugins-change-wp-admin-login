@@ -5,7 +5,7 @@
 			<div v-if="!showSettings">
 				<div>
 					<h1>
-						<span>Notifications</span>
+						<span>{{ $t("Notifications") }}</span>
 						<aio-login-tooltip
 							:content="tooltipContent.notifications.content"
 							:title="tooltipContent.notifications.title"
@@ -13,7 +13,7 @@
 						/>
 					</h1>
 					<p class="desc">
-						Configure how you want to be notified about login activity and security-related events.
+						{{ $t("Configure how you want to be notified about login activity and security-related events.") }}
 					</p>
 				</div>
 				<div class="aio-login-pro__social-login">
@@ -49,7 +49,7 @@
 						<div class="notifications-settings-header-text">
 							<h2>{{ settingsPanelHeading }}</h2>
 							<p class="notifications-settings-subtitle">
-								Configure how you want to receive alerts about security events on your website.
+								{{ $t("Configure how you want to receive alerts about security events on your website.") }}
 							</p>
 						</div>
 					</div>
@@ -58,7 +58,7 @@
 						class="notifications-back-btn"
 						@click="goBack"
 					>
-						← Back
+						{{ $t("← Back") }}
 					</button>
 				</div>
 
@@ -97,7 +97,7 @@
 						<template v-else>
 						<div class="notifications-form-row">
 							<div class="notifications-form-label">
-								<span>Slack Notifications</span>
+								<span>{{ $t("Slack Notifications") }}</span>
 								<aio-login-tooltip
 									title="Slack Notifications"
 									content="Turn on to send security notifications to your Slack workspace using an incoming webhook."
@@ -114,16 +114,14 @@
 										:disabled="!has_pro"
 									/>
 								</label>
-								<p class="notifications-field-hint">
-									Receive real-time security alerts directly in your Slack workspace.
-								</p>
+								<p class="notifications-field-hint">{{ $t("Receive real-time security alerts directly in your Slack workspace.") }}</p>
 							</div>
 						</div>
 
 						<template v-if="slackEnabled && has_pro">
 							<div class="notifications-form-row">
 								<div class="notifications-form-label">
-									<span>Slack Webhook URL</span>
+									<span>{{ $t("Slack Webhook URL") }}</span>
 									<aio-login-tooltip
 										title="Incoming webhook"
 										content="Create an incoming webhook in your Slack app settings and paste the URL here."
@@ -146,19 +144,17 @@
 											class="button notifications-connect-slack"
 											:disabled="!has_pro || !slackConnectUrl"
 											@click="connectWithSlack"
-										>
-											Connect with Slack
-										</button>
+										>{{ $t("Connect with Slack") }}</button>
 									</div>
 									<p class="notifications-guide-line">
-										Need help setting up?
+										{{ $t("Need help setting up?") }}
 										<a
 											:href="slackGuideUrl"
 											class="notifications-guide-link"
 											target="_blank"
 											rel="noopener noreferrer"
 										>
-											View configuration guide
+											{{ $t("View configuration guide") }}
 											<span class="notifications-external-icon" aria-hidden="true">↗</span>
 										</a>
 									</p>
@@ -167,7 +163,7 @@
 
 							<div class="notifications-form-row notifications-form-row--events">
 								<div class="notifications-form-label">
-									<span>Event Settings</span>
+									<span>{{ $t("Event Settings") }}</span>
 								</div>
 								<div class="notifications-form-field notifications-events-list">
 									<label class="notifications-checkbox-row">
@@ -177,7 +173,7 @@
 											disabled
 											class="notifications-checkbox notifications-checkbox--locked"
 										/>
-										<span>Lockout Attempts</span>
+										<span>{{ $t("Lockout Attempts") }}</span>
 										<aio-login-tooltip
 											title="Lockout Attempts"
 											content="Always included. Alerts when an IP or user is locked out after failed logins."
@@ -191,7 +187,7 @@
 											class="notifications-checkbox"
 											:disabled="!has_pro"
 										/>
-										<span>Failed Login Attempts</span>
+										<span>{{ $t("Failed Login Attempts") }}</span>
 										<aio-login-tooltip
 											title="Failed Login Attempts"
 											content="Notify when failed login attempts are recorded according to your security settings."
@@ -205,7 +201,7 @@
 											class="notifications-checkbox"
 											:disabled="!has_pro"
 										/>
-										<span>User Enumeration Attempts</span>
+										<span>{{ $t("User Enumeration Attempts") }}</span>
 										<aio-login-tooltip
 											title="User Enumeration Attempts"
 											content="Notify when username or author enumeration is detected, if logging is enabled."
@@ -252,7 +248,7 @@
 						<template v-else>
 						<div class="notifications-form-row">
 							<div class="notifications-form-label">
-								<span>Webhook Notifications</span>
+								<span>{{ $t("Webhook Notifications") }}</span>
 								<aio-login-tooltip
 									title="Webhook Notifications"
 									content="Send security events to your own HTTPS endpoint as JSON POST requests."
@@ -269,16 +265,14 @@
 										:disabled="!has_pro"
 									/>
 								</label>
-								<p class="notifications-field-hint">
-									Send security events to your custom endpoint for integration with other tools.
-								</p>
+								<p class="notifications-field-hint">{{ $t("Send security events to your custom endpoint for integration with other tools.") }}</p>
 							</div>
 						</div>
 
 						<template v-if="webhookEnabled && has_pro">
 							<div class="notifications-form-row">
 								<div class="notifications-form-label">
-									<span>Custom Webhook URL</span>
+									<span>{{ $t("Custom Webhook URL") }}</span>
 								</div>
 								<div class="notifications-form-field">
 									<aio-login-text
@@ -289,15 +283,13 @@
 										placeholder="https://example.com/webhook"
 										:disabled="!has_pro"
 									/>
-									<p class="notifications-field-hint">
-										Enter the endpoint URL where you want to receive security notifications. We'll send a POST request with event details.
-									</p>
+									<p class="notifications-field-hint">{{ $t("Enter the endpoint URL where you want to receive security notifications. We'll send a POST request with event details.") }}</p>
 								</div>
 							</div>
 
 							<div class="notifications-form-row notifications-form-row--events">
 								<div class="notifications-form-label">
-									<span>Event Settings</span>
+									<span>{{ $t("Event Settings") }}</span>
 								</div>
 								<div class="notifications-form-field notifications-events-list">
 									<label class="notifications-checkbox-row">
@@ -307,7 +299,7 @@
 											disabled
 											class="notifications-checkbox notifications-checkbox--locked"
 										/>
-										<span>Lockout Attempts</span>
+										<span>{{ $t("Lockout Attempts") }}</span>
 										<aio-login-tooltip
 											title="Lockout Attempts"
 											content="Always included. Alerts when an IP or user is locked out after failed logins."
@@ -321,7 +313,7 @@
 											class="notifications-checkbox"
 											:disabled="!has_pro"
 										/>
-										<span>Failed Login Attempts</span>
+										<span>{{ $t("Failed Login Attempts") }}</span>
 										<aio-login-tooltip
 											title="Failed Login Attempts"
 											content="Notify when failed login attempts are recorded according to your security settings."
@@ -335,7 +327,7 @@
 											class="notifications-checkbox"
 											:disabled="!has_pro"
 										/>
-										<span>User Enumeration Attempts</span>
+										<span>{{ $t("User Enumeration Attempts") }}</span>
 										<aio-login-tooltip
 											title="User Enumeration Attempts"
 											content="Notify when username or author enumeration is detected, if logging is enabled."
@@ -355,7 +347,7 @@
 							:disabled="!has_pro || saving"
 							@click="saveAllNotificationSettings"
 						>
-							{{ saving ? 'Saving…' : 'Save Changes' }}
+							{{ saving ? $t('Saving…') : $t('Save Changes') }}
 						</button>
 					</div>
 				</div>
@@ -376,6 +368,7 @@
 <script>
 import tooltipContent from '../tooltip-content.js';
 import resolveParentCurrentIsPro from '../resolve-parent-current-is-pro.js';
+import { t } from '../i18n.js';
 
 // Final desired URL examples:
 // .../admin.php?page=aio-login&tab=activity-log#/notifications#/notifications-slack-settings
@@ -715,7 +708,7 @@ export default {
 				const response = await axios.post( 'aio-login-pro/notifications/save-settings', this.payloadFromState() );
 				const msg = ( response.data && response.data.message )
 					? response.data.message
-					: 'Settings saved successfully.';
+					: t( 'Settings saved successfully.' );
 				this.snackbar.message = msg;
 				this.snackbar.show = true;
 			} catch ( e ) {

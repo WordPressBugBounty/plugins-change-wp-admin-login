@@ -3,19 +3,19 @@
 		<div>
 			<aio-login-card
 				type="success"
-				title="Success"
+				:title="$t('Success')"
 			></aio-login-card>
 		</div>
 		<div>
 			<aio-login-card
 				type="failed"
-				title="Failed"
+				:title="$t('Failed')"
 			></aio-login-card>
 		</div>
 		<div>
 			<aio-login-card
 				type="lockouts"
-				title="Lockouts"
+				:title="$t('Lockouts')"
 			></aio-login-card>
 		</div>
 		<div>

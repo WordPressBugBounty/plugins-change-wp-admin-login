@@ -5,17 +5,17 @@
 				<div class="popup-header-title">
 					<img
 						:src="popupHeaderIcon"
-						alt="Cloudflare Turnstile"
+						:alt="$t('Cloudflare turnstile')"
 						class="popup-header-title__icon"
 					/>
-					<h2 class="popup-header-title__text">Turnstile Configuration</h2>
+					<h2 class="popup-header-title__text">{{ $t("Turnstile Configuration") }}</h2>
 				</div>
 				<button class="close-btn" @click="closePopup">&times;</button>
 			</div>
 
 			<div class="popup-steps">
 				<div class="step-container">
-					<h4>Getting Started</h4>
+					<h4>{{ $t("Getting Started") }}</h4>
 					<div
 						class="step"
 						:class="{ active: currentStep >= 1 }"
@@ -26,7 +26,7 @@
 				<div class="connector" :style="{ backgroundColor: currentStep >= 2 ? '#9516DF' : '#C9D2E3' }"></div>
 
 				<div class="step-container">
-					<h4>Configuration</h4>
+					<h4>{{ $t("Configuration") }}</h4>
 					<div
 						class="step"
 						:class="{ active: currentStep >= 2 }"
@@ -37,7 +37,7 @@
 				<div class="connector" :style="{ backgroundColor: currentStep >= 3 ? '#9516DF' : '#C9D2E3' }"></div>
 
 				<div class="step-container">
-					<h4>Settings</h4>
+					<h4>{{ $t("Settings") }}</h4>
 					<div
 						class="step"
 						:class="{ active: currentStep >= 3 }"
@@ -49,22 +49,22 @@
 
 			<div class="popup-modal-body">
 			<div v-if="currentStep === 1" class="aio-login-pro__first-step">
-				<h4 class="aio-login-pro__first-step__title">Getting Started</h4>
-				<p class="aio-login-pro__first-step__content">To protect your website from spam and bots, start by adding Cloudflare Turnstile to your WordPress login page.</p>
-				<h5 class="aio-login-pro__first-step__instruction">Instruction:</h5>
-				<p class="aio-login-pro__first-step__instructions">1. Register your site and get the keys -> <a href="https://dash.cloudflare.com/?to=/:account/turnstile" target="_blank" class="aio-login-pro__first-step__doc-link">Click Here</a></p>
-				<p class="aio-login-pro__first-step__instructions">2. Need help creating keys? -> <a href="https://developers.cloudflare.com/turnstile/get-started/" target="_blank" class="aio-login-pro__first-step__doc-link">Click Here</a></p>
-				<p class="aio-login-pro__first-step__next-step-note">3. Once you have your keys, click Next to enter them.</p>
+				<h4 class="aio-login-pro__first-step__title">{{ $t("Getting Started") }}</h4>
+				<p class="aio-login-pro__first-step__content">{{ $t("To protect your website from spam and bots, start by adding Cloudflare Turnstile to your WordPress login page.") }}</p>
+				<h5 class="aio-login-pro__first-step__instruction">{{ $t("Instruction:") }}</h5>
+				<p class="aio-login-pro__first-step__instructions">{{ $t("1. Register your site and get the keys ->") }} <a href="https://dash.cloudflare.com/?to=/:account/turnstile" target="_blank" class="aio-login-pro__first-step__doc-link">{{ $t("Click Here") }}</a></p>
+				<p class="aio-login-pro__first-step__instructions">{{ $t("2. Need help creating keys? ->") }} <a href="https://developers.cloudflare.com/turnstile/get-started/" target="_blank" class="aio-login-pro__first-step__doc-link">{{ $t("Click Here") }}</a></p>
+				<p class="aio-login-pro__first-step__next-step-note">{{ $t("3. Once you have your keys, click Next to enter them.") }}</p>
 			</div>
 
 			<div v-if="currentStep === 2" class="aio-login-pro__step2">
 				<p class="aio-login-pro__step2__description">
-					Enter your Cloudflare Turnstile details.
+					{{ $t("Enter your Cloudflare Turnstile details.") }}
 				</p>
 				<div class="aio-login-pro__inline-form">
 					<div class="aio-login-pro__form-group">
 						<label for="turnstile-site-key" class="aio-login-pro__form-label">
-							Site Key <span class="aio-login-pro__required">*</span>
+							{{ $t("Site Key") }} <span class="aio-login-pro__required">*</span>
 						</label>
 						<div class="input-with-delete">
 							<input
@@ -73,7 +73,7 @@
 								v-model="formData.siteKey"
 								class="aio-login-pro__form-input"
 								:class="{ 'aio-login-pro__error': showValidationError && !formData.siteKey.trim() }"
-								placeholder="Enter Site Key"
+								:placeholder="$t('Enter Site Key')"
 								autocomplete="off"
 							/>
 							<button v-if="formData.siteKey" @click="clearField('siteKey')" class="clear-btn">×</button>
@@ -82,12 +82,12 @@
 							v-if="showValidationError && !formData.siteKey.trim()"
 							class="aio-login-pro__error-message"
 						>
-							This field is required
+							{{ $t("This field is required") }}
 						</span>
 					</div>
 					<div class="aio-login-pro__form-group">
 						<label for="turnstile-secret-key" class="aio-login-pro__form-label">
-							Secret Key <span class="aio-login-pro__required">*</span>
+							{{ $t("Secret Key") }} <span class="aio-login-pro__required">*</span>
 						</label>
 						<div class="input-with-delete">
 							<input
@@ -96,7 +96,7 @@
 								v-model="formData.secretKey"
 								class="aio-login-pro__form-input"
 								:class="{ 'aio-login-pro__error': showValidationError && !formData.secretKey.trim() }"
-								placeholder="Enter Secret Key"
+								:placeholder="$t('Enter Secret Key')"
 								autocomplete="new-password"
 							/>
 							<button v-if="formData.secretKey" @click="clearField('secretKey')" class="clear-btn">×</button>
@@ -105,7 +105,7 @@
 							v-if="showValidationError && !formData.secretKey.trim()"
 							class="aio-login-pro__error-message"
 						>
-							This field is required
+							{{ $t("This field is required") }}
 						</span>
 					</div>
 				</div>
@@ -113,56 +113,62 @@
 
 			<div v-if="currentStep === 3" class="aio-login-pro__step3">
 				<p class="aio-login-pro__step3__description">
-					These settings are not compulsory.
+					{{ $t("These settings are not compulsory.") }}
 				</p>
 				<div class="aio-login-pro__step3__layout">
 					<div class="aio-login-pro__step3__column">
 						<div class="aio-login-pro__form-group">
-							<label for="turnstile-language" class="aio-login-pro__form-label">Language for Captcha:</label>
+							<label for="turnstile-language" class="aio-login-pro__form-label">{{ $t("Language for Captcha:") }}</label>
 							<select id="turnstile-language" v-model="formData.language" class="aio-login-pro__form-input">
-								<option value="auto">Auto (Browser language)</option>
-								<option value="en">English</option>
-								<option value="ar">Arabic</option>
-								<option value="de">German</option>
-								<option value="es">Spanish</option>
-								<option value="fr">French</option>
-								<option value="hi">Hindi</option>
-								<option value="id">Indonesian</option>
-								<option value="it">Italian</option>
-								<option value="ja">Japanese</option>
-								<option value="ko">Korean</option>
-								<option value="nl">Dutch</option>
-								<option value="pl">Polish</option>
-								<option value="pt">Portuguese</option>
-								<option value="ru">Russian</option>
-								<option value="tr">Turkish</option>
-								<option value="uk">Ukrainian</option>
-								<option value="ur">Urdu</option>
-								<option value="vi">Vietnamese</option>
-								<option value="zh-CN">Chinese (Simplified)</option>
-								<option value="zh-TW">Chinese (Traditional)</option>
+								<option value="auto">{{ $t("Auto (Browser language)") }}</option>
+								<option value="en">{{ $t("English") }}</option>
+								<option value="ar">{{ $t("Arabic") }}</option>
+								<option value="de">{{ $t("German") }}</option>
+								<option value="es">{{ $t("Spanish") }}</option>
+								<option value="fr">{{ $t("French") }}</option>
+								<option value="hi">{{ $t("Hindi") }}</option>
+								<option value="id">{{ $t("Indonesian") }}</option>
+								<option value="it">{{ $t("Italian") }}</option>
+								<option value="ja">{{ $t("Japanese") }}</option>
+								<option value="ko">{{ $t("Korean") }}</option>
+								<option value="nl">{{ $t("Dutch") }}</option>
+								<option value="pl">{{ $t("Polish") }}</option>
+								<option value="pt">{{ $t("Portuguese") }}</option>
+								<option value="ru">{{ $t("Russian") }}</option>
+								<option value="tr">{{ $t("Turkish") }}</option>
+								<option value="uk">{{ $t("Ukrainian") }}</option>
+								<option value="ur">{{ $t("Urdu") }}</option>
+								<option value="vi">{{ $t("Vietnamese") }}</option>
+								<option value="zh-CN">{{ $t("Chinese (Simplified)") }}</option>
+								<option value="zh-TW">{{ $t("Chinese (Traditional)") }}</option>
 							</select>
 						</div>
 						<div class="aio-login-pro__form-group">
-							<label for="turnstile-theme" class="aio-login-pro__form-label">Theme:</label>
+							<label for="turnstile-theme" class="aio-login-pro__form-label">{{ $t("Theme:") }}</label>
 							<select id="turnstile-theme" v-model="formData.theme" class="aio-login-pro__form-input">
-								<option value="auto">Auto</option>
-								<option value="light">Light</option>
-								<option value="dark">Dark</option>
+								<option value="auto">{{ $t("Auto") }}</option>
+								<option value="light">{{ $t("Light") }}</option>
+								<option value="dark">{{ $t("Dark") }}</option>
 							</select>
 						</div>
 						<div class="aio-login-pro__form-group">
-							<label for="turnstile-size" class="aio-login-pro__form-label">Size:</label>
+							<label for="turnstile-size" class="aio-login-pro__form-label">{{ $t("Size:") }}</label>
 							<select id="turnstile-size" v-model="formData.size" class="aio-login-pro__form-input">
-								<option value="normal">Normal</option>
-								<option value="compact">Compact</option>
-								<option value="flexible">Flexible</option>
+								<option value="normal">{{ $t("Normal") }}</option>
+								<option value="compact">{{ $t("Compact") }}</option>
+								<option value="flexible">{{ $t("Flexible") }}</option>
 							</select>
 						</div>
 					</div>
 				</div>
 
+				<p v-if="!hasEnteredKeys" class="aio-login-pro__step3__description aio-login-pro__error-message">
+					{{ $t("Site key or secret key is missing. Go back to Configuration and enter both keys.") }}
+				</p>
+
 				<aio-login-captcha-verify
+					v-if="hasEnteredKeys"
+					:key="verifyComponentKey"
 					:namespace="apiNamespace"
 					:nonce="apiNonce"
 					:payload="testPayload"
@@ -173,19 +179,21 @@
 			</div>
 
 			<div class="popup-footer">
-				<button v-if="currentStep === 2" @click="prevStep" class="back-btn">Back</button>
-				<button v-if="currentStep === 3" @click="prevStep" class="back-btn">Back</button>
+				<button v-if="currentStep === 2" @click="prevStep" class="back-btn">{{ $t("Back") }}</button>
+				<button v-if="currentStep === 3" @click="prevStep" class="back-btn">{{ $t("Back") }}</button>
 				<div class="popup-footer-left">
-					<button v-if="currentStep === 1" @click="nextStep" class="next-btn">Next</button>
+					<button v-if="currentStep === 1" @click="nextStep" class="next-btn">{{ $t("Next") }}</button>
 				</div>
-				<button v-if="currentStep === 2" @click="nextStep" class="next-btn">Next</button>
-				<button v-if="currentStep === 3" @click="finish" class="finish-btn" :disabled="!connectionVerified">Finished</button>
+				<button v-if="currentStep === 2" @click="nextStep" class="next-btn">{{ $t("Next") }}</button>
+				<button v-if="currentStep === 3" @click="finish" class="finish-btn" :disabled="!connectionVerified">{{ $t("Finished") }}</button>
 			</div>
 		</div>
 	</div>
 </template>
 
 <script>
+import { resetCaptchaEnvironment, isolateActiveCaptchaProvider } from '../captcha-dom-cleanup.js';
+
 export default {
 	name: 'aio-login-turnstile-popup',
 
@@ -222,6 +230,7 @@ export default {
 				language: 'auto'
 			},
 			connectionVerified: false,
+			verifySessionKey: 0,
 		}
 	},
 
@@ -229,15 +238,33 @@ export default {
 		canProceed() {
 			if (this.currentStep === 1) return true;
 			if (this.currentStep === 2) {
-				return this.formData.siteKey.trim() !== '' && this.formData.secretKey.trim() !== '';
+				return this.getNormalizedSiteKey() !== '' && this.getNormalizedSecretKey() !== '';
 			}
 			if (this.currentStep === 3) return true;
 			return false;
 		},
+		hasEnteredKeys() {
+			return this.getNormalizedSiteKey() !== '' && this.getNormalizedSecretKey() !== '';
+		},
+		verifyComponentKey() {
+			return [
+				this.verifySessionKey,
+				this.getNormalizedSiteKey(),
+				this.getNormalizedSecretKey(),
+				this.formData.theme || 'auto',
+				this.formData.size || 'normal',
+				this.formData.language || 'auto',
+			].join('|');
+		},
 		testPayload() {
 			return {
-				site_key: this.formData.siteKey,
-				secret_key: this.formData.secretKey,
+				site_key: this.getNormalizedSiteKey(),
+				secret_key: this.getNormalizedSecretKey(),
+				siteKey: this.getNormalizedSiteKey(),
+				secretKey: this.getNormalizedSecretKey(),
+				theme: this.formData.theme || 'auto',
+				size: this.formData.size || 'normal',
+				language: this.formData.language || 'auto',
 			};
 		},
 	},
@@ -246,15 +273,16 @@ export default {
 		show(newVal) {
 			if (newVal) {
 				this.currentStep = 1;
-				this.formData = { ...this.initialData };
-				if (!this.formData.theme) this.formData.theme = 'auto';
-				if (!this.formData.size) this.formData.size = 'normal';
-				if (!this.formData.language) this.formData.language = 'auto';
+				this.syncFormKeysFromInitialData();
 				this.connectionVerified = !!this.initialData.validated;
+				this.verifySessionKey = 0;
 				this.showValidationError = false;
+				// Clear other providers' leftovers; keep Turnstile script intact.
+				isolateActiveCaptchaProvider( 'turnstile' );
 				document.body.style.overflow = 'hidden';
 				document.body.classList.add('aio-login-modal-open');
 			} else {
+				resetCaptchaEnvironment();
 				document.body.style.overflow = '';
 				document.body.classList.remove('aio-login-modal-open');
 			}
@@ -262,6 +290,32 @@ export default {
 	},
 
 	methods: {
+		getNormalizedSiteKey() {
+			return String(this.formData.siteKey || this.formData.site_key || '').trim();
+		},
+
+		getNormalizedSecretKey() {
+			return String(this.formData.secretKey || this.formData.secret_key || '').trim();
+		},
+
+		syncFormKeysFromInitialData() {
+			const initial = this.initialData || {};
+			this.formData = {
+				siteKey: String(initial.siteKey || initial.site_key || '').trim(),
+				secretKey: String(initial.secretKey || initial.secret_key || '').trim(),
+				theme: initial.theme || 'auto',
+				size: initial.size || 'normal',
+				language: initial.language || 'auto',
+			};
+		},
+
+		syncFormKeys() {
+			this.formData.siteKey = this.getNormalizedSiteKey();
+			this.formData.secretKey = this.getNormalizedSecretKey();
+			delete this.formData.site_key;
+			delete this.formData.secret_key;
+		},
+
 		closePopup() {
 			this.$emit('close');
 		},
@@ -269,11 +323,16 @@ export default {
 		nextStep() {
 			if (this.currentStep === 2) {
 				this.showValidationError = true;
+				this.syncFormKeys();
 				if (!this.canProceed) {
 					return;
 				}
 			}
 			if (this.canProceed && this.currentStep < 3) {
+				if (this.currentStep === 2) {
+					this.connectionVerified = false;
+					this.verifySessionKey = Date.now();
+				}
 				this.currentStep++;
 			}
 		},

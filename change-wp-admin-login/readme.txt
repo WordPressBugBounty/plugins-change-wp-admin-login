@@ -4,15 +4,14 @@ Tags: login url, login, wp admin, wp login, custom login
 Requires at least: 4.6
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 2.4.0
+Stable tag: 2.4.1
 License: GPLv2 or later
 
 Do you want to secure and customize the WordPress login page? Download the All in One Login plugin for login page security and customization.
 
 == Description ==
-[📢 A Pro version Lifetime Deal is available ⏰](https://aiologin.com/appsumo-lifetime-deal/?utm_source=wp_org&utm_medium=readme&utm_campaign=ltd)
 
-[Documentation](https://aiologin.com/docs/?utm_source=wp_org&utm_medium=readme&utm_campaign=technical_documentation) | [Features](https://aiologin.com/features/?utm_source=wp_org&utm_medium=readme&utm_campaign=see_all_features)
+👑[Check Out Premium Version](https://aiologin.com/pricing/?utm_source=wp_org&utm_medium=readme&utm_campaign=check_out_premium_version) | 📘[Technical Documentation](https://aiologin.com/docs/?utm_source=wp_org&utm_medium=readme&utm_campaign=technical_documentation) | 🧰[See all Features](https://aiologin.com/features/?utm_source=wp_org&utm_medium=readme&utm_campaign=see_all_features)
 
 https://youtu.be/kDWrQNvZO0s?si=OL1hbiZXC0AD0S3t
 
@@ -63,6 +62,19 @@ Transform your WordPress login page with live preview customization. Change logo
 **✔️ User Enumeration [Free + Pro]**
 
 Block attackers from discovering WordPress usernames through author or query string requests. This prevents exposure of valid usernames and strengthens login security against brute-force attacks.
+
+**✔️ Email OTP Login [Free]**
+
+Allow users to sign in securely using a one-time verification code sent to their email address. This provides a passwordless login experience while reducing the risks associated with weak or compromised passwords.
+
+**✔️ SMS OTP Login [Pro]**
+
+Enable users to authenticate using a one-time verification code delivered via SMS. Powered by Twilio integration, this adds a secure, possession-based passwordless login experience for your WordPress site.
+
+**✔️ Login Link (Magic Link) [Pro]**
+
+Allow users to sign in instantly using a secure one-click link sent to their email inbox. This frictionless, passwordless authentication method improves user experience and increases login and checkout conversions.
+
 
 **✔️ Disable Common Usernames [Pro]**
 
@@ -131,8 +143,7 @@ Access 1,900+ Google Fonts to match your login page typography with your brand i
 
 **✔️ WooCommerce Login Integration [Pro]**
 
-Allow customers to log in with social accounts on WooCommerce checkout and account pages. Enhance login security and user experience with Google, Facebook, Apple, Discord, Microsoft, or LINE.
-
+Allow customers to sign in using social accounts or passwordless Login Links directly from WooCommerce account and checkout pages. Enhance login security and user experience with Google, Facebook, Apple, Discord, Microsoft, LINE, and one-click email login links.
 
 ### Don’t Miss Out on Social Login Integrations
 
@@ -320,13 +331,28 @@ Control where users are redirected after login or logout to deliver a more strea
 
 * **Login Redirects:** Send users to custom pages immediately after login.
 
-* **Logout Redirects:**Redirect users to specific destinations after logout.
+* **Logout Redirects:** Redirect users to specific destinations after logout.
 
-* **Role-Based Rules:** Create unique destinations for different user roles.
+* **Role-Based Rules:** Create unique redirect destinations for different user roles.
 
-* **User-Specific Redirects:** Configure redirects for individual users.
+* **User-Specific Redirects:** Configure custom redirects for individual users.
 
 * **Fallback Protection:** Ensure users always reach a valid destination, even if a target URL becomes unavailable.
+
+
+**⚡ Reason #11: Passwordless Authentication**
+
+Eliminate passwords and give users a faster, more secure way to sign in using Email OTP, SMS OTP, and one-click Login Links.
+
+* **Email OTP Login:** Authenticate using a one-time code sent to email.
+
+* **SMS OTP Login:** Verify users with secure SMS-based authentication.
+
+* **Magic Login Links:** Sign in instantly with a secure one-click email link.
+
+* **Reduced Login Friction:** Simplify authentication and improve user experience.
+
+* **Enhanced Account Security:** Reduce risks associated with weak, reused, or compromised passwords.
 
 
 == Try Our Other Awesome WordPress Plugins ==
@@ -395,6 +421,11 @@ Yes. AIO Login allows you to create custom redirection rules based on All Users,
 = Can I customize my WordPress login page design? =
 Absolutely! All In One Login includes a visual customizer with live preview. You can choose from 9 pre-built templates, upload logos, change colors, customize backgrounds, select from 1,900+ Google Fonts, and add custom CSS, all without coding.
 
+= Can users log in without passwords? =
+
+Absolutely! All In One Login supports Passwordless Authentication, allowing users to sign in using Email OTP, SMS OTP, or secure one-click Login Links (Magic Links). These options reduce login friction, improve user experience, and enhance security by eliminating traditional passwords.
+
+
 = Can I receive security alerts in Slack? =
 Yes. All In One Login Pro integrates with Slack notifications to send real-time alerts for security events such as failed login attempts, IP lockouts, and user enumeration detection directly to your Slack workspace.
 
@@ -447,16 +478,23 @@ Please report security bugs found in the source code of the Change wp-admin logi
 
 == Changelog ==
 
-= 2.4.0 – June 24, 2026 =
-* NEW – Introduced Email OTP Login.
+= 2.4.1 – Aug 18, 2026 =
+* Fix – Email OTP was enabled by default.
+* Fix – Fixed an unauthenticated account takeover vulnerability through Email OTP login in AIO Login 2.4.0.
+* Fix – Fixed the translation issue with the “Email me an OTP” text for multilingual websites.
+
+= 2.4.0 – June 23, 2026 =
+* NEW – Introduced Passwordless Authentication with support for Email OTP Login, SMS OTP Login, and Login Link (Magic Link).
+* NEW – Added Email OTP Login, enabling users to securely sign in using a one-time code sent to their email.
+* FIX – Resolved dashboard responsiveness issues.
 
 = 2.3.1 - June 12, 2026 =
-* TWEAK – Added an admin notice
+* New – Added an admin notice
 
 = 2.3.0 – June 08, 2026 =
 * NEW – Introduced Login Redirection, allowing users to create personalized login and logout redirection rules.
 * FIX – Resolved a CSS issue affecting the WordPress login page.
-* FIX - Resolved a PHP warning related to the Template Grid customization control when rendering login customization templates.
+* FIX – Resolved a PHP warning related to the Template Grid customization control when rendering login customization templates.
 
 = 2.2.0 – May 01, 2026 = 
 * New – Introduced Real-Time Customizer for login form customization.
