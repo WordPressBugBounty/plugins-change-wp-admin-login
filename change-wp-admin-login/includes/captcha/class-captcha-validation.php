@@ -2,6 +2,9 @@
 /**
  * Captcha credential validation and frontend activation gate.
  *
+ * Free ships Google reCAPTCHA only. Pro registers hCaptcha / Turnstile via
+ * {@see 'aio_login_captcha_providers'}.
+ *
  * @package AIO_Login
  */
 
@@ -16,43 +19,90 @@ if ( ! class_exists( 'AIO_Login\\Captcha\\Captcha_Validation' ) ) {
 	final class Captcha_Validation {
 
 		/**
-		 * @var array<string, string>
+		 * Built-in + filtered captcha providers.
+		 *
+		 * Each provider array may include:
+		 * - validated_option (string)
+		 * - enable_option (string) optional, for mutual exclusion
+		 * - is_toggle_enabled (callable): () => bool
+		 * - has_stored_keys (callable): () => bool
+		 * - verify (callable): ( array $args ) => true|\WP_Error
+		 *
+		 * @return array<string, array<string, mixed>>
 		 */
-		private const VALIDATED_OPTIONS = array(
-			'recaptcha' => 'aio_login_google_recaptcha_validated',
-			'hcaptcha'  => 'aio_login_hcaptcha_validated',
-			'turnstile' => 'aio_login_turnstile_validated',
-		);
+		public static function get_providers() {
+			$providers = array(
+				'recaptcha' => array(
+					'validated_option'  => 'aio_login_google_recaptcha_validated',
+					'enable_option'     => 'aio_login_google_recaptcha_enable',
+					'is_toggle_enabled' => static function () {
+						return 'on' === get_option( 'aio_login_google_recaptcha_enable', 'off' );
+					},
+					'has_stored_keys'   => static function () {
+						$version = get_option( 'aio_login_google_recaptcha_version', 'v2' );
+						return '' !== (string) get_option( 'aio_login_google_recaptcha_' . $version . '_site_key', '' )
+							&& '' !== (string) get_option( 'aio_login_google_recaptcha_' . $version . '_secret_key', '' );
+					},
+					'verify'            => static function ( $args ) {
+						$secret_key = isset( $args['secret_key'] ) ? sanitize_text_field( (string) $args['secret_key'] ) : '';
+						$response   = Captcha_Validation::sanitize_captcha_response_token( $args['response'] ?? '' );
+						return Captcha_Validation::verify_recaptcha_keys( $secret_key, $response );
+					},
+				),
+			);
 
-		/**
-		 * @param string $provider recaptcha|hcaptcha|turnstile
-		 * @return bool
-		 */
-		public static function is_validated( $provider ) {
-			if ( ! isset( self::VALIDATED_OPTIONS[ $provider ] ) ) {
-				return false;
-			}
+			/**
+			 * Register additional captcha providers (Pro: hCaptcha, Turnstile).
+			 *
+			 * @param array<string, array<string, mixed>> $providers Provider definitions keyed by slug.
+			 */
+			$providers = apply_filters( 'aio_login_captcha_providers', $providers );
 
-			return 'on' === get_option( self::VALIDATED_OPTIONS[ $provider ], 'off' );
+			return is_array( $providers ) ? $providers : array();
 		}
 
 		/**
-		 * @param string $provider recaptcha|hcaptcha|turnstile
+		 * @param string $provider Provider slug.
+		 * @return array<string, mixed>|null
+		 */
+		private static function get_provider( $provider ) {
+			$providers = self::get_providers();
+			return isset( $providers[ $provider ] ) && is_array( $providers[ $provider ] )
+				? $providers[ $provider ]
+				: null;
+		}
+
+		/**
+		 * @param string $provider Provider slug.
+		 * @return bool
+		 */
+		public static function is_validated( $provider ) {
+			$def = self::get_provider( $provider );
+			if ( null === $def || empty( $def['validated_option'] ) ) {
+				return false;
+			}
+
+			return 'on' === get_option( (string) $def['validated_option'], 'off' );
+		}
+
+		/**
+		 * @param string $provider  Provider slug.
 		 * @param bool   $validated Validated state.
 		 * @return void
 		 */
 		public static function set_validated( $provider, $validated ) {
-			if ( ! isset( self::VALIDATED_OPTIONS[ $provider ] ) ) {
+			$def = self::get_provider( $provider );
+			if ( null === $def || empty( $def['validated_option'] ) ) {
 				return;
 			}
 
-			update_option( self::VALIDATED_OPTIONS[ $provider ], $validated ? 'on' : 'off' );
+			update_option( (string) $def['validated_option'], $validated ? 'on' : 'off' );
 		}
 
 		/**
 		 * Whether captcha should run on the login frontend.
 		 *
-		 * @param string $provider recaptcha|hcaptcha|turnstile
+		 * @param string $provider Provider slug.
 		 * @return bool
 		 */
 		public static function is_active_for_frontend( $provider ) {
@@ -68,47 +118,50 @@ if ( ! class_exists( 'AIO_Login\\Captcha\\Captcha_Validation' ) ) {
 		}
 
 		/**
-		 * @param string $provider recaptcha|hcaptcha|turnstile
+		 * @param string $provider Provider slug.
 		 * @return bool
 		 */
 		public static function is_toggle_enabled( $provider ) {
-			switch ( $provider ) {
-				case 'recaptcha':
-					return 'on' === get_option( 'aio_login_google_recaptcha_enable', 'off' );
-				case 'hcaptcha':
-					return 'on' === get_option( 'aio_login_hcaptcha_enable', 'off' );
-				case 'turnstile':
-					return 'on' === get_option( 'aio_login_turnstile_enable', 'off' );
+			$def = self::get_provider( $provider );
+			if ( null === $def || ! isset( $def['is_toggle_enabled'] ) || ! is_callable( $def['is_toggle_enabled'] ) ) {
+				return false;
 			}
 
-			return false;
+			return (bool) call_user_func( $def['is_toggle_enabled'] );
 		}
 
 		/**
-		 * @param string $provider recaptcha|hcaptcha|turnstile
+		 * @param string $provider Provider slug.
 		 * @return bool
 		 */
 		public static function has_stored_keys( $provider ) {
-			switch ( $provider ) {
-				case 'recaptcha':
-					$version = get_option( 'aio_login_google_recaptcha_version', 'v2' );
-					return '' !== (string) get_option( 'aio_login_google_recaptcha_' . $version . '_site_key', '' )
-						&& '' !== (string) get_option( 'aio_login_google_recaptcha_' . $version . '_secret_key', '' );
-				case 'hcaptcha':
-					return '' !== (string) get_option( 'aio_login_hcaptcha_site_key', '' )
-						&& '' !== (string) get_option( 'aio_login_hcaptcha_secret_key', '' );
-				case 'turnstile':
-					return '' !== (string) get_option( 'aio_login_turnstile_site_key', '' )
-						&& '' !== (string) get_option( 'aio_login_turnstile_secret_key', '' );
+			$def = self::get_provider( $provider );
+			if ( null === $def || ! isset( $def['has_stored_keys'] ) || ! is_callable( $def['has_stored_keys'] ) ) {
+				return false;
 			}
 
-			return false;
+			return (bool) call_user_func( $def['has_stored_keys'] );
+		}
+
+		/**
+		 * Disable every captcha provider except the one being enabled.
+		 *
+		 * @param string $keep_provider Provider slug to keep on.
+		 * @return void
+		 */
+		public static function disable_other_providers( $keep_provider ) {
+			foreach ( self::get_providers() as $slug => $def ) {
+				if ( $slug === $keep_provider || empty( $def['enable_option'] ) ) {
+					continue;
+				}
+				update_option( (string) $def['enable_option'], 'off' );
+			}
 		}
 
 		/**
 		 * Verify provider credentials against the remote API.
 		 *
-		 * @param string               $provider recaptcha|hcaptcha|turnstile
+		 * @param string               $provider Provider slug.
 		 * @param array<string, mixed> $args     site_key, secret_key, response (optional), version (recaptcha).
 		 * @return true|\WP_Error
 		 */
@@ -124,19 +177,31 @@ if ( ! class_exists( 'AIO_Login\\Captcha\\Captcha_Validation' ) ) {
 				);
 			}
 
-			switch ( $provider ) {
-				case 'recaptcha':
-					return self::verify_recaptcha_keys( $secret_key, $response );
-				case 'hcaptcha':
-					return self::verify_hcaptcha_keys( $secret_key, $response );
-				case 'turnstile':
-					return self::verify_turnstile_keys( $secret_key, $site_key, $response );
+			$def = self::get_provider( $provider );
+			if ( null === $def || ! isset( $def['verify'] ) || ! is_callable( $def['verify'] ) ) {
+				/**
+				 * Fallback verify hook when a provider is not registered on the registry.
+				 *
+				 * @param true|\WP_Error|null $result   Null to signal unknown provider.
+				 * @param string              $provider Provider slug.
+				 * @param array               $args     Verification args.
+				 */
+				$filtered = apply_filters( 'aio_login_verify_captcha_provider', null, $provider, $args );
+				if ( null !== $filtered ) {
+					return $filtered;
+				}
+
+				return new \WP_Error(
+					'captcha_invalid_provider',
+					__( 'Unknown captcha provider.', 'change-wp-admin-login' )
+				);
 			}
 
-			return new \WP_Error(
-				'captcha_invalid_provider',
-				__( 'Unknown captcha provider.', 'change-wp-admin-login' )
-			);
+			$args['site_key']   = $site_key;
+			$args['secret_key'] = $secret_key;
+			$args['response']   = $response;
+
+			return call_user_func( $def['verify'], $args );
 		}
 
 		/**
@@ -168,7 +233,7 @@ if ( ! class_exists( 'AIO_Login\\Captcha\\Captcha_Validation' ) ) {
 		 * @param string $response   Optional client token.
 		 * @return true|\WP_Error
 		 */
-		private static function verify_recaptcha_keys( $secret_key, $response = '' ) {
+		public static function verify_recaptcha_keys( $secret_key, $response = '' ) {
 			if ( '' === $response ) {
 				return self::verify_recaptcha_secret_only( $secret_key );
 			}
@@ -184,7 +249,7 @@ if ( ! class_exists( 'AIO_Login\\Captcha\\Captcha_Validation' ) ) {
 				)
 			);
 
-			$result = self::interpret_siteverify_response( $remote, 'recaptcha' );
+			$result = self::interpret_siteverify_response( $remote );
 			if ( true === $result ) {
 				return true;
 			}
@@ -209,86 +274,14 @@ if ( ! class_exists( 'AIO_Login\\Captcha\\Captcha_Validation' ) ) {
 				)
 			);
 
-			return self::interpret_siteverify_response( $remote, 'recaptcha' );
+			return self::interpret_siteverify_response( $remote );
 		}
 
 		/**
-		 * hCaptcha requires a real client-generated response token to validate keys.
-		 *
-		 * @param string $secret_key Secret key.
-		 * @param string $response   Client token.
+		 * @param array|\WP_Error $remote Remote response.
 		 * @return true|\WP_Error
 		 */
-		private static function verify_hcaptcha_keys( $secret_key, $response ) {
-			if ( '' === $response ) {
-				return new \WP_Error(
-					'captcha_response_required',
-					__( 'Complete the hCaptcha challenge to test the connection.', 'change-wp-admin-login' )
-				);
-			}
-
-			$remote = wp_remote_post(
-				'https://api.hcaptcha.com/siteverify',
-				array(
-					'timeout' => 15,
-					'body'    => array(
-						'secret'   => $secret_key,
-						'response' => $response,
-					),
-				)
-			);
-
-			return self::interpret_siteverify_response( $remote, 'hcaptcha' );
-		}
-
-		/**
-		 * Turnstile requires a real client-generated response token to validate keys.
-		 *
-		 * @param string $secret_key Secret key.
-		 * @param string $site_key   Site key.
-		 * @param string $response   Client token.
-		 * @return true|\WP_Error
-		 */
-		private static function verify_turnstile_keys( $secret_key, $site_key, $response ) {
-			if ( '' === $response ) {
-				return new \WP_Error(
-					'captcha_response_required',
-					__( 'Complete the Turnstile challenge to test the connection.', 'change-wp-admin-login' )
-				);
-			}
-
-			$remote = wp_remote_post(
-				'https://challenges.cloudflare.com/turnstile/v0/siteverify',
-				array(
-					'timeout' => 15,
-					'body'    => array(
-						'secret'   => $secret_key,
-						'response' => $response,
-					),
-				)
-			);
-
-			$result = self::interpret_siteverify_response( $remote, 'turnstile' );
-			if ( is_wp_error( $result ) ) {
-				return $result;
-			}
-
-			if ( '' === $site_key ) {
-				return new \WP_Error(
-					'captcha_invalid_site_key',
-					__( 'Site key is required.', 'change-wp-admin-login' )
-				);
-			}
-
-			return true;
-		}
-
-		/**
-		 * @param array|\WP_Error $remote   Remote response.
-		 * @param string          $provider Provider slug.
-		 * @return true|\WP_Error
-		 */
-		private static function interpret_siteverify_response( $remote, $provider ) {
+		private static function interpret_siteverify_response( $remote ) {
 			if ( is_wp_error( $remote ) ) {
 				return new \WP_Error(
 					'captcha_network',

@@ -2,7 +2,7 @@
 	<div>
 		<div class="aio-login__recent-activity-wrapper">
 			<h2>
-				<span>{{ $t("Recent Activity") }}</span>
+				<span>{{ $t('Recent Activity') }}</span>
 				<aio-login-tooltip
 					:content="tooltipContent.recentActivity.content"
 					:title="tooltipContent.recentActivity.title"
@@ -40,7 +40,7 @@
 							</td>
 						</tr>
 						<tr v-else>
-							<td colspan="5">{{ $t("No lockouts found") }}</td>
+							<td :colspan="lockout_headers.length">{{ $t('No lockouts found') }}</td>
 						</tr>
 					</table>
 				</div>
@@ -62,7 +62,7 @@
 						</tr>
 
 						<tr v-else>
-							<td colspan="7">{{ $t("No failed logins found") }}</td>
+							<td :colspan="failed_login_headers.length">{{ $t('No failed logins found') }}</td>
 						</tr>
 					</table>
 				</div>
@@ -74,7 +74,7 @@
 			<a
 				:href="view_all_activity_logs"
 				class="aio-login__view-all-activity"
-			>{{ $t("View All Activity") }}</a>
+			>{{ $t('View All Activity') }}</a>
 		</div>
 	</div>
 </template>
@@ -105,28 +105,51 @@ export default {
 			},
 		],
 
-		lockout_headers: [
-			{ title: t( 'Date & Time' ), value: 'time' },
-			{ title: t( 'Country' ), value: 'country' },
-			{ title: t( 'City' ), value: 'city' },
-			{ title: t( 'User Agent' ), value: 'user_agent' },
-			{ title: t( 'IP Address' ), value: 'ip_address' },
-		],
 		lockouts: [],
-
-		failed_login_headers: [
-			{ title: t( 'ID' ), value: 'id' },
-			{ title: t( 'User Login' ), value: 'user_login' },
-			{ title: t( 'Date & Time' ), value: 'time' },
-			{ title: t( 'Country' ), value: 'country' },
-			{ title: t( 'City' ), value: 'city' },
-			{ title: t( 'User Agent' ), value: 'user_agent' },
-			{ title: t( 'IP Address' ), value: 'ip_address' },
-		],
 		failed_logins: [],
-
 		current_tab: 'lockouts',
 	} ),
+
+	computed: {
+		hasPro() {
+			const h = window.aio_login__app_object && window.aio_login__app_object.has_pro;
+			return h === true || h === 'true';
+		},
+		lockout_headers() {
+			const headers = [
+				{ title: t( 'Date & Time' ), value: 'time' },
+			];
+			if ( this.hasPro ) {
+				headers.push(
+					{ title: t( 'Country' ), value: 'country' },
+					{ title: t( 'City' ), value: 'city' }
+				);
+			}
+			headers.push(
+				{ title: t( 'User Agent' ), value: 'user_agent' },
+				{ title: t( 'IP Address' ), value: 'ip_address' }
+			);
+			return headers;
+		},
+		failed_login_headers() {
+			const headers = [
+				{ title: t( 'ID' ), value: 'id' },
+				{ title: t( 'User Login' ), value: 'user_login' },
+				{ title: t( 'Date & Time' ), value: 'time' },
+			];
+			if ( this.hasPro ) {
+				headers.push(
+					{ title: t( 'Country' ), value: 'country' },
+					{ title: t( 'City' ), value: 'city' }
+				);
+			}
+			headers.push(
+				{ title: t( 'User Agent' ), value: 'user_agent' },
+				{ title: t( 'IP Address' ), value: 'ip_address' }
+			);
+			return headers;
+		},
+	},
 
 	watch: {
 		current_tab( val ) {

@@ -1,5 +1,14 @@
 <template>
 	<div v-if="page_loaded" class="aio-login-pro__social-login__card">
+				<div class="aio-login-pro__social-login__network-badge">
+					<aio-login-network-notice
+						feature="captcha"
+						:inline="true"
+						:show-override-toggle="false"
+						@can-edit="$emit('can-edit', $event)"
+						@context="onCaptchaNetworkContext"
+					/>
+				</div>
 				<!-- Configured Tag -->
 				<div 
 					v-if="statusBadge" 
@@ -13,9 +22,9 @@
 				<div class="aio-login-pro__social-login__card__top">
 					<img :src="getSrc('grecaptcha')" :alt="'Google reCAPTCHA'" />
 					<p>
-						<span>Google reCAPTCHA</span>
+						<span>{{ $t('Google reCAPTCHA') }}</span>
 					</p>
-					<span class="version-badge">v2 & v3</span>
+					<span class="version-badge">{{ $t('v2 & v3') }}</span>
 				</div>
 				<!-- Bottom Section -->
 				<div class="aio-login-pro__social-login__card__bottom">
@@ -25,17 +34,19 @@
 							name="grecaptcha"
 							v-on:toggle-input="handleToggle"
 							:enabled="enabled"
+							:disabled="!canEdit"
 						/>
 					</label>
-					<!-- Show Configure button only if the toggle is enabled -->
 					<button
-						v-if="enabled"
+						v-if="showConfigureButton"
+						type="button"
 						class="configure-btn"
+						:disabled="configureButtonDisabled"
 						@click="configureCaptcha"
 						@mouseenter="onHover"
 						@mouseleave="onLeave"
 					>
-						Configure
+						{{ $t('Configure') }}
 					</button>
 				</div>
 
@@ -44,6 +55,8 @@
 			:show="showPopup"
 			:initial-data="popupData"
 			:api-nonce="apiNonce"
+			:can-edit="canEdit"
+			@can-edit="$emit('can-edit', $event)"
 			@close="closePopup"
 			@save="saveSettings"
 		/>
@@ -52,6 +65,11 @@
 
 <script>
 import tooltipContent from '../../tooltip-content.js';
+import {
+	shouldShowCaptchaConfigureButton,
+	isCaptchaConfigureDisabledByNetwork,
+	resolveCaptchaNetworkPolicy,
+} from '../../captcha-card-network.js';
 
 export default {
 	name: 'aio-login-captcha',
@@ -75,6 +93,10 @@ export default {
 			type: String,
 			default: '',
 		},
+		canEdit: {
+			type: Boolean,
+			default: true,
+		},
 	},
 
 	data: ( vm ) => ( {
@@ -83,15 +105,27 @@ export default {
 		page_loaded: false,
 		showPopup: false,
 		popupData: {},
-		isHovered: false
+		isHovered: false,
+		captchaNetworkPolicy: '',
 	} ),
 
 	computed: {
+		showConfigureButton() {
+			return shouldShowCaptchaConfigureButton( {
+				enabled: this.enabled,
+				requiresPro: false,
+				hasPro: true,
+			} );
+		},
+		configureButtonDisabled() {
+			return isCaptchaConfigureDisabledByNetwork(
+				resolveCaptchaNetworkPolicy( this.captchaNetworkPolicy )
+			);
+		},
 		statusBadge() {
 			if ( ! this.hasValidKeys() ) {
 				return null;
 			}
-			// Configured + enabled = green; configured but disabled = orange.
 			return this.enabled ? 'green' : 'orange';
 		},
 
@@ -116,10 +150,22 @@ export default {
 		},
 
 		handleToggle( enabled ) {
+			if ( ! this.canEdit ) {
+				return;
+			}
 			this.$emit('toggle-captcha', enabled);
 		},
 
+		onCaptchaNetworkContext( ctx ) {
+			if ( ctx && ctx.policy ) {
+				this.captchaNetworkPolicy = ctx.policy;
+			}
+		},
+
 		configureCaptcha() {
+			if ( this.configureButtonDisabled || ! this.showConfigureButton ) {
+				return;
+			}
 			this.popupData = { ...this.configData };
 			this.showPopup = true;
 		},
@@ -130,6 +176,9 @@ export default {
 		},
 
 		saveSettings( data ) {
+			if ( ! this.canEdit ) {
+				return;
+			}
 			this.$emit('save-settings', data);
 			this.closePopup();
 		},
@@ -144,7 +193,6 @@ export default {
 	},
 
 	mounted() {
-		// Always load the component since this is a free feature
 		this.page_loaded = true;
 	}
 }
@@ -170,43 +218,34 @@ export default {
 }
 
 .configured-tag.enabled {
-  background-color: #22c55e !important; /* Green for enabled */
+  background-color: #22c55e !important;
   box-shadow: 0 1px 3px rgba(34, 197, 94, 0.4) !important;
 }
 
 .configured-tag.disabled {
-  background-color: #f97316 !important; /* Orange for disabled */
+  background-color: #f97316 !important;
   box-shadow: 0 1px 3px rgba(249, 115, 22, 0.4) !important;
 }
 
-/* Social Login Container */
-.aio-login-pro__social-login {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 20px;
-}
-
-/* Social Login Card */
 .aio-login-pro__social-login__card {
   position: relative !important;
   overflow: visible !important;
   border: 1px solid #ebe8eb;
   border-radius: 10px;
-  height: 200px;
+  height: 230px;
   width: 320px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
 }
 
-/* Top Section */
 .aio-login-pro__social-login__card__top {
   flex: 4;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 10px;
+  padding: 28px 10px 10px;
   text-align: center;
 }
 
@@ -214,6 +253,7 @@ export default {
   width: 48px;
   height: 48px;
   margin-bottom: 10px;
+  object-fit: contain;
 }
 
 .aio-login-pro__social-login__card__top p {
@@ -222,16 +262,6 @@ export default {
   margin: 0 0 5px 0;
 }
 
-.version-badge {
-  background: #f0f0f0;
-  color: #666;
-  font-size: 12px;
-  padding: 2px 8px;
-  border-radius: 12px;
-  font-weight: 500;
-}
-
-/* Bottom Section */
 .aio-login-pro__social-login__card__bottom {
   flex: 1;
   display: flex;
@@ -241,7 +271,6 @@ export default {
   border-top: 1px solid #ebe8eb;
 }
 
-/* Configure Button */
 .configure-btn {
   background: #f7ecfd;
   color: #6e16df;
@@ -253,8 +282,25 @@ export default {
   padding: 9px 18px;
 }
 
-.configure-btn:hover {
+.configure-btn:hover:not(:disabled) {
   background-color: #C9D2E3;
   color: #6e16df;
+}
+
+.configure-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.aio-login-pro__social-login__network-badge {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 999;
+  max-width: calc(100% - 16px);
+}
+
+.aio-login-pro__social-login__network-badge .aio-login-network-tag-wrap {
+  margin: 0;
 }
 </style>

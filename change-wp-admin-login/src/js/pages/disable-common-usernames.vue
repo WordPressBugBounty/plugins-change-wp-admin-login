@@ -1,22 +1,13 @@
 <template>
 	<div>
-		<aio-login-disable-common-usernames
-			:has-pro="has_pro"
-		/>
+		<!-- Free feature: always unlock UI (ignore plan-tab blur). -->
+		<aio-login-disable-common-usernames :has-pro="true" />
 	</div>
 </template>
 
 <script>
-import resolveParentCurrentIsPro from '../resolve-parent-current-is-pro.js';
-
 export default {
 	name: 'disable-common-usernames',
-
-	computed: {
-		has_pro() {
-			return resolveParentCurrentIsPro( this );
-		},
-	},
 }
 </script>
 

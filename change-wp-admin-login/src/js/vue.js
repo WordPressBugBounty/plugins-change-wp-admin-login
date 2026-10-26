@@ -1,6 +1,7 @@
 /**
  * Importing layouts and components
  */
+import { __, t } from './i18n.js';
 import aioLoginApp from './layouts/aio-login-app.vue';
 /**
  * Importing header components
@@ -16,19 +17,9 @@ import aioLoginCards from './components/aio-login-cards.vue';
 import aioLoginCard from './components/aio-login-card.vue';
 import aioLoginDaysSelector from './components/aio-login-days-selector.vue';
 
-import aioLoginTempAccess from './pages/aio-login-temp-access.vue';
-import aioLoginSocialLoginMain from './pages/social-login-main.vue';
-import aioLoginIntegrations from './pages/integrations.vue';
 import aioLoginCaptcha from './demo/components/aio-login-captcha.vue';
 import aioLoginRecaptchaPopup from './components/aio-login-recaptcha-popup.vue';
 import aioLoginCaptchaVerify from './components/aio-login-captcha-verify.vue';
-import aioLoginHcaptchaCard from './components/aio-login-hcaptcha-card.vue';
-import aioLoginHcaptchaPopup from './components/aio-login-hcaptcha-popup.vue';
-import aioLoginTurnstileCard from './components/aio-login-turnstile-card.vue';
-import aioLoginTurnstilePopup from './components/aio-login-turnstile-popup.vue';
-import aioLoginWooCommercePopup from './components/aio-login-woocommerce-popup.vue';
-import aioLoginWooCommerceCard from './components/aio-login-woocommerce-card.vue';
-import aioLoginNotificationChannelCard from './components/aio-login-notification-channel-card.vue';
 /**
  * Importing metadata components
  */
@@ -63,17 +54,13 @@ import aioLoginPopup from './components/aio-login-popup.vue';
 import aioLoginProPopup from './components/aio-login-pro-popup.vue';
 import aioLoginAppsumoHelloBar from './components/aio-login-appsumo-hello-bar.vue';
 import aioLoginTooltip from './components/aio-login-tooltip.vue';
-import { t as aioLoginT } from './i18n.js';
+import aioLoginNetworkNotice from './components/aio-login-network-notice.vue';
 
 
 let aio_login__mount_helper = function() {
 };
 
 aio_login__mount_helper.prototype.mount = function( element, required_components = {} ) {
-
-	function is_pro_tab( tab ) {
-		return typeof tab['is-pro'] !== 'undefined' && tab['is-pro'] === true;
-	}
 
 	const { vue, vueRouter, aio_login__object } = window,
 		{ createApp, resolveComponent } = vue,
@@ -82,9 +69,9 @@ aio_login__mount_helper.prototype.mount = function( element, required_components
 
 	let aio_login__app = createApp( {} );
 
-	// Global i18n helper for templates: {{ $t('Save Changes') }} / this.$t(...)
-	aio_login__app.config.globalProperties.t = aioLoginT;
-	aio_login__app.config.globalProperties.$t = aioLoginT;
+	// Single translation API for all admin Vue templates/scripts ($t / __).
+	aio_login__app.config.globalProperties.$t = t;
+	aio_login__app.config.globalProperties.__ = __;
 
 	if ( routes.length ) {
 		aio_login__app.use( createRouter( {
@@ -97,24 +84,21 @@ aio_login__mount_helper.prototype.mount = function( element, required_components
 
 	let container = this;
 
+		// Register demo/free feature components whenever the tab slug matches.
+		// Do not gate on is-pro — Free features (Ban IP, Disable Common Usernames, etc.)
+		// have is-pro removed; Pro overwrites these registrations below when active.
 		Object.values( aio_login__app_object.tabs ).forEach( function( tab ) {
 			if ( tab['sub-tabs'] ) {
 				Object.values( tab['sub-tabs'] ).forEach( function( sub_tab ) {
 					Object.keys(required_components).forEach(function (component_name) {
-						if (
-							sub_tab.slug === required_components[component_name].slug &&
-							(
-								is_pro_tab( sub_tab ) ||
-								sub_tab.slug === 'authentication-methods'
-							)
-						) {
+						if ( sub_tab.slug === required_components[component_name].slug ) {
 							aio_login__app.component(component_name, required_components[component_name]);
 						}
 					});
 				} );
 			} else {
 				Object.keys(required_components).forEach(function (component_name) {
-					if ( tab.slug === required_components[component_name].slug && is_pro_tab( tab ) ) {
+					if ( tab.slug === required_components[component_name].slug ) {
 						aio_login__app.component(component_name, required_components[component_name]);
 					}
 				});
@@ -141,19 +125,15 @@ aio_login__mount_helper.prototype.mount = function( element, required_components
 	aio_login__app.component( 'aio-login-pro-branding', aioLoginProBranding );
 	aio_login__app.component( 'aio-login-recent-activity', aioLoginRecentActivity );
 	aio_login__app.component( 'aio-login-dashboard-docs', aioLoginDashboardDocs );
-	aio_login__app.component( 'aio-login-temp-access', aioLoginTempAccess );
-	aio_login__app.component( 'aio-login-social-login-main', aioLoginSocialLoginMain );
-	aio_login__app.component( 'aio-login-integrations', aioLoginIntegrations );
 	aio_login__app.component( 'aio-login-captcha', aioLoginCaptcha );
 	aio_login__app.component( 'aio-login-recaptcha-popup', aioLoginRecaptchaPopup );
-	aio_login__app.component( 'aio-login-captcha-verify', aioLoginCaptchaVerify );
-	aio_login__app.component( 'aio-login-hcaptcha-card', aioLoginHcaptchaCard );
-	aio_login__app.component( 'aio-login-hcaptcha-popup', aioLoginHcaptchaPopup );
-	aio_login__app.component( 'aio-login-turnstile-card', aioLoginTurnstileCard );
-	aio_login__app.component( 'aio-login-turnstile-popup', aioLoginTurnstilePopup );
-	aio_login__app.component( 'aio-login-woocommerce-popup', aioLoginWooCommercePopup );
-	aio_login__app.component( 'aio-login-woocommerce-card', aioLoginWooCommerceCard );
-	aio_login__app.component( 'aio-login-notification-channel-card', aioLoginNotificationChannelCard );
+	// Free: reCAPTCHA-only verify. Pro overrides with full hCaptcha/Turnstile widget.
+	aio_login__app.component(
+		'aio-login-captcha-verify',
+		( window.aio_login_pro && window.aio_login_pro.captchaVerify )
+			? window.aio_login_pro.captchaVerify
+			: aioLoginCaptchaVerify
+	);
 	aio_login__app.component( 'aio-login-form', aioLoginForm );
 	aio_login__app.component( 'aio-login-submit-button', aioLoginSubmitButton );
 	aio_login__app.component( 'aio-login-media', aioLoginMedia );
@@ -167,6 +147,7 @@ aio_login__mount_helper.prototype.mount = function( element, required_components
 	aio_login__app.component( 'aio-login-pro-popup', aioLoginProPopup );
 	aio_login__app.component( 'aio-login-appsumo-hello-bar', aioLoginAppsumoHelloBar );
 	aio_login__app.component( 'aio-login-tooltip', aioLoginTooltip );
+	aio_login__app.component( 'aio-login-network-notice', aioLoginNetworkNotice );
 
 	aio_login__app.mount( element );
 }
@@ -177,7 +158,3 @@ try {
 
 	require('./demo-components-vue.js');
 } catch ( e ) {}
-
-
-
-

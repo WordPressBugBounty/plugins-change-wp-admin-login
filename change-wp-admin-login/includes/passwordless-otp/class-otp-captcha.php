@@ -2,6 +2,9 @@
 /**
  * Reuse active captcha providers for passwordless OTP requests.
  *
+ * Free handles Google reCAPTCHA. Pro providers register via
+ * {@see 'aio_login_captcha_providers'} and OTP filters.
+ *
  * @package AIO_Login
  */
 
@@ -25,18 +28,31 @@ if ( ! class_exists( 'AIO_Login\\Passwordless_Otp\\OTP_Captcha' ) ) {
 		}
 
 		/**
-		 * @return string recaptcha|hcaptcha|turnstile|''
+		 * @return string Provider slug or empty string.
 		 */
 		public static function get_active_provider() {
-			if ( class_exists( '\AIO_Login\Captcha\Captcha_Validation' ) && \AIO_Login\Captcha\Captcha_Validation::is_active_for_frontend( 'recaptcha' ) ) {
-				return 'recaptcha';
+			/**
+			 * Priority order of captcha providers for passwordless OTP.
+			 * Free defaults to reCAPTCHA only; Pro appends hCaptcha / Turnstile.
+			 *
+			 * @param string[] $order Provider slugs.
+			 */
+			$order = apply_filters( 'aio_login_otp_captcha_provider_order', array( 'recaptcha' ) );
+			if ( ! is_array( $order ) ) {
+				$order = array( 'recaptcha' );
 			}
-			if ( class_exists( '\AIO_Login\Captcha\Captcha_Validation' ) && class_exists( '\AIO_Login_Pro\HCaptcha\HCaptcha' ) && \AIO_Login\Captcha\Captcha_Validation::is_active_for_frontend( 'hcaptcha' ) ) {
-				return 'hcaptcha';
+
+			foreach ( $order as $slug ) {
+				$slug = (string) $slug;
+				if (
+					'' !== $slug
+					&& class_exists( '\AIO_Login\Captcha\Captcha_Validation' )
+					&& \AIO_Login\Captcha\Captcha_Validation::is_active_for_frontend( $slug )
+				) {
+					return $slug;
+				}
 			}
-			if ( class_exists( '\AIO_Login\Captcha\Captcha_Validation' ) && class_exists( '\AIO_Login_Pro\Turnstile\Turnstile' ) && \AIO_Login\Captcha\Captcha_Validation::is_active_for_frontend( 'turnstile' ) ) {
-				return 'turnstile';
-			}
+
 			return '';
 		}
 
@@ -56,16 +72,17 @@ if ( ! class_exists( 'AIO_Login\\Passwordless_Otp\\OTP_Captcha' ) ) {
 				$config['version']  = $version;
 				$config['site_key'] = (string) get_option( 'aio_login_google_recaptcha_' . $version . '_site_key', '' );
 				$config['theme']    = (string) get_option( 'aio_login_google_recaptcha_v2_theme', 'light' );
-			} elseif ( 'hcaptcha' === $provider ) {
-				$config['site_key'] = (string) get_option( 'aio_login_hcaptcha_site_key', '' );
-				$config['theme']    = (string) get_option( 'aio_login_hcaptcha_theme', 'light' );
-				$config['size']     = (string) get_option( 'aio_login_hcaptcha_size', 'normal' );
-			} elseif ( 'turnstile' === $provider ) {
-				$config['site_key'] = (string) get_option( 'aio_login_turnstile_site_key', '' );
-				$config['theme']    = (string) get_option( 'aio_login_turnstile_theme', 'auto' );
 			}
 
-			return $config;
+			/**
+			 * Augment OTP captcha frontend config (Pro fills hCaptcha / Turnstile).
+			 *
+			 * @param array  $config   Config for the active provider.
+			 * @param string $provider Active provider slug.
+			 */
+			$config = apply_filters( 'aio_login_otp_captcha_frontend_config', $config, $provider );
+
+			return is_array( $config ) ? $config : array( 'provider' => $provider );
 		}
 
 		/**
@@ -82,11 +99,16 @@ if ( ! class_exists( 'AIO_Login\\Passwordless_Otp\\OTP_Captcha' ) ) {
 			if ( 'recaptcha' === $provider ) {
 				return self::verify_recaptcha();
 			}
-			if ( 'hcaptcha' === $provider ) {
-				return self::verify_hcaptcha();
-			}
-			if ( 'turnstile' === $provider ) {
-				return self::verify_turnstile();
+
+			/**
+			 * Verify a Pro (or other) captcha provider for OTP requests.
+			 *
+			 * @param true|\WP_Error|null $result   Null means unhandled.
+			 * @param string              $provider Provider slug.
+			 */
+			$result = apply_filters( 'aio_login_otp_captcha_verify_request', null, $provider );
+			if ( null !== $result ) {
+				return $result;
 			}
 
 			return true;
@@ -133,81 +155,6 @@ if ( ! class_exists( 'AIO_Login\\Passwordless_Otp\\OTP_Captcha' ) ) {
 				if ( $score < $threshold ) {
 					return new \WP_Error( 'captcha_invalid', __( 'Please verify that you are not a robot.', 'change-wp-admin-login' ) );
 				}
-			}
-
-			return true;
-		}
-
-		/**
-		 * @return true|\WP_Error
-		 */
-		private static function verify_hcaptcha() {
-			$response = isset( $_POST['h-captcha-response'] ) ? sanitize_text_field( wp_unslash( $_POST['h-captcha-response'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Missing
-			if ( '' === $response ) {
-				return new \WP_Error( 'captcha_required', __( 'Please complete the captcha challenge.', 'change-wp-admin-login' ) );
-			}
-
-			$secret = (string) get_option( 'aio_login_hcaptcha_secret_key', '' );
-			if ( '' === $secret ) {
-				return new \WP_Error( 'captcha_misconfigured', __( 'Captcha is not configured correctly.', 'change-wp-admin-login' ) );
-			}
-
-			$remote = wp_remote_post(
-				'https://api.hcaptcha.com/siteverify',
-				array(
-					'timeout' => 15,
-					'body'    => array(
-						'secret'   => $secret,
-						'response' => $response,
-					),
-				)
-			);
-
-			if ( is_wp_error( $remote ) ) {
-				return new \WP_Error( 'captcha_network', __( 'Unable to verify captcha. Please try again.', 'change-wp-admin-login' ) );
-			}
-
-			$body = json_decode( wp_remote_retrieve_body( $remote ), true );
-			if ( empty( $body['success'] ) ) {
-				return new \WP_Error( 'captcha_invalid', __( 'Please complete the captcha challenge.', 'change-wp-admin-login' ) );
-			}
-
-			return true;
-		}
-
-		/**
-		 * @return true|\WP_Error
-		 */
-		private static function verify_turnstile() {
-			$response = isset( $_POST['cf-turnstile-response'] ) ? sanitize_text_field( wp_unslash( $_POST['cf-turnstile-response'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Missing
-			if ( '' === $response ) {
-				return new \WP_Error( 'captcha_required', __( 'Please complete the captcha challenge.', 'change-wp-admin-login' ) );
-			}
-
-			$secret = (string) get_option( 'aio_login_turnstile_secret_key', '' );
-			if ( '' === $secret ) {
-				return new \WP_Error( 'captcha_misconfigured', __( 'Captcha is not configured correctly.', 'change-wp-admin-login' ) );
-			}
-
-			$remote = wp_remote_post(
-				'https://challenges.cloudflare.com/turnstile/v0/siteverify',
-				array(
-					'timeout' => 15,
-					'body'    => array(
-						'secret'   => $secret,
-						'response' => $response,
-						'remoteip' => \AIO_Login\Helper\Helper::get_ip(),
-					),
-				)
-			);
-
-			if ( is_wp_error( $remote ) ) {
-				return new \WP_Error( 'captcha_network', __( 'Unable to verify captcha. Please try again.', 'change-wp-admin-login' ) );
-			}
-
-			$body = json_decode( wp_remote_retrieve_body( $remote ), true );
-			if ( empty( $body['success'] ) ) {
-				return new \WP_Error( 'captcha_invalid', __( 'Please complete the captcha challenge.', 'change-wp-admin-login' ) );
 			}
 
 			return true;

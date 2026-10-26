@@ -1,7 +1,7 @@
 <template>
 	<div class="aio-login-captcha-verify">
 		<div v-if="!verified" class="aio-login-captcha-verify__card">
-			<h4 class="aio-login-captcha-verify__title">{{ $t("Test Connection") }}</h4>
+			<h4 class="aio-login-captcha-verify__title">{{ $t('Test Connection') }}</h4>
 			<p class="aio-login-captcha-verify__text">
 				{{ helperText }}
 			</p>
@@ -25,9 +25,9 @@
 		</div>
 		<div v-else class="aio-login-captcha-verify__card aio-login-captcha-verify__card--success">
 			<div class="aio-login-captcha-verify__success-icon" aria-hidden="true">✓</div>
-			<h4 class="aio-login-captcha-verify__title aio-login-captcha-verify__title--success">{{ $t("Connection Verified") }}</h4>
-			<p class="aio-login-captcha-verify__text">{{ $t("Your credentials are valid. You can finish setup now.") }}</p>
-			<button type="button" class="aio-login-captcha-verify__link" @click="resetVerification">{{ $t("Verify Again") }}</button>
+			<h4 class="aio-login-captcha-verify__title aio-login-captcha-verify__title--success">{{ $t('Connection Verified') }}</h4>
+			<p class="aio-login-captcha-verify__text">{{ $t('Your credentials are valid. You can finish setup now.') }}</p>
+			<button type="button" class="aio-login-captcha-verify__link" @click="resetVerification">{{ $t('Verify Again') }}</button>
 		</div>
 	</div>
 </template>
@@ -38,7 +38,6 @@ import {
 	purgeCaptchaProviderGlobal,
 	isolateActiveCaptchaProvider,
 } from '../captcha-dom-cleanup.js';
-import { t } from '../i18n.js';
 
 export default {
 	name: 'aio-login-captcha-verify',
@@ -72,26 +71,21 @@ export default {
 			pendingToken: '',
 			lastPayloadFingerprint: '',
 			widgetPrepared: false,
+			widgetPrepareInFlight: false,
+			loadedV3SiteKey: '',
 		};
 	},
 
 	computed: {
 		providerSlug() {
-			if ( this.namespace.indexOf( 'hcaptcha' ) !== -1 ) {
-				return 'hcaptcha';
-			}
-			if ( this.namespace.indexOf( 'turnstile' ) !== -1 ) {
-				return 'turnstile';
-			}
 			return 'recaptcha';
 		},
 		needsClientChallenge() {
 			// reCAPTCHA v3 is invisible — key check is secret-only on button click.
-			// v2, hCaptcha, and Turnstile require a client widget token first.
-			if ( 'recaptcha' === this.providerSlug ) {
-				return 'v3' !== this.recaptchaVersion;
-			}
-			return true;
+			return 'v3' !== this.recaptchaVersion;
+		},
+		isRecaptchaV3() {
+			return 'v3' === this.recaptchaVersion;
 		},
 		helperText() {
 			if ( this.needsClientChallenge ) {
@@ -103,7 +97,6 @@ export default {
 			if ( ! this.siteKey || ! this.secretKey ) {
 				return false;
 			}
-			// AIOL-654: do not enable Test Connection until the challenge is completed.
 			if ( this.needsClientChallenge && ! this.pendingToken ) {
 				return false;
 			}
@@ -162,9 +155,7 @@ export default {
 		this.pendingToken = '';
 		this.errorMessage = '';
 		this.resetClientWidget();
-		// Soft DOM cleanup only — do not remove provider scripts (breaks Turnstile re-init).
 		cleanupCaptchaProviderDom( this.providerSlug );
-		this.cleanupForeignProviderArtifacts();
 	},
 
 	methods: {
@@ -187,7 +178,7 @@ export default {
 					return error.response.data.data.message;
 				}
 			}
-			return error && error.message ? error.message : t( 'Connection test failed. Please check your keys and try again.' );
+			return error && error.message ? error.message : 'Connection test failed. Please check your keys and try again.';
 		},
 
 		scheduleWidgetPrepare() {
@@ -200,13 +191,32 @@ export default {
 		},
 
 		runTest() {
-			if ( ! this.namespace || ! this.nonce ) {
+			if ( ! this.namespace ) {
 				this.errorMessage = 'Unable to test connection right now. Please reload the page.';
+				return;
+			}
+			if ( ! this.nonce ) {
+				this.errorMessage = 'Security token is still loading. Wait a moment and try Test Connection again.';
 				return;
 			}
 
 			if ( ! this.siteKey || ! this.secretKey ) {
 				this.errorMessage = 'Enter both site key and secret key before testing.';
+				return;
+			}
+
+			if ( this.isRecaptchaV3 ) {
+				this.testing = true;
+				this.errorMessage = '';
+				isolateActiveCaptchaProvider( this.providerSlug );
+				this.generateRecaptchaV3Token()
+					.then( ( token ) => {
+						this.runBackendTest( { response: token } );
+					} )
+					.catch( ( error ) => {
+						this.testing = false;
+						this.errorMessage = this.getProviderLoadErrorMessage( error );
+					} );
 				return;
 			}
 
@@ -223,6 +233,46 @@ export default {
 			}
 
 			this.runBackendTest( {} );
+		},
+
+		generateRecaptchaV3Token() {
+			const siteKey = this.siteKey;
+			return this.loadRecaptchaV3Script( siteKey ).then( () => new Promise( ( resolve, reject ) => {
+				window.grecaptcha.ready( () => {
+					window.grecaptcha.execute( siteKey, { action: 'test_connection' } )
+						.then( resolve )
+						.catch( reject );
+				} );
+			} ) );
+		},
+
+		loadRecaptchaV3Script( siteKey ) {
+			const isReady = () => (
+				window.grecaptcha &&
+				typeof window.grecaptcha.execute === 'function'
+			);
+
+			if ( isReady() && this.loadedV3SiteKey === siteKey ) {
+				return Promise.resolve();
+			}
+
+			this.removeProviderScripts( 'www.google.com/recaptcha' );
+			this.removeProviderScripts( 'www.gstatic.com/recaptcha' );
+			this.purgeProviderGlobals( 'recaptcha' );
+
+			return new Promise( ( resolve, reject ) => {
+				const script = document.createElement( 'script' );
+				script.src = 'https://www.google.com/recaptcha/api.js?render=' + encodeURIComponent( siteKey );
+				script.async = true;
+				script.defer = true;
+				script.setAttribute( 'data-aio-login-captcha-script', script.src );
+				script.onload = () => {
+					this.loadedV3SiteKey = siteKey;
+					this.waitFor( isReady, 0, 50 ).then( resolve ).catch( reject );
+				};
+				script.onerror = () => reject( new Error( 'Script load failed' ) );
+				document.head.appendChild( script );
+			} );
 		},
 
 		runBackendTest( extraFields ) {
@@ -262,22 +312,8 @@ export default {
 			purgeCaptchaProviderGlobal( provider );
 		},
 
-		/**
-		 * Remove leftover provider iframes/badges outside the Vue mount.
-		 * Google/hCaptcha inject fixed overlays that otherwise survive modal close (AIOL-656).
-		 *
-		 * @param {string} provider recaptcha|hcaptcha|turnstile
-		 */
 		cleanupProviderArtifacts( provider ) {
 			cleanupCaptchaProviderDom( provider, this.$refs.challengeMount || null );
-		},
-
-		cleanupForeignProviderArtifacts() {
-			[ 'recaptcha', 'hcaptcha', 'turnstile' ].forEach( ( provider ) => {
-				if ( provider !== this.providerSlug ) {
-					this.cleanupProviderArtifacts( provider );
-				}
-			} );
 		},
 
 		removeProviderScripts( pattern ) {
@@ -292,19 +328,11 @@ export default {
 				const srcBase = src.split( '?' )[0];
 
 				const isReady = () => {
-					if ( 'turnstile' === provider ) {
-						return window.turnstile && typeof window.turnstile.render === 'function';
-					}
-					if ( 'hcaptcha' === provider ) {
-						return window.hcaptcha && typeof window.hcaptcha.render === 'function';
-					}
 					if ( 'recaptcha' === provider ) {
-						// Reject hCaptcha's grecaptcha compatibility alias.
 						return (
 							window.grecaptcha &&
 							typeof window.grecaptcha.render === 'function' &&
-							!! window.___grecaptcha_cfg &&
-							window.grecaptcha !== window.hcaptcha
+							!! window.___grecaptcha_cfg
 						);
 					}
 					return true;
@@ -324,7 +352,6 @@ export default {
 					document.head.appendChild( script );
 				};
 
-				// Reuse an already-bootstrapped provider (e.g. WP-enqueued Turnstile).
 				if ( provider && isReady() ) {
 					resolve();
 					return;
@@ -334,11 +361,9 @@ export default {
 					.call( document.querySelectorAll( 'script[src]' ) )
 					.find( ( script ) => ( script.getAttribute( 'src' ) || '' ).indexOf( srcBase ) !== -1 );
 
-				// If a matching script is already on the page, wait for it instead of ripping it out.
 				const existingSrcScript = findSrcScript();
 				if ( existingSrcScript ) {
 					this.waitFor( isReady, 0, 50 ).then( resolve ).catch( () => {
-						// Globals were purged (e.g. hCaptcha overwrote grecaptcha) — force a fresh load.
 						existingSrcScript.remove();
 						this.purgeProviderGlobals( provider );
 						injectMarkedScript();
@@ -346,17 +371,9 @@ export default {
 					return;
 				}
 
-				if ( provider ) {
-					if ( 'hcaptcha' === provider ) {
-						this.removeProviderScripts( 'js.hcaptcha.com' );
-					}
-					if ( 'turnstile' === provider ) {
-						this.removeProviderScripts( 'challenges.cloudflare.com/turnstile' );
-					}
-					if ( 'recaptcha' === provider ) {
-						this.removeProviderScripts( 'www.google.com/recaptcha' );
-						this.removeProviderScripts( 'www.gstatic.com/recaptcha' );
-					}
+				if ( provider && 'recaptcha' === provider ) {
+					this.removeProviderScripts( 'www.google.com/recaptcha' );
+					this.removeProviderScripts( 'www.gstatic.com/recaptcha' );
 					this.purgeProviderGlobals( provider );
 				}
 
@@ -411,64 +428,6 @@ export default {
 			} );
 		},
 
-		runWhenTurnstileReady( callback ) {
-			if ( window.turnstile && typeof window.turnstile.ready === 'function' ) {
-				window.turnstile.ready( callback );
-				return;
-			}
-			callback();
-		},
-
-		getTurnstileRenderOptions() {
-			const options = {
-				sitekey: this.siteKey,
-				callback: ( token ) => {
-					this.onChallengeToken( token );
-				},
-				'error-callback': ( errorCode ) => {
-					this.widgetPrepared = false;
-					this.errorMessage = this.getTurnstileErrorMessage( errorCode );
-				},
-				'expired-callback': () => {
-					this.pendingToken = '';
-					this.$emit( 'update:verified', false );
-					this.widgetPrepared = false;
-					this.scheduleWidgetPrepare();
-				},
-			};
-
-			const theme = this.payload.theme || this.payload.Theme;
-			const size = this.payload.size || this.payload.Size;
-			const language = this.payload.language || this.payload.Language;
-
-			if ( theme ) {
-				options.theme = theme;
-			}
-			if ( size ) {
-				options.size = size;
-			}
-			if ( language && 'auto' !== language ) {
-				options.language = language;
-			}
-
-			return options;
-		},
-
-		getTurnstileErrorMessage( errorCode ) {
-			const code = String( errorCode || '' ).toLowerCase();
-
-			if ( code.indexOf( 'hostname' ) !== -1 || '110200' === code ) {
-				const host = window.location && window.location.hostname ? window.location.hostname : 'this site';
-				return 'Turnstile blocked this domain (' + host + '). Add it under Hostname Management in your Cloudflare Turnstile widget settings.';
-			}
-
-			if ( code.indexOf( 'invalid' ) !== -1 || '110100' === code ) {
-				return 'Turnstile site key is invalid. Check the key from your Cloudflare dashboard.';
-			}
-
-			return 'Turnstile could not be loaded. Check your site key and allowed hostnames.';
-		},
-
 		getProviderLoadErrorMessage( error ) {
 			const message = error && error.message ? error.message : '';
 
@@ -477,9 +436,6 @@ export default {
 			}
 
 			if ( 'Timed out waiting for captcha script.' === message ) {
-				if ( 'turnstile' === this.providerSlug ) {
-					return 'Turnstile script did not initialize. Reload this page and ensure challenges.cloudflare.com is not blocked.';
-				}
 				return 'Captcha script did not initialize in time. Please reload and try again.';
 			}
 
@@ -487,23 +443,10 @@ export default {
 				return 'Unable to render the captcha widget. Please go back one step and try again.';
 			}
 
-			if ( 'turnstile' === this.providerSlug ) {
-				return 'Unable to load Turnstile. Check your site key and add this site hostname in Cloudflare Turnstile settings.';
-			}
-
-			if ( 'hcaptcha' === this.providerSlug ) {
-				return 'Unable to load hCaptcha. Check your site key and try again.';
-			}
-
-			if ( 'recaptcha' === this.providerSlug ) {
-				return 'Unable to load reCAPTCHA. Check your site key and try again.';
-			}
-
-			return 'Unable to load captcha. Check your site key and try again.';
+			return 'Unable to load reCAPTCHA. Check your site key and try again.';
 		},
 
 		onChallengeToken( token ) {
-			// Store the token only — verification must wait for an explicit Test Connection click.
 			this.pendingToken = token;
 			this.errorMessage = '';
 		},
@@ -515,27 +458,15 @@ export default {
 			if ( ! this.siteKey || ! this.secretKey ) {
 				return;
 			}
+			if ( this.widgetPrepareInFlight && ! force ) {
+				return;
+			}
 			if ( this.widgetPrepared && ! force ) {
 				return;
 			}
 
-			// Drop leftover UI / conflicting scripts from other captcha providers (AIOL-656).
-			// hCaptcha must be fully unloaded before reCAPTCHA — it aliases window.grecaptcha.
-			isolateActiveCaptchaProvider( this.providerSlug );
-
-			if ( 'hcaptcha' === this.providerSlug ) {
-				this.prepareHcaptchaWidget();
-				return;
-			}
-
-			if ( 'turnstile' === this.providerSlug ) {
-				this.prepareTurnstileWidget();
-				return;
-			}
-
-			if ( 'recaptcha' === this.providerSlug ) {
-				this.prepareRecaptchaWidget();
-			}
+			isolateActiveCaptchaProvider( this.providerSlug, this.$refs.challengeMount || null );
+			this.prepareRecaptchaWidget();
 		},
 
 		prepareRecaptchaWidget() {
@@ -544,13 +475,10 @@ export default {
 				.then( () => this.waitFor( () => (
 					window.grecaptcha &&
 					typeof window.grecaptcha.render === 'function' &&
-					!! window.___grecaptcha_cfg &&
-					window.grecaptcha !== window.hcaptcha
+					!! window.___grecaptcha_cfg
 				) ) )
 				.then( () => this.waitForMountRef() )
 				.then( ( mount ) => {
-					// Avoid tearing down a live widget; grecaptcha cannot reliably re-render
-					// after remove/purge and surfaces false "Unable to load" errors.
 					if ( null !== this.widgetId && mount && mount.childNodes && mount.childNodes.length ) {
 						return;
 					}
@@ -593,106 +521,15 @@ export default {
 				} );
 		},
 
-		prepareHcaptchaWidget() {
-			this.widgetPrepared = true;
-			// recaptchacompat=off prevents hCaptcha from overwriting window.grecaptcha.
-			this.loadScript( 'https://js.hcaptcha.com/1/api.js?render=explicit&recaptchacompat=off', 'hcaptcha' )
-				.then( () => this.waitFor( () => window.hcaptcha && typeof window.hcaptcha.render === 'function' ) )
-				.then( () => this.waitForMountRef() )
-				.then( ( mount ) => {
-					this.resetClientWidget();
-
-					this.widgetId = window.hcaptcha.render( mount, {
-						sitekey: this.siteKey,
-						callback: ( token ) => {
-							this.onChallengeToken( token );
-						},
-						'error-callback': () => {
-							this.widgetPrepared = false;
-							this.errorMessage = 'hCaptcha could not be loaded. Check your site key.';
-						},
-						'expired-callback': () => {
-							this.pendingToken = '';
-							this.$emit( 'update:verified', false );
-							this.widgetPrepared = false;
-							this.scheduleWidgetPrepare();
-						},
-					} );
-				} )
-				.catch( ( error ) => {
-					this.widgetPrepared = false;
-					this.errorMessage = this.getProviderLoadErrorMessage( error );
-				} );
-		},
-
-		prepareTurnstileWidget() {
-			if ( ! this.siteKey || ! this.secretKey ) {
-				this.errorMessage = 'Enter both site key and secret key before testing.';
-				return;
-			}
-
-			this.widgetPrepared = true;
-			this.errorMessage = '';
-			this.loadScript( 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit', 'turnstile' )
-				.then( () => this.waitFor( () => window.turnstile && typeof window.turnstile.render === 'function' ) )
-				.then( () => this.waitForMountRef() )
-				.then( ( mount ) => {
-					// Clear previous widget in-place. Avoid full resetClientWidget() here —
-					// it was wiping state and racing script cleanup so Turnstile never painted.
-					if ( null !== this.widgetId && window.turnstile && typeof window.turnstile.remove === 'function' ) {
-						try {
-							window.turnstile.remove( this.widgetId );
-						} catch ( e ) {}
-					}
-					this.widgetId = null;
-					mount.innerHTML = '';
-
-					const renderWidget = () => {
-						try {
-							if ( ! mount.isConnected ) {
-								throw new Error( 'Unable to render captcha widget.' );
-							}
-							this.widgetId = window.turnstile.render( mount, this.getTurnstileRenderOptions() );
-							if ( null === this.widgetId || 'undefined' === typeof this.widgetId ) {
-								throw new Error( 'Turnstile render returned no widget id.' );
-							}
-							this.widgetPrepared = true;
-						} catch ( error ) {
-							this.widgetPrepared = false;
-							this.errorMessage = this.getProviderLoadErrorMessage( error );
-						}
-					};
-
-					this.runWhenTurnstileReady( renderWidget );
-				} )
-				.catch( ( error ) => {
-					this.widgetPrepared = false;
-					this.errorMessage = this.getProviderLoadErrorMessage( error );
-				} );
-		},
-
 		resetClientWidget() {
-			if ( 'hcaptcha' === this.providerSlug && null !== this.widgetId && window.hcaptcha && typeof window.hcaptcha.remove === 'function' ) {
-				try {
-					window.hcaptcha.remove( this.widgetId );
-				} catch ( e ) {}
-			}
+			this.widgetPrepareInFlight = false;
 
-			if ( 'turnstile' === this.providerSlug && null !== this.widgetId && window.turnstile && typeof window.turnstile.remove === 'function' ) {
-				try {
-					window.turnstile.remove( this.widgetId );
-				} catch ( e ) {}
-			}
-
-			if ( 'recaptcha' === this.providerSlug && this.$refs.challengeMount ) {
+			if ( this.$refs.challengeMount ) {
 				this.$refs.challengeMount.innerHTML = '';
 			}
 
 			this.widgetId = null;
 			this.widgetPrepared = false;
-			if ( this.$refs.challengeMount ) {
-				this.$refs.challengeMount.innerHTML = '';
-			}
 		},
 
 		resetVerification() {

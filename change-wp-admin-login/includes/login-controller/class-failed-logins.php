@@ -55,17 +55,21 @@ if ( ! class_exists( 'AIO_Login\\Login_Controller\\Failed_Logins' ) ) {
 			$table_name = $wpdb->prefix . 'aio_login_login_attempts';
 
 			if ( 'all' === $id ) {
-				$sql = 'TRUNCATE TABLE %i';
-			} else {
-				if ( is_array( $id ) ) {
-					$id = implode( ',', $id );
-				}
-
-				$sql = 'DELETE FROM %i WHERE id IN (' . $id . ')';
+				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.NotPrepared
+				return $wpdb->query( $wpdb->prepare( 'TRUNCATE TABLE %i', $table_name ) );
 			}
 
-			$sql = $wpdb->prepare( $sql, $table_name ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
-			return $wpdb->query( $sql ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.NotPrepared
+			$ids = array_values( array_filter( array_map( 'absint', (array) $id ) ) );
+			if ( empty( $ids ) ) {
+				return false;
+			}
+
+			$placeholders = implode( ',', array_fill( 0, count( $ids ), '%d' ) );
+			$sql          = "DELETE FROM %i WHERE id IN ($placeholders)";
+			// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare -- dynamic IN list.
+			$prepared = $wpdb->prepare( $sql, array_merge( array( $table_name ), $ids ) );
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.NotPrepared
+			return $wpdb->query( $prepared );
 		}
 
 		/**
@@ -80,17 +84,21 @@ if ( ! class_exists( 'AIO_Login\\Login_Controller\\Failed_Logins' ) ) {
 			$table_name = $wpdb->prefix . 'aio_login_login_lockouts';
 
 			if ( 'all' === $id ) {
-				$sql = 'TRUNCATE TABLE %i';
-			} else {
-				if ( is_array( $id ) ) {
-					$id = implode( ',', $id );
-				}
-
-				$sql = 'DELETE FROM %i WHERE id IN (' . $id . ')';
+				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.NotPrepared
+				return $wpdb->query( $wpdb->prepare( 'TRUNCATE TABLE %i', $table_name ) );
 			}
 
-			$sql = $wpdb->prepare( $sql, $table_name ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
-			return $wpdb->query( $sql ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.NotPrepared
+			$ids = array_values( array_filter( array_map( 'absint', (array) $id ) ) );
+			if ( empty( $ids ) ) {
+				return false;
+			}
+
+			$placeholders = implode( ',', array_fill( 0, count( $ids ), '%d' ) );
+			$sql          = "DELETE FROM %i WHERE id IN ($placeholders)";
+			// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare -- dynamic IN list.
+			$prepared = $wpdb->prepare( $sql, array_merge( array( $table_name ), $ids ) );
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.NotPrepared
+			return $wpdb->query( $prepared );
 		}
 
 		/**
@@ -108,23 +116,33 @@ if ( ! class_exists( 'AIO_Login\\Login_Controller\\Failed_Logins' ) ) {
 			global $wpdb;
 			$table_name = $wpdb->prefix . 'aio_login_login_attempts';
 
-			$sql = 'SELECT * FROM %i WHERE status = %s';
-			$sql = $wpdb->prepare( $sql, $table_name, $status ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+			$allowed_orderby = array( 'id', 'user_login', 'ip_address', 'time', 'status', 'country', 'city' );
+			$orderby         = in_array( (string) $orderby, $allowed_orderby, true ) ? (string) $orderby : 'id';
+			$order           = ( 'ASC' === strtoupper( (string) $order ) ) ? 'ASC' : 'DESC';
+			$limit           = absint( $limit );
+
+			$sql    = 'SELECT * FROM %i WHERE status = %s';
+			$params = array( $table_name, $status );
 
 			if ( ! empty( $search ) ) {
-				$sql .= ' AND (user_login LIKE %s OR ip_address LIKE %s)';
-				$sql  = $wpdb->prepare( $sql, '%' . $search . '%', '%' . $search . '%' ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+				$sql     .= ' AND (user_login LIKE %s OR ip_address LIKE %s)';
+				$like     = '%' . $wpdb->esc_like( $search ) . '%';
+				$params[] = $like;
+				$params[] = $like;
 			}
 
-			if ( ! empty( $orderby ) && ! empty( $order ) ) {
-				$sql .= ' ORDER BY ' . $orderby . ' ' . $order;
+			// ORDER BY column/direction are allowlisted above — safe to interpolate.
+			$sql .= ' ORDER BY ' . $orderby . ' ' . $order;
+
+			if ( $limit > 0 ) {
+				$sql     .= ' LIMIT %d';
+				$params[] = $limit;
 			}
 
-			if ( ! empty( $limit ) ) {
-				$sql .= ' LIMIT ' . $limit;
-			}
-
-			return $wpdb->get_results( $sql, ARRAY_A ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.PreparedSQL.NotPrepared
+			// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare
+			$prepared = $wpdb->prepare( $sql, $params );
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.PreparedSQL.NotPrepared
+			return $wpdb->get_results( $prepared, ARRAY_A );
 		}
 
 		/**

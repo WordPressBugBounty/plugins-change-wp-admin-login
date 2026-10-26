@@ -47,6 +47,10 @@ export default {
 
 	methods: {
 		handelEvent( e ) {
+			if ( this.disabled ) {
+				e.preventDefault();
+				return;
+			}
 			this.$emit( 'toggle-input', e.target.checked );
 		}
 	}

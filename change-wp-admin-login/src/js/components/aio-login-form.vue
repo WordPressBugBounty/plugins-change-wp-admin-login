@@ -1,7 +1,7 @@
 <template>
 	<div>
 		<form :action="ajaxurl" method="post" @submit="submitHandler">
-			<h2>
+			<h2 class="aio-login-form-title">
 				<slot name="title"></slot>
 			</h2>
 			<p class="description">
@@ -17,7 +17,7 @@
 				</tbody>
 			</table>
 
-			<aio-login-submit-button />
+			<aio-login-submit-button :disabled="disabled" />
 		</form>
 	</div>
 </template>
@@ -30,6 +30,10 @@ export default {
 			type: String,
 			required: true,
 		},
+		disabled: {
+			type: Boolean,
+			default: false,
+		},
 	},
 
 	data: () => ( {
@@ -39,6 +43,9 @@ export default {
 	methods: {
 		submitHandler( e ) {
 			e.preventDefault();
+			if ( this.disabled ) {
+				return;
+			}
 			this.$emit( 'handle-submit', e );
 		},
 	},
@@ -50,5 +57,14 @@ export default {
 </script>
 
 <style scoped>
+.aio-login-form-title {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 8px;
+}
 
+:deep(.aio-login-network-tag-wrap) {
+	margin-left: auto;
+}
 </style>

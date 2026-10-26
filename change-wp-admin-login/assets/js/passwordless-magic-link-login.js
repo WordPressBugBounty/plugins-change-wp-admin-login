@@ -166,6 +166,29 @@
 		}
 	}
 
+	function getDirectChildUnderForm(form, node) {
+		if (!form || !node || !form.contains(node)) {
+			return null;
+		}
+		var current = node;
+		while (current && current.parentNode && current.parentNode !== form) {
+			current = current.parentNode;
+		}
+		return current && current.parentNode === form ? current : null;
+	}
+
+	function safeInsertBeforeInForm(form, wrapper, referenceNode) {
+		if (!form || !wrapper || !referenceNode) {
+			return false;
+		}
+		var directRef = getDirectChildUnderForm(form, referenceNode);
+		if (!directRef || directRef === wrapper || wrapper.contains(directRef)) {
+			return false;
+		}
+		form.insertBefore(wrapper, directRef);
+		return true;
+	}
+
 	function positionSocialAfterMagicLink() {
 		var forms = document.querySelectorAll(
 			'form#loginform, form.woocommerce-form-login, form.woocommerce-form-register'
@@ -195,30 +218,31 @@
 
 			var social = form.querySelector('.aio-login-social-login-buttons-wrapper');
 			if (social && form.contains(social)) {
-				form.insertBefore(wrapper, social);
-				return;
+				if (safeInsertBeforeInForm(form, wrapper, social)) {
+					return;
+				}
 			}
 
 			var captcha = form.querySelector(
 				'.h-captcha, .g-recaptcha, .cf-turnstile, .aio-login-turnstile-widget-error, input[name="cf-turnstile-error-code"]'
 			);
 			if (captcha && form.contains(captcha)) {
-				form.insertBefore(wrapper, captcha);
-				return;
+				if (safeInsertBeforeInForm(form, wrapper, captcha)) {
+					return;
+				}
 			}
 			var remember = form.querySelector('p.forgetmenot, .woocommerce-form-login__rememberme');
 			if (remember) {
 				var rememberRow = remember.closest('p.form-row, p') || remember;
-				if (rememberRow.parentNode === form) {
-					form.insertBefore(wrapper, rememberRow);
+				if (safeInsertBeforeInForm(form, wrapper, rememberRow)) {
 					return;
 				}
 			}
 			var submit = form.querySelector('p.submit, .woocommerce-form-login__submit, .woocommerce-form-register__submit');
 			if (submit) {
 				var row = submit.closest('p') || submit;
-				if (row.parentNode === form) {
-					form.insertBefore(wrapper, row);
+				if (safeInsertBeforeInForm(form, wrapper, row)) {
+					return;
 				}
 			}
 		});

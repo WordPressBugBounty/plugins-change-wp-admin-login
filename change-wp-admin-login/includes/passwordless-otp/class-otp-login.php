@@ -7,8 +7,6 @@
 
 namespace AIO_Login\Passwordless_Otp;
 
-use AIO_Login\AIO_Login;
-use AIO_Login\Helper\Helper;
 use AIO_Login\Login_Controller\Login_Redirection;
 
 defined( 'ABSPATH' ) || exit;
@@ -106,66 +104,70 @@ if ( ! class_exists( 'AIO_Login\\Passwordless_Otp\\OTP_Login' ) ) {
 				} else {
 					wp_enqueue_script( 'google-recaptcha', 'https://www.google.com/recaptcha/api.js', array(), null, true ); // phpcs:ignore WordPress.WP.EnqueuedResourceParameters.MissingVersion
 				}
-			} elseif ( ! empty( $captcha['provider'] ) && 'hcaptcha' === $captcha['provider'] ) {
-				wp_enqueue_script( 'hcaptcha', 'https://js.hcaptcha.com/1/api.js', array(), null, true ); // phpcs:ignore WordPress.WP.EnqueuedResourceParameters.MissingVersion
-			} elseif ( ! empty( $captcha['provider'] ) && 'turnstile' === $captcha['provider'] ) {
-				if ( wp_script_is( 'aio-login-turnstile', 'registered' ) ) {
-					wp_enqueue_script( 'aio-login-turnstile' );
-				} else {
-					wp_enqueue_script( 'cloudflare-turnstile', 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit', array(), null, true ); // phpcs:ignore WordPress.WP.EnqueuedResourceParameters.MissingVersion
-				}
 			}
 
-			$sms_default = OTP_Settings::get_login_sms_default_country();
+			/**
+			 * Enqueue Pro captcha provider scripts for passwordless OTP (hCaptcha / Turnstile).
+			 *
+			 * @param array $captcha Frontend captcha config from OTP_Captcha::get_frontend_config().
+			 */
+			do_action( 'aio_login_otp_captcha_enqueue_scripts', $captcha );
 
-			wp_localize_script(
-				'aio-login-passwordless-otp',
-				'aioLoginOtp',
-				array(
-					'ajaxUrl'           => admin_url( 'admin-ajax.php' ),
-					'nonce'             => wp_create_nonce( self::AJAX_NONCE ),
-					'emailEnabled'      => OTP_Settings::is_channel_enabled( 'email' ),
-					'smsEnabled'        => OTP_Settings::is_sms_login_available(),
-					'emailLength'       => OTP_Settings::get_otp_length( 'email' ),
-					'smsLength'         => OTP_Settings::get_otp_length( 'sms' ),
-					'emailResend'       => OTP_Settings::get_resend_seconds( 'email' ),
-					'smsResend'         => OTP_Settings::get_resend_seconds( 'sms' ),
-					'defaultCountry'    => $sms_default['code'],
-					'defaultCountryIso' => $sms_default['iso'],
-					'countryCodes'      => OTP_Settings::get_login_country_codes(),
-					'captcha'           => $captcha,
-					'captchaRequired'   => OTP_Captcha::is_required(),
-					'i18n'              => array(
-						'continueEmail'    => __( 'Continue with Email', 'change-wp-admin-login' ),
-						'continueSms'      => __( 'Continue with SMS', 'change-wp-admin-login' ),
-						'sendCode'         => __( 'Send Code', 'change-wp-admin-login' ),
-						'back'             => __( 'Back', 'change-wp-admin-login' ),
-						'backToLogin'      => __( 'Back to login', 'change-wp-admin-login' ),
-						'verify'           => __( 'Verify', 'change-wp-admin-login' ),
-						'resend'           => __( 'Resend code', 'change-wp-admin-login' ),
-						'resendIn'         => __( 'Resend code in %ds', 'change-wp-admin-login' ),
-						'successTitle'     => __( "You're signed in", 'change-wp-admin-login' ),
-						'successMessage'   => __( "You're signed in. Redirecting you to your dashboard…", 'change-wp-admin-login' ),
-						'successTitle2fa'  => __( 'Verification successful', 'change-wp-admin-login' ),
-						'successMessage2fa' => __( 'Complete two-factor authentication to finish signing in…', 'change-wp-admin-login' ),
-						'continueDash'     => __( 'Continue to Dashboard', 'change-wp-admin-login' ),
-						'emailPlaceholder' => __( 'Email address', 'change-wp-admin-login' ),
-						'phonePlaceholder' => __( 'Phone number', 'change-wp-admin-login' ),
-						'otpLabel'         => __( 'Verification code', 'change-wp-admin-login' ),
-						'noSmsCountries'   => __( 'SMS login is not available for your region. Please contact the site administrator.', 'change-wp-admin-login' ),
-						'invalidPhone'     => __( 'Please enter a valid phone number.', 'change-wp-admin-login' ),
-						'registerLink'     => __( 'Register', 'change-wp-admin-login' ),
-					),
-					'registerUrl'       => $this->get_registration_url(),
-				)
+			$localize = array(
+				'ajaxUrl'         => admin_url( 'admin-ajax.php' ),
+				'nonce'           => wp_create_nonce( self::AJAX_NONCE ),
+				'emailEnabled'    => OTP_Settings::is_channel_enabled( 'email' ),
+				'smsEnabled'      => false,
+				'emailLength'     => OTP_Settings::get_otp_length( 'email' ),
+				'smsLength'       => 6,
+				'emailResend'     => OTP_Settings::get_resend_seconds( 'email' ),
+				'smsResend'       => 60,
+				'defaultCountry'  => '',
+				'defaultCountryIso' => '',
+				'countryCodes'    => array(),
+				'captcha'         => $captcha,
+				'captchaRequired' => OTP_Captcha::is_required(),
+				'i18n'            => array(
+					'continueEmail'     => __( 'Continue with Email', 'change-wp-admin-login' ),
+					'sendCode'          => __( 'Send Code', 'change-wp-admin-login' ),
+					'back'              => __( 'Back', 'change-wp-admin-login' ),
+					'backToLogin'       => __( 'Back to login', 'change-wp-admin-login' ),
+					'verify'            => __( 'Verify', 'change-wp-admin-login' ),
+					'resend'            => __( 'Resend code', 'change-wp-admin-login' ),
+					'resendIn'          => __( 'Resend code in %ds', 'change-wp-admin-login' ),
+					'successTitle'      => __( "You're signed in", 'change-wp-admin-login' ),
+					'successMessage'    => __( "You're signed in. Redirecting you to your dashboard…", 'change-wp-admin-login' ),
+					'successTitle2fa'   => __( 'Verification successful', 'change-wp-admin-login' ),
+					'successMessage2fa' => __( 'Complete two-factor authentication to finish signing in…', 'change-wp-admin-login' ),
+					'continueDash'      => __( 'Continue to Dashboard', 'change-wp-admin-login' ),
+					'emailPlaceholder'  => __( 'Email address', 'change-wp-admin-login' ),
+					'otpLabel'          => __( 'Verification code', 'change-wp-admin-login' ),
+					'registerLink'      => __( 'Register', 'change-wp-admin-login' ),
+				),
+				'registerUrl'     => $this->get_registration_url(),
 			);
+
+			/**
+			 * Filter frontend OTP localize data (Pro adds SMS fields when enabled).
+			 *
+			 * @param array<string, mixed> $localize Localize payload.
+			 */
+			$localize = apply_filters( 'aio_login_otp_localize_script', $localize );
+
+			wp_localize_script( 'aio-login-passwordless-otp', 'aioLoginOtp', $localize );
 		}
 
 		public function render_launcher_buttons() {
 			$email = OTP_Settings::is_channel_enabled( 'email' );
-			$sms   = OTP_Settings::is_sms_login_available();
 
-			if ( ! $email && ! $sms ) {
+			/**
+			 * Whether Pro (or another add-on) will render additional OTP launchers (e.g. SMS).
+			 *
+			 * @param bool $has_extra Default false.
+			 */
+			$has_extra = (bool) apply_filters( 'aio_login_otp_has_extra_launchers', false );
+
+			if ( ! $email && ! $has_extra ) {
 				return;
 			}
 
@@ -179,13 +181,10 @@ if ( ! class_exists( 'AIO_Login\\Passwordless_Otp\\OTP_Login' ) ) {
 				);
 			}
 
-			if ( $sms ) {
-				printf(
-					'<button type="button" class="aio-login-otp-launcher" data-channel="sms" aria-label="%1$s"><span class="aio-login-otp-launcher__icon" aria-hidden="true">%2$s</span><span>%1$s</span></button>',
-					esc_html__( 'Continue with SMS', 'change-wp-admin-login' ),
-					self::get_sms_launcher_icon_svg() // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-				);
-			}
+			/**
+			 * Pro renders SMS (and other) passwordless launcher buttons here.
+			 */
+			do_action( 'aio_login_otp_login_launcher_buttons' );
 
 			echo '</div>';
 		}
@@ -207,7 +206,7 @@ if ( ! class_exists( 'AIO_Login\\Passwordless_Otp\\OTP_Login' ) ) {
 			if ( 'email' === $channel ) {
 				$this->handle_send_email();
 			} elseif ( 'sms' === $channel ) {
-				$this->handle_send_sms();
+				$this->delegate_send_sms();
 			} else {
 				wp_send_json_error( array( 'message' => __( 'Invalid request.', 'change-wp-admin-login' ) ) );
 			}
@@ -294,14 +293,6 @@ if ( ! class_exists( 'AIO_Login\\Passwordless_Otp\\OTP_Login' ) ) {
 				/** Same hook as username/password login — required for 2FA policy redirects. */
 				do_action( 'wp_login', $user->user_login, $user );
 
-				// Drop prior 2FA completion cookie so Skip-2FA-off always re-challenges.
-				if ( class_exists( '\AIO_Login_Pro\Two_Factor\Two_Factor_Auth' ) ) {
-					$tfa = \AIO_Login_Pro\Two_Factor\Two_Factor_Auth::get_instance();
-					if ( $tfa && method_exists( $tfa, 'clear_login_challenge_cookie' ) ) {
-						$tfa->clear_login_challenge_cookie();
-					}
-				}
-
 				if ( $this->passwordless_login_requires_2fa( $user ) ) {
 					$default_redirect = admin_url();
 					self::$passwordless_login_channel = $channel;
@@ -360,46 +351,44 @@ if ( ! class_exists( 'AIO_Login\\Passwordless_Otp\\OTP_Login' ) ) {
 			);
 		}
 
-		private function handle_send_sms() {
-			if ( ! AIO_Login::has_pro() ) {
-				wp_send_json_error( array( 'message' => __( 'SMS login requires AIO Login Pro.', 'change-wp-admin-login' ) ) );
+		/**
+		 * Thin SMS send bridge — full implementation lives in Pro (OTP_Sms_Login).
+		 */
+		private function delegate_send_sms() {
+			if ( class_exists( '\\AIO_Login\\Passwordless_Otp\\OTP_Sms_Login' )
+				&& method_exists( '\\AIO_Login\\Passwordless_Otp\\OTP_Sms_Login', 'handle_send' ) ) {
+				\AIO_Login\Passwordless_Otp\OTP_Sms_Login::handle_send( $this );
+				return;
 			}
 
-			$cc     = isset( $_POST['country_code'] ) ? sanitize_text_field( wp_unslash( $_POST['country_code'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Missing
-			$number = isset( $_POST['phone'] ) ? sanitize_text_field( wp_unslash( $_POST['phone'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Missing
-			$iso    = isset( $_POST['country_iso'] ) ? sanitize_text_field( wp_unslash( $_POST['country_iso'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Missing
+			wp_send_json_error( array( 'message' => __( 'SMS login requires AIO Login Pro.', 'change-wp-admin-login' ) ) );
+		}
 
-			$phone = OTP_Service::normalize_phone( $cc, $number, $iso );
-			if ( is_wp_error( $phone ) ) {
-				wp_send_json_error( array( 'message' => $phone->get_error_message() ) );
-			}
+		/**
+		 * Deliver OTP for a channel (used by Free email + Pro SMS resend path).
+		 *
+		 * @param string $channel    Channel.
+		 * @param int    $user_id    User.
+		 * @param string $identifier Identifier.
+		 * @param string $otp        OTP.
+		 * @return true|\WP_Error
+		 */
+		public function deliver_otp_public( $channel, $user_id, $identifier, $otp ) {
+			return $this->deliver_otp( $channel, $user_id, $identifier, $otp );
+		}
 
-			$user_id = OTP_Service::find_user_id_by_phone( $cc, $number, $iso );
-			if ( is_wp_error( $user_id ) ) {
-				wp_send_json_error( array( 'message' => $user_id->get_error_message() ) );
-			}
-			if ( (int) $user_id <= 0 ) {
-				$this->reject_unregistered_otp_user( 'sms' );
-			}
+		/**
+		 * @param string $channel email|sms.
+		 */
+		public function reject_unregistered_otp_user_public( $channel ) {
+			$this->reject_unregistered_otp_user( $channel );
+		}
 
-			$challenge = OTP_Service::create_challenge( 'sms', $phone, (int) $user_id );
-			if ( is_wp_error( $challenge ) ) {
-				$this->send_challenge_error( $challenge );
-			}
-
-			$deliver = $this->deliver_otp( 'sms', $user_id, $phone, $challenge['otp'] );
-			if ( is_wp_error( $deliver ) ) {
-				wp_send_json_error( array( 'message' => $deliver->get_error_message() ) );
-			}
-
-			wp_send_json_success(
-				array(
-					'token'     => $challenge['token'],
-					'length'    => OTP_Settings::get_otp_length( 'sms' ),
-					'resend_in' => $challenge['resend_in'],
-					'message'   => __( 'Verification code sent to your phone.', 'change-wp-admin-login' ),
-				)
-			);
+		/**
+		 * @param \WP_Error $error Challenge error.
+		 */
+		public function send_challenge_error_public( $error ) {
+			$this->send_challenge_error( $error );
 		}
 
 		/**
@@ -429,10 +418,10 @@ if ( ! class_exists( 'AIO_Login\\Passwordless_Otp\\OTP_Login' ) ) {
 			if ( ! ( $user instanceof \WP_User ) ) {
 				return false;
 			}
-			if ( ! class_exists( '\AIO_Login_Pro\Two_Factor\Two_Factor_Auth' ) ) {
+			if ( ! class_exists( '\AIO_Login\Two_Factor\Two_Factor_Auth' ) ) {
 				return false;
 			}
-			$tfa = \AIO_Login_Pro\Two_Factor\Two_Factor_Auth::get_instance();
+			$tfa = \AIO_Login\Two_Factor\Two_Factor_Auth::get_instance();
 			if ( $tfa && method_exists( $tfa, 'user_has_pending_login_challenge' ) ) {
 				return (bool) $tfa->user_has_pending_login_challenge( $user );
 			}
@@ -449,10 +438,10 @@ if ( ! class_exists( 'AIO_Login\\Passwordless_Otp\\OTP_Login' ) ) {
 			if ( ! OTP_Settings::should_skip_two_factor( $channel ) ) {
 				return;
 			}
-			if ( ! class_exists( '\AIO_Login_Pro\Two_Factor\Two_Factor_Auth' ) ) {
+			if ( ! class_exists( '\AIO_Login\Two_Factor\Two_Factor_Auth' ) ) {
 				return;
 			}
-			$tfa = \AIO_Login_Pro\Two_Factor\Two_Factor_Auth::get_instance();
+			$tfa = \AIO_Login\Two_Factor\Two_Factor_Auth::get_instance();
 			if ( $tfa && method_exists( $tfa, 'login_user' ) ) {
 				$tfa->login_user( $user );
 			}
@@ -479,8 +468,8 @@ if ( ! class_exists( 'AIO_Login\\Passwordless_Otp\\OTP_Login' ) ) {
 			}
 
 			if ( $this->passwordless_login_requires_2fa( $user ) ) {
-				if ( class_exists( '\AIO_Login_Pro\Two_Factor\Two_Factor_Auth' ) ) {
-					return \AIO_Login_Pro\Two_Factor\Two_Factor_Auth::get_verification_url( $redirect_to );
+				if ( class_exists( '\AIO_Login\Two_Factor\Two_Factor_Auth' ) ) {
+					return \AIO_Login\Two_Factor\Two_Factor_Auth::get_verification_url( $redirect_to );
 				}
 			}
 
@@ -551,7 +540,7 @@ if ( ! class_exists( 'AIO_Login\\Passwordless_Otp\\OTP_Login' ) ) {
 			}
 
 			$transient_name = $this->get_completion_transient_name( $key );
-			$payload        = get_transient( $transient_name );
+			$payload        = $this->claim_completion_payload( $transient_name );
 
 			if ( ! is_array( $payload ) || empty( $payload['user_id'] ) ) {
 				if ( is_user_logged_in() ) {
@@ -565,7 +554,6 @@ if ( ! class_exists( 'AIO_Login\\Passwordless_Otp\\OTP_Login' ) ) {
 
 			$user = get_user_by( 'id', (int) $payload['user_id'] );
 			if ( ! ( $user instanceof \WP_User ) ) {
-				delete_transient( $transient_name );
 				wp_safe_redirect( wp_login_url() );
 				exit;
 			}
@@ -581,14 +569,53 @@ if ( ! class_exists( 'AIO_Login\\Passwordless_Otp\\OTP_Login' ) ) {
 				$this->skip_two_factor_for_passwordless( $user, $channel );
 			}
 
-			delete_transient( $transient_name );
-
 			self::$passwordless_login_channel = $channel;
 			$redirect                         = apply_filters( 'login_redirect', admin_url(), '', $user );
 			self::$passwordless_login_channel = null;
 
 			wp_safe_redirect( wp_validate_redirect( (string) $redirect, admin_url() ) );
 			exit;
+		}
+
+		/**
+		 * Atomically claim a one-time completion payload (G02-005).
+		 *
+		 * Consumes the transient under a MySQL named lock before issuing a session,
+		 * so concurrent requests cannot both redeem the same key.
+		 *
+		 * @param string $transient_name Transient key.
+		 * @return array|null Payload or null when missing/already consumed.
+		 */
+		private function claim_completion_payload( $transient_name ) {
+			global $wpdb;
+
+			$lock_name = 'aio_otp_complete_' . md5( (string) $transient_name );
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+			$got = $wpdb->get_var( $wpdb->prepare( 'SELECT GET_LOCK(%s, %d)', $lock_name, 5 ) );
+
+			// Fail closed: do not consume the completion token without an exclusive lock.
+			if ( '1' !== (string) $got ) {
+				return null;
+			}
+
+			try {
+				$payload = get_transient( $transient_name );
+				if ( ! is_array( $payload ) || empty( $payload['user_id'] ) ) {
+					return null;
+				}
+
+				delete_transient( $transient_name );
+
+				// Fail closed: do not issue a session unless the one-time token is gone.
+				if ( false !== get_transient( $transient_name ) ) {
+					return null;
+				}
+
+				return $payload;
+			} finally {
+				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+				$wpdb->get_var( $wpdb->prepare( 'SELECT RELEASE_LOCK(%s)', $lock_name ) );
+			}
 		}
 
 		/**
@@ -600,17 +627,6 @@ if ( ! class_exists( 'AIO_Login\\Passwordless_Otp\\OTP_Login' ) ) {
 			return '<svg class="aio-login-otp-launcher__svg" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">'
 				. '<path d="M4 6.5h16c.83 0 1.5.67 1.5 1.5v8c0 .83-.67 1.5-1.5 1.5H4A1.5 1.5 0 012.5 16V8c0-.83.67-1.5 1.5-1.5z" stroke="currentColor" stroke-width="1.75" stroke-linejoin="round"/>'
 				. '<path d="M3 7.5l8.65 5.77a1.5 1.5 0 001.7 0L22 7.5" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>'
-				. '</svg>';
-		}
-
-		/**
-		 * Message bubble icon for Continue with SMS (matches admin OTP settings card).
-		 *
-		 * @return string SVG markup.
-		 */
-		private static function get_sms_launcher_icon_svg() {
-			return '<svg class="aio-login-otp-launcher__svg" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">'
-				. '<path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2v10z" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>'
 				. '</svg>';
 		}
 

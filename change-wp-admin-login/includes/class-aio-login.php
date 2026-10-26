@@ -14,6 +14,7 @@ use AIO_Login\Helper\Helper;
 use AIO_Login\Login_Controller\Failed_Logins;
 use AIO_Login\Login_Controller\Login_Controller;
 use AIO_Login\Login_Controller\Login_Redirection;
+use AIO_Login\Login_Controller\Security_Controls;
 use AIO_Login\Login_Customization\Login_Customization;
 use AIO_Login\Login_Customization\Login_Customization_Output;
 use AIO_Login\Rest_API\Controller;
@@ -39,21 +40,24 @@ if ( ! class_exists( 'AIO_Login\\AIO_Login' ) ) {
 			$this->include_files();
 
 			self::class_loader( Admin::class );
+			self::class_loader( \AIO_Login\Multisite\Network_Admin::class );
+			self::class_loader( \AIO_Login\Multisite\Network_WP_Settings::class );
 			self::class_loader( Change_WP_Admin_Login::class );
 			self::class_loader( Google_Recaptcha::class );
 			self::class_loader( Login_Controller::class );
+			self::class_loader( Security_Controls::class );
 			self::class_loader( Login_Redirection::class );
 			self::class_loader( Login_Customization::class );
 			self::class_loader( Login_Customization_Output::class );
 			/*
-			 * Pro loads after free; class_exists() here is too early and boots Pro_Fallback while Pro is active,
-			 * duplicating template-09 footer markup and hooks.
+			 * Free-only template renderer (default + template-8). Pro loads after free; defer the
+			 * class_exists check so Pro's Login_Customization_Output owns premium templates when active.
 			 */
 			add_action(
 				'plugins_loaded',
 				static function () {
 					if ( ! class_exists( 'AIO_Login_Pro\\Login_Customization\\Login_Customization_Output' ) ) {
-						\AIO_Login\Login_Customization\Login_Customization_Output_Pro_Fallback::get_instance();
+						\AIO_Login\Login_Customization\Login_Customization_Output_Free::get_instance();
 					}
 				},
 				20
@@ -62,9 +66,9 @@ if ( ! class_exists( 'AIO_Login\\AIO_Login' ) ) {
 			self::class_loader( \AIO_Login\User_Enumeration_Protection\User_Enumeration_Protection::class );
 			self::class_loader( \AIO_Login\Passwordless_Otp\OTP_Admin_Rest::class );
 			self::class_loader( \AIO_Login\Passwordless_Otp\OTP_Login::class );
-			self::class_loader( \AIO_Login\Passwordless_Otp\OTP_User_Phone::class );
-			self::class_loader( \AIO_Login\Passwordless_Otp\Magic_Link_Admin_Rest::class );
-			self::class_loader( \AIO_Login\Passwordless_Otp\Magic_Link_Login::class );
+			self::class_loader( \AIO_Login\Two_Factor\Two_Factor::class );
+			self::class_loader( \AIO_Login\Two_Factor\Two_Factor_Auth::class );
+			// Magic Link is Pro-only (Guideline 5) — implementation lives in aio-login-pro.
 
 			$this->init();
 
@@ -76,35 +80,37 @@ if ( ! class_exists( 'AIO_Login\\AIO_Login' ) ) {
 		 */
 		private function include_files() {
 			require_once AIO_LOGIN__DIR_PATH . 'includes/class-helper.php';
+			require_once AIO_LOGIN__DIR_PATH . 'includes/multisite/class-network-settings.php';
+			require_once AIO_LOGIN__DIR_PATH . 'includes/multisite/class-network-admin.php';
+			require_once AIO_LOGIN__DIR_PATH . 'includes/multisite/class-network-wp-settings.php';
 			require_once AIO_LOGIN__DIR_PATH . 'includes/captcha/class-captcha-validation.php';
+			require_once AIO_LOGIN__DIR_PATH . 'includes/admin/class-admin-js-i18n.php';
 			require_once AIO_LOGIN__DIR_PATH . 'includes/admin/class-admin-i18n.php';
 			require_once AIO_LOGIN__DIR_PATH . 'includes/admin/class-admin.php';
 			require_once AIO_LOGIN__DIR_PATH . 'includes/change-wp-admin-login/class-change-wp-admin-login.php';
 			require_once AIO_LOGIN__DIR_PATH . 'includes/google-recaptcha/class-google-recaptcha.php';
 			require_once AIO_LOGIN__DIR_PATH . 'includes/login-controller/class-login-controller.php';
+			require_once AIO_LOGIN__DIR_PATH . 'includes/login-controller/class-security-controls.php';
 			require_once AIO_LOGIN__DIR_PATH . 'includes/login-controller/class-login-redirection.php';
 			require_once AIO_LOGIN__DIR_PATH . 'includes/login-controller/class-failed-logins.php';
 			require_once AIO_LOGIN__DIR_PATH . 'includes/login-customization/class-login-customization.php';
 			require_once AIO_LOGIN__DIR_PATH . 'includes/login-customization/class-login-customization-output.php';
-			require_once AIO_LOGIN__DIR_PATH . 'includes/login-customization/class-login-customization-output-pro-fallback.php';
+			require_once AIO_LOGIN__DIR_PATH . 'includes/login-customization/class-login-customizer-preview-guard.php';
+			require_once AIO_LOGIN__DIR_PATH . 'includes/login-customization/class-login-customization-output-free.php';
 			require_once AIO_LOGIN__DIR_PATH . 'includes/login-customization/class-login-customizer.php';
 			require_once AIO_LOGIN__DIR_PATH . 'includes/user-enumeration-protection/class-user-enumeration-protection.php';
 			require_once AIO_LOGIN__DIR_PATH . 'includes/user-enumeration-protection/class-user-enumeration-activator.php';
 			require_once AIO_LOGIN__DIR_PATH . 'includes/passwordless-otp/class-otp-lockout.php';
 			require_once AIO_LOGIN__DIR_PATH . 'includes/passwordless-otp/class-otp-encryption.php';
-			require_once AIO_LOGIN__DIR_PATH . 'includes/passwordless-otp/class-otp-country-codes.php';
 			require_once AIO_LOGIN__DIR_PATH . 'includes/passwordless-otp/class-otp-settings.php';
 			require_once AIO_LOGIN__DIR_PATH . 'includes/passwordless-otp/class-otp-captcha.php';
 			require_once AIO_LOGIN__DIR_PATH . 'includes/passwordless-otp/class-otp-service.php';
 			require_once AIO_LOGIN__DIR_PATH . 'includes/passwordless-otp/class-otp-email-sender.php';
 			require_once AIO_LOGIN__DIR_PATH . 'includes/passwordless-otp/class-otp-admin-rest.php';
 			require_once AIO_LOGIN__DIR_PATH . 'includes/passwordless-otp/class-otp-login.php';
-			require_once AIO_LOGIN__DIR_PATH . 'includes/passwordless-otp/class-otp-user-phone.php';
-			require_once AIO_LOGIN__DIR_PATH . 'includes/passwordless-otp/class-magic-link-settings.php';
-			require_once AIO_LOGIN__DIR_PATH . 'includes/passwordless-otp/class-magic-link-admin-rest.php';
-			require_once AIO_LOGIN__DIR_PATH . 'includes/passwordless-otp/class-magic-link-service.php';
-			require_once AIO_LOGIN__DIR_PATH . 'includes/passwordless-otp/class-magic-link-email-sender.php';
-			require_once AIO_LOGIN__DIR_PATH . 'includes/passwordless-otp/class-magic-link-login.php';
+			require_once AIO_LOGIN__DIR_PATH . 'includes/two-factor/class-two-factor.php';
+			require_once AIO_LOGIN__DIR_PATH . 'includes/two-factor/class-two-factor-auth.php';
+			// SMS OTP (User Phone, Country Codes) and Magic Link live in Pro (Guideline 5).
 		}
 
 		/**
@@ -134,6 +140,7 @@ if ( ! class_exists( 'AIO_Login\\AIO_Login' ) ) {
 
 			// Priority -10 so domain is loaded before other init callbacks that call __().
 			add_action( 'init', array( $this, 'load_textdomain' ), -10 );
+			add_action( 'init', array( $this, 'maybe_upgrade_plugin' ), 5 );
 			add_action( 'init', array( $this, 'if_activation_hook_not_triggered' ) );
 
 			if ( is_multisite() ) {
@@ -194,12 +201,7 @@ if ( ! class_exists( 'AIO_Login\\AIO_Login' ) ) {
 				)
 			);
 
-			if ( ! get_option( 'aio_login__version' ) ) {
-				update_option( 'aio_login__version', AIO_LOGIN__VERSION );
-			}
-
-			// Create database tables
-			\AIO_Login\User_Enumeration_Protection\User_Enumeration_Activator::create_table();
+			update_option( 'aio_login__version', AIO_LOGIN__VERSION );
 
 			\AIO_Login\Passwordless_Otp\OTP_Settings::set_defaults();
 
@@ -226,6 +228,7 @@ if ( ! class_exists( 'AIO_Login\\AIO_Login' ) ) {
 		public static function uninstall_plugin() {
 			\AIO_Login\Helper\Helper::drop_table( 'login_attempts' );
 			\AIO_Login\Helper\Helper::drop_table( 'login_lockouts' );
+			// Legacy cleanup if an older Free install created this table before G5 split.
 			\AIO_Login\Helper\Helper::drop_table( 'aio_login_enumeration_logs' );
 
 			global $wpdb;
@@ -248,6 +251,20 @@ if ( ! class_exists( 'AIO_Login\\AIO_Login' ) ) {
 				false,
 				dirname( plugin_basename( AIO_LOGIN__FILE ) ) . '/languages'
 			);
+		}
+
+		/**
+		 * Run version-keyed migrations (including passwordless hardening on upgrade).
+		 */
+		public function maybe_upgrade_plugin() {
+			\AIO_Login\Passwordless_Otp\OTP_Settings::apply_passwordless_upgrade_hardening();
+
+			$stored = (string) get_option( 'aio_login__version', '0' );
+			if ( version_compare( $stored, AIO_LOGIN__VERSION, '>=' ) ) {
+				return;
+			}
+
+			update_option( 'aio_login__version', AIO_LOGIN__VERSION );
 		}
 
 		/**
@@ -278,7 +295,6 @@ if ( ! class_exists( 'AIO_Login\\AIO_Login' ) ) {
 					)
 				);
 
-				\AIO_Login\User_Enumeration_Protection\User_Enumeration_Activator::create_table();
 				\AIO_Login\Passwordless_Otp\OTP_Settings::set_defaults();
 
 				update_option( 'aio_login__update', 'true' );

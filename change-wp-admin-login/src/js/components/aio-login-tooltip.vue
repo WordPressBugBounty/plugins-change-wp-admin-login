@@ -2,7 +2,7 @@
 	<span class="aio-login-tooltip-wrap" ref="wrapRef" @mouseenter="show" @mouseleave="hide">
 		<span
 			class="aio-login-tooltip-icon"
-			:aria-label="$t('Help')"
+			aria-label="Help"
 			role="img"
 		>?</span>
 		<Teleport to="body">
@@ -17,8 +17,8 @@
 					@mouseleave="hide"
 					role="tooltip"
 				>
-					<p v-if="title" class="aio-login-tooltip-title">{{ title }}</p>
-					<div class="aio-login-tooltip-body" v-html="content"></div>
+					<p v-if="translatedTitle" class="aio-login-tooltip-title">{{ translatedTitle }}</p>
+					<div class="aio-login-tooltip-body" v-html="safeContentHtml"></div>
 				</div>
 			</transition>
 		</Teleport>
@@ -41,6 +41,17 @@ export default {
 			type: String,
 			default: 'bottom',
 			validator: (v) => ['top', 'bottom', 'left', 'right'].includes(v),
+		},
+	},
+	computed: {
+		translatedTitle() {
+			return this.title ? this.$t( this.title ) : '';
+		},
+		translatedContent() {
+			return this.content ? this.$t( this.content ) : '';
+		},
+		safeContentHtml() {
+			return this.sanitizeTooltipHtml( this.translatedContent );
 		},
 	},
 	data() {
@@ -69,6 +80,47 @@ export default {
 		}
 	},
 	methods: {
+		/**
+		 * Allowlist sanitize for translated tooltip HTML (G02-004).
+		 * Permits p/br/strong/em/b/i/ul/ol/li/a[href] only; strips scripts/events.
+		 */
+		sanitizeTooltipHtml( html ) {
+			const raw = String( html || '' );
+			if ( ! raw ) {
+				return '';
+			}
+			if ( typeof document === 'undefined' ) {
+				return raw.replace( /<[^>]*>/g, '' );
+			}
+			const template = document.createElement( 'template' );
+			template.innerHTML = raw;
+			const allowed = new Set( [ 'P', 'BR', 'STRONG', 'EM', 'B', 'I', 'UL', 'OL', 'LI', 'A', '#text' ] );
+			const walk = ( node ) => {
+				const kids = Array.from( node.childNodes || [] );
+				kids.forEach( ( child ) => {
+					if ( child.nodeType === Node.TEXT_NODE ) {
+						return;
+					}
+					if ( child.nodeType !== Node.ELEMENT_NODE || ! allowed.has( child.nodeName ) ) {
+						child.replaceWith( document.createTextNode( child.textContent || '' ) );
+						return;
+					}
+					if ( child.nodeName === 'A' ) {
+						const href = ( child.getAttribute( 'href' ) || '' ).trim();
+						[ ...child.attributes ].forEach( ( attr ) => child.removeAttribute( attr.name ) );
+						if ( /^(https?:|mailto:|\/|#)/i.test( href ) ) {
+							child.setAttribute( 'href', href );
+							child.setAttribute( 'rel', 'noopener noreferrer' );
+						}
+					} else {
+						[ ...child.attributes ].forEach( ( attr ) => child.removeAttribute( attr.name ) );
+					}
+					walk( child );
+				} );
+			};
+			walk( template.content );
+			return template.innerHTML;
+		},
 		show() {
 			if (this.hideTimer) {
 				clearTimeout(this.hideTimer);

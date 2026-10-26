@@ -2,10 +2,15 @@
 /**
  * Passwordless OTP option keys and defaults.
  *
+ * Email OTP lives in Free. SMS/Twilio option readers remain as thin bridges so
+ * Pro can reuse shared helpers when active (Guideline 5 / AIOL-745).
+ *
  * @package AIO_Login
  */
 
 namespace AIO_Login\Passwordless_Otp;
+
+use AIO_Login\Multisite\Network_Settings;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -23,14 +28,14 @@ if ( ! class_exists( 'AIO_Login\\Passwordless_Otp\\OTP_Settings' ) ) {
 		 * @return bool
 		 */
 		public static function is_sms_enabled_in_settings() {
-			return 'on' === get_option( 'aio_login_otp_sms_enable', 'off' );
+			return 'on' === Network_Settings::get_option( 'aio_login_otp_sms_enable', 'off' );
 		}
 
 		/**
 		 * Persist SMS OTP as disabled in settings (admin explicitly turns it off).
 		 */
 		public static function disable_sms_channel() {
-			update_option( 'aio_login_otp_sms_enable', 'off', false );
+			Network_Settings::update_option( 'aio_login_otp_sms_enable', 'off' );
 		}
 
 		/**
@@ -43,33 +48,18 @@ if ( ! class_exists( 'AIO_Login\\Passwordless_Otp\\OTP_Settings' ) ) {
 		}
 
 		/**
-		 * Set activation defaults.
+		 * Set activation defaults (email OTP only — SMS defaults live in Pro).
 		 */
 		public static function set_defaults() {
 			$defaults = array(
-				'aio_login_otp_email_enable'          => 'off',
-				'aio_login_otp_email_length'          => '6',
-				'aio_login_otp_email_expiration'      => '10',
-				'aio_login_otp_email_resend_timer'    => '60',
-				'aio_login_otp_email_max_retries'     => '5',
-				'aio_login_otp_sms_enable'            => 'off',
-				'aio_login_otp_sms_length'            => '6',
-				'aio_login_otp_sms_expiration'        => '10',
-				'aio_login_otp_sms_resend_timer'      => '60',
-				'aio_login_otp_sms_max_retries'       => '5',
-				'aio_login_otp_twilio_account_sid'    => '',
-				'aio_login_otp_twilio_auth_token'     => '',
-				'aio_login_otp_twilio_sender_number'  => '',
-				'aio_login_otp_sms_default_country'     => '+1',
-				'aio_login_otp_sms_default_country_iso' => 'US',
-				'aio_login_otp_sms_allowed_countries' => wp_json_encode( array( 'US', 'CA', 'GB', 'AU', 'IN' ) ),
-				'aio_login_otp_email_block_duration'  => '15',
-				'aio_login_otp_email_skip_2fa'        => 'on',
-				'aio_login_otp_sms_block_duration'    => '15',
-				'aio_login_otp_sms_skip_2fa'          => 'on',
+				'aio_login_otp_email_enable'         => 'off',
+				'aio_login_otp_email_length'         => '6',
+				'aio_login_otp_email_expiration'     => '10',
+				'aio_login_otp_email_resend_timer'   => '60',
+				'aio_login_otp_email_max_retries'    => '5',
+				'aio_login_otp_email_block_duration' => '15',
+				'aio_login_otp_email_skip_2fa'       => 'on',
 			);
-
-			Magic_Link_Settings::set_defaults();
 
 			foreach ( $defaults as $key => $value ) {
 				if ( false === get_option( $key, false ) ) {
@@ -78,6 +68,39 @@ if ( ! class_exists( 'AIO_Login\\Passwordless_Otp\\OTP_Settings' ) ) {
 			}
 
 			self::maybe_raise_default_otp_length();
+		}
+
+		/**
+		 * One-time security hardening for in-place upgrades
+		 */
+		public static function apply_passwordless_upgrade_hardening() {
+			if ( '1' !== get_option( 'aio_login_otp_upgrade_hardened_241', '' ) ) {
+				$email_on                  = 'on' === get_option( 'aio_login_otp_email_enable', 'off' );
+				$length_4                  = '4' === (string) get_option( 'aio_login_otp_email_length', '6' );
+				$insecure_factory_defaults = $email_on && $length_4;
+
+				self::maybe_raise_default_otp_length();
+
+				if ( $insecure_factory_defaults ) {
+					update_option( 'aio_login_otp_email_enable', 'off', false );
+				}
+
+				update_option( 'aio_login_otp_upgrade_hardened_241', '1', false );
+			}
+
+			self::force_minimum_otp_length_six();
+		}
+
+		/**
+		 * 4-digit OTP is no longer allowed (AIOL-697).
+		 */
+		public static function force_minimum_otp_length_six() {
+			foreach ( array( 'aio_login_otp_email_length', 'aio_login_otp_sms_length' ) as $key ) {
+				$current = (string) get_option( $key, '6' );
+				if ( '4' === $current || '' === $current || ! in_array( $current, array( '6', '8' ), true ) ) {
+					update_option( $key, '6', false );
+				}
+			}
 		}
 
 		/**
@@ -104,13 +127,13 @@ if ( ! class_exists( 'AIO_Login\\Passwordless_Otp\\OTP_Settings' ) ) {
 		 */
 		public static function is_channel_enabled( $channel ) {
 			if ( 'email' === $channel ) {
-				return 'on' === get_option( 'aio_login_otp_email_enable', 'off' );
+				return 'on' === Network_Settings::get_option( 'aio_login_otp_email_enable', 'off' );
 			}
 			if ( 'sms' === $channel ) {
 				if ( ! \AIO_Login\AIO_Login::has_pro() ) {
 					return false;
 				}
-				return 'on' === get_option( 'aio_login_otp_sms_enable', 'off' );
+				return 'on' === Network_Settings::get_option( 'aio_login_otp_sms_enable', 'off' );
 			}
 			return false;
 		}
@@ -122,7 +145,7 @@ if ( ! class_exists( 'AIO_Login\\Passwordless_Otp\\OTP_Settings' ) ) {
 		public static function get_otp_length( $channel ) {
 			$key    = 'email' === $channel ? 'aio_login_otp_email_length' : 'aio_login_otp_sms_length';
 			$length = absint( get_option( $key, 6 ) );
-			if ( ! in_array( $length, array( 4, 6, 8 ), true ) ) {
+			if ( ! in_array( $length, array( 6, 8 ), true ) ) {
 				$length = 6;
 			}
 			return $length;
@@ -134,7 +157,7 @@ if ( ! class_exists( 'AIO_Login\\Passwordless_Otp\\OTP_Settings' ) ) {
 		 */
 		public static function get_expiration_minutes( $channel ) {
 			$key = 'email' === $channel ? 'aio_login_otp_email_expiration' : 'aio_login_otp_sms_expiration';
-			return max( 1, min( 60, absint( get_option( $key, 10 ) ) ) );
+			return max( 1, min( 60, absint( Network_Settings::get_option( $key, 10 ) ) ) );
 		}
 
 		/**
@@ -143,7 +166,7 @@ if ( ! class_exists( 'AIO_Login\\Passwordless_Otp\\OTP_Settings' ) ) {
 		 */
 		public static function get_resend_seconds( $channel ) {
 			$key = 'email' === $channel ? 'aio_login_otp_email_resend_timer' : 'aio_login_otp_sms_resend_timer';
-			return max( 30, min( 600, absint( get_option( $key, 60 ) ) ) );
+			return max( 30, min( 600, absint( Network_Settings::get_option( $key, 60 ) ) ) );
 		}
 
 		/**
@@ -152,7 +175,7 @@ if ( ! class_exists( 'AIO_Login\\Passwordless_Otp\\OTP_Settings' ) ) {
 		 */
 		public static function get_max_retries( $channel ) {
 			$key = 'email' === $channel ? 'aio_login_otp_email_max_retries' : 'aio_login_otp_sms_max_retries';
-			return max( 1, min( 20, absint( get_option( $key, 5 ) ) ) );
+			return max( 1, min( 20, absint( Network_Settings::get_option( $key, 5 ) ) ) );
 		}
 
 		/**
@@ -170,7 +193,7 @@ if ( ! class_exists( 'AIO_Login\\Passwordless_Otp\\OTP_Settings' ) ) {
 		public static function should_skip_two_factor( $channel ) {
 			$channel = 'sms' === $channel ? 'sms' : 'email';
 			$key     = 'email' === $channel ? 'aio_login_otp_email_skip_2fa' : 'aio_login_otp_sms_skip_2fa';
-			return 'on' === get_option( $key, 'on' );
+			return 'on' === Network_Settings::get_option( $key, 'on' );
 		}
 
 		/**
@@ -182,65 +205,68 @@ if ( ! class_exists( 'AIO_Login\\Passwordless_Otp\\OTP_Settings' ) ) {
 			$channel = 'sms' === $channel ? 'sms' : 'email';
 			$key     = 'email' === $channel ? 'aio_login_otp_email_block_duration' : 'aio_login_otp_sms_block_duration';
 
-			$legacy = absint( get_option( 'aio_login_otp_block_duration', 0 ) );
+			$legacy   = absint( get_option( 'aio_login_otp_block_duration', 0 ) );
 			$fallback = $legacy > 0 ? $legacy : 15;
 
-			return max( 1, min( 1440, absint( get_option( $key, $fallback ) ) ) );
+			return max( 1, min( 1440, absint( Network_Settings::get_option( $key, $fallback ) ) ) );
 		}
 
 		/**
-		 * Admin settings payload for REST.
+		 * Admin settings payload for REST (email + Pro capability stub).
+		 * Pro merges SMS/Twilio fields via `aio_login_otp_admin_settings`.
 		 *
 		 * @return array<string, mixed>
 		 */
 		public static function get_admin_settings() {
-			$token_enc = (string) get_option( 'aio_login_otp_twilio_auth_token', '' );
-			$has_token = '' !== $token_enc;
-
-			$allowed = get_option( 'aio_login_otp_sms_allowed_countries', '[]' );
-			if ( is_string( $allowed ) ) {
-				$allowed = json_decode( $allowed, true );
-			}
-			if ( ! is_array( $allowed ) ) {
-				$allowed = array();
-			}
-
-			return array(
-				'nonce'                      => wp_create_nonce( self::NONCE_ACTION ),
-				'email_enable'               => 'on' === get_option( 'aio_login_otp_email_enable', 'off' ),
-				'email_block_duration'       => (string) self::get_block_duration_minutes( 'email' ),
-				'email_length'               => (string) self::get_otp_length( 'email' ),
-				'email_expiration'           => (string) self::get_expiration_minutes( 'email' ),
-				'email_resend_timer'         => (string) self::get_resend_seconds( 'email' ),
-				'email_max_retries'          => (string) self::get_max_retries( 'email' ),
-				'email_skip_2fa'             => self::should_skip_two_factor( 'email' ),
-				'sms_enable'                 => self::is_sms_enabled_in_settings(),
-				'sms_active'                 => self::is_channel_enabled( 'sms' ),
-				'sms_length'                 => (string) self::get_otp_length( 'sms' ),
-				'sms_expiration'             => (string) self::get_expiration_minutes( 'sms' ),
-				'sms_resend_timer'           => (string) self::get_resend_seconds( 'sms' ),
-				'sms_max_retries'            => (string) self::get_max_retries( 'sms' ),
-				'sms_block_duration'         => (string) self::get_block_duration_minutes( 'sms' ),
-				'sms_skip_2fa'               => self::should_skip_two_factor( 'sms' ),
-				'twilio_account_sid'         => (string) get_option( 'aio_login_otp_twilio_account_sid', '' ),
-				'twilio_auth_token'          => $has_token ? OTP_Encryption::masked_placeholder( true ) : '',
-				'twilio_auth_token_stored'   => $has_token,
-				'twilio_sender_number'       => (string) get_option( 'aio_login_otp_twilio_sender_number', '' ),
-				'sms_default_country'        => self::get_dial_code_for_country_iso( self::get_sms_default_country_iso() ),
-				'sms_default_country_iso'    => self::get_sms_default_country_iso(),
-				'sms_allowed_countries'      => array_values( array_map( 'sanitize_text_field', $allowed ) ),
-				'has_pro'                    => \AIO_Login\AIO_Login::has_pro(),
-				'country_codes'              => self::get_country_codes(),
+			$settings = array(
+				'nonce'                => wp_create_nonce( self::NONCE_ACTION ),
+				'email_enable'         => 'on' === Network_Settings::get_option( 'aio_login_otp_email_enable', 'off' ),
+				'email_block_duration' => (string) self::get_block_duration_minutes( 'email' ),
+				'email_length'         => (string) self::get_otp_length( 'email' ),
+				'email_expiration'     => (string) self::get_expiration_minutes( 'email' ),
+				'email_resend_timer'   => (string) self::get_resend_seconds( 'email' ),
+				'email_max_retries'    => (string) self::get_max_retries( 'email' ),
+				'email_skip_2fa'       => self::should_skip_two_factor( 'email' ),
+				'has_pro'              => \AIO_Login\AIO_Login::has_pro(),
+				'email_network'        => Network_Settings::get_feature_context( 'email_otp' ),
+				// SMS stubs so Free Vue does not break when Pro inactive; Pro overwrites via filter.
+				'sms_enable'           => false,
+				'sms_active'           => false,
+				'sms_length'           => '6',
+				'sms_expiration'       => '10',
+				'sms_resend_timer'     => '60',
+				'sms_max_retries'      => '5',
+				'sms_block_duration'   => '15',
+				'sms_skip_2fa'         => true,
+				'twilio_account_sid'   => '',
+				'twilio_auth_token'    => '',
+				'twilio_auth_token_stored' => false,
+				'twilio_sender_number' => '',
+				'sms_default_country'  => '',
+				'sms_default_country_iso' => '',
+				'sms_allowed_countries' => array(),
+				'country_codes'        => array(),
+				'sms_network'          => array( 'can_edit' => false ),
 			);
+
+			/**
+			 * Filter admin OTP settings payload (Pro merges SMS/Twilio fields).
+			 *
+			 * @param array<string, mixed> $settings Settings.
+			 */
+			return apply_filters( 'aio_login_otp_admin_settings', $settings );
 		}
 
 		/**
-		 * Common country dial codes for SMS UI.
+		 * Common country dial codes for SMS UI (loaded by Pro).
 		 *
 		 * @return array<int, array{code:string,label:string,iso:string}>
 		 */
 		public static function get_country_codes() {
-			return OTP_Country_Codes::all();
+			if ( class_exists( __NAMESPACE__ . '\\OTP_Country_Codes' ) ) {
+				return OTP_Country_Codes::all();
+			}
+			return array();
 		}
 
 		/**
@@ -308,7 +334,7 @@ if ( ! class_exists( 'AIO_Login\\Passwordless_Otp\\OTP_Settings' ) ) {
 		 * @return string ISO 3166-1 alpha-2.
 		 */
 		public static function get_sms_default_country_iso() {
-			$iso = strtoupper( (string) get_option( 'aio_login_otp_sms_default_country_iso', '' ) );
+			$iso = strtoupper( (string) Network_Settings::get_option( 'aio_login_otp_sms_default_country_iso', '' ) );
 
 			if ( preg_match( '/^[A-Z]{2}$/', $iso ) ) {
 				foreach ( self::get_country_codes() as $country ) {
@@ -369,6 +395,7 @@ if ( ! class_exists( 'AIO_Login\\Passwordless_Otp\\OTP_Settings' ) ) {
 
 		/**
 		 * Whether SMS passwordless login should appear on wp-login.
+		 * Thin bridge: requires Pro + SMS channel enabled + allowed countries.
 		 *
 		 * @return bool
 		 */

@@ -71,7 +71,7 @@ defined( 'ABSPATH' ) || exit;
 	<div class="aio-login-otp-step aio-login-otp-step--success" data-step="success" hidden>
 		<div class="aio-login-otp-success-icon" aria-hidden="true">✓</div>
 		<h2 class="aio-login-otp-panel__title"><?php esc_html_e( "You're signed in", 'change-wp-admin-login' ); ?></h2>
-		<p class="aio-login-otp-success-message"><?php esc_html_e( "You're signed in. Redirecting you to your dashboard…", 'change-wp-admin-login' ); ?></p>
+		<p class="aio-login-otp-success-message"><?php esc_html_e( 'Redirecting you to your dashboard…', 'change-wp-admin-login' ); ?></p>
 		<button type="button" class="button button-primary button-large aio-login-otp-continue"><?php esc_html_e( 'Continue to Dashboard', 'change-wp-admin-login' ); ?></button>
 	</div>
 </div>

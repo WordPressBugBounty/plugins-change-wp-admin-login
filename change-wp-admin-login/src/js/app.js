@@ -1,17 +1,114 @@
 
-window.vue = require('vue');
-window.vueRouter = require('vue-router');
+// Vue / vue-router come from aio-login-vue (vue-vendor.js) — shared with Pro.
+// Use WordPress core jQuery (webpack external) — do not bundle jQuery.
 window.Datatable = require('datatables.net-dt');
+if (typeof window.Datatable === 'function' && window.jQuery) {
+	window.Datatable(window, window.jQuery);
+}
 window.axios = require('axios');
 
-window.axios = axios.create({
-	baseURL: aio_login__app_object.rest_url,
-	timeout: 1000 * 10 * 6,
-	headers: {
-		'X-WP-Nonce': aio_login__app_object.nonce,
-	},
-});
+(function () {
+	var appObject = window.aio_login__app_object || {};
+	var restUrl = appObject.rest_url || '/wp-json/';
+	var restNonce = appObject.nonce || '';
 
+	function setRestNonce(nonce) {
+		if (!nonce) {
+			return;
+		}
+		restNonce = nonce;
+		if (window.aio_login__app_object) {
+			window.aio_login__app_object.nonce = nonce;
+		}
+		if (window.axios && window.axios.defaults && window.axios.defaults.headers) {
+			window.axios.defaults.headers['X-WP-Nonce'] = nonce;
+			if (window.axios.defaults.headers.common) {
+				window.axios.defaults.headers.common['X-WP-Nonce'] = nonce;
+			}
+		}
+	}
+
+	function refreshRestNonce() {
+		var ajaxUrl = (window.aio_login__app_object && window.aio_login__app_object.ajax_url) || (window.ajaxurl || '');
+		var adminNonce = (window.aio_login__app_object && window.aio_login__app_object.admin_nonce) || '';
+		if (!ajaxUrl) {
+			return Promise.reject(new Error('Missing ajax_url'));
+		}
+		var body = new URLSearchParams();
+		body.set('action', 'aio_login_refresh_rest_nonce');
+		body.set('nonce', adminNonce);
+		return fetch(ajaxUrl, {
+			method: 'POST',
+			credentials: 'same-origin',
+			headers: {
+				'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+			},
+			body: body.toString(),
+		}).then(function (res) {
+			return res.json();
+		}).then(function (json) {
+			if (!json || !json.success || !json.data || !json.data.nonce) {
+				throw new Error('Unable to refresh REST nonce');
+			}
+			setRestNonce(json.data.nonce);
+			if (json.data.rest_url && window.aio_login__app_object) {
+				window.aio_login__app_object.rest_url = json.data.rest_url;
+				if (window.axios && window.axios.defaults) {
+					window.axios.defaults.baseURL = json.data.rest_url;
+				}
+			}
+			return json.data.nonce;
+		});
+	}
+
+	window.axios = axios.create({
+		baseURL: restUrl,
+		timeout: 1000 * 10 * 6,
+		withCredentials: true,
+		headers: {
+			'X-WP-Nonce': restNonce,
+		},
+		params: (
+			appObject.is_network_admin === true
+			|| appObject.is_network_admin === 'true'
+		)
+			? { aio_login_network_admin: '1' }
+			: {},
+	});
+
+	window.axios.interceptors.request.use(function (config) {
+		config.headers = config.headers || {};
+		config.headers['X-WP-Nonce'] = restNonce || (window.aio_login__app_object && window.aio_login__app_object.nonce) || '';
+		return config;
+	});
+
+	window.axios.interceptors.response.use(function (response) {
+		var headers = response && response.headers ? response.headers : {};
+		var fresh = headers['x-wp-nonce'] || headers['X-WP-Nonce'];
+		if (fresh) {
+			setRestNonce(fresh);
+		}
+		return response;
+	}, function (error) {
+		var response = error && error.response;
+		var data = response && response.data;
+		var config = error && error.config;
+		var isNonceError = response && response.status === 403 && data && data.code === 'rest_cookie_invalid_nonce';
+
+		if (!isNonceError || !config || config.__aioLoginNonceRetried) {
+			return Promise.reject(error);
+		}
+
+		config.__aioLoginNonceRetried = true;
+		return refreshRestNonce().then(function (nonce) {
+			config.headers = config.headers || {};
+			config.headers['X-WP-Nonce'] = nonce;
+			return window.axios.request(config);
+		}).catch(function () {
+			return Promise.reject(error);
+		});
+	});
+})();
 
 
 window.aio_login__object = {
@@ -78,12 +175,24 @@ aio_login__object.pages.forEach(function (page) {
 
 if (window.aio_login__object.routes.length) {
 	window.aio_login__object.routes.forEach(function (route, i) {
+		var proPages = window.aio_login_pro_route_pages || {};
+
+		function assignFreeOrPro(slug, freeFactory) {
+			if (proPages[slug]) {
+				window.aio_login__object.routes[i].component = proPages[slug];
+				return;
+			}
+			if (typeof freeFactory === 'function') {
+				window.aio_login__object.routes[i].component = freeFactory();
+			}
+		}
+
 		if ('change-login-url' === route.my_slug) {
 			window.aio_login__object.routes[i].component = require('./pages/change-login-url.vue').default;
 		}
 
 		if ('limit-login-attempts' === route.my_slug) {
-			window.aio_login__object.routes[i].component = require('./pages/limit-login-attempts.vue').default;
+			assignFreeOrPro('limit-login-attempts', null);
 		}
 
 		if ('block-ip-addresses' === route.my_slug) {
@@ -95,7 +204,7 @@ if (window.aio_login__object.routes.length) {
 		}
 
 		if ('password-strenght-checker' === route.my_slug) {
-			window.aio_login__object.routes[i].component = require('./pages/password-strenght-checker.vue').default;
+			assignFreeOrPro('password-strenght-checker', null);
 		}
 		if ('login-redirection' === route.my_slug) {
 			window.aio_login__object.routes[i].component = require('./pages/login-redirection.vue').default;
@@ -110,7 +219,9 @@ if (window.aio_login__object.routes.length) {
 		}
 
 		if ('captcha' === route.my_slug) {
-			window.aio_login__object.routes[i].component = require('./pages/grecaptcha.vue').default;
+			assignFreeOrPro('captcha', function () {
+				return require('./pages/grecaptcha.vue').default;
+			});
 		}
 
 		if ('authentication-methods' === route.my_slug) {
@@ -138,15 +249,30 @@ if (window.aio_login__object.routes.length) {
 		}
 
 		if ('templates' === route.my_slug) {
-			window.aio_login__object.routes[i].component = require('./pages/templates.vue').default;
+			assignFreeOrPro('templates', null);
 		}
 
 		if ('social-login' === route.my_slug) {
-			window.aio_login__object.routes[i].component = require('./pages/social-login.vue').default;
+			assignFreeOrPro('social-login', null);
 		}
 
 		if ('integrations' === route.my_slug) {
-			window.aio_login__object.routes[i].component = require('./pages/integrations.vue').default;
+			assignFreeOrPro('integrations', null);
+			// Keep Integrations settings route available after browser reload.
+			// Pro component navigates to #/woocommerce-integrations internally.
+			if (window.aio_login__object.routes[i].component && !window.aio_login__object.routes.some(function (r) {
+				return r.path === '/woocommerce-integrations';
+			})) {
+				window.aio_login__object.routes.push({
+					path: '/woocommerce-integrations',
+					my_slug: 'integrations',
+					component: window.aio_login__object.routes[i].component,
+				});
+			}
+		}
+
+		if ('temp-access' === route.my_slug) {
+			assignFreeOrPro('temp-access', null);
 		}
 
 		if ('user-enumeration-protection' === route.my_slug) {
@@ -154,23 +280,25 @@ if (window.aio_login__object.routes.length) {
 		}
 
 		if ('enumeration-protection-logs' === route.my_slug) {
-			window.aio_login__object.routes[i].component = require('./pages/enumeration-protection-logs.vue').default;
+			assignFreeOrPro('enumeration-protection-logs', null);
 		}
 
 		if ('elements' === route.my_slug) {
-			window.aio_login__object.routes[i].component = require('./pages/elements.vue').default;
+			assignFreeOrPro('elements', null);
 		}
 
 		if ('notifications' === route.my_slug) {
-			window.aio_login__object.routes[i].component = require('./pages/notifications.vue').default;
+			assignFreeOrPro('notifications', null);
 		}
 
 		if ('otp-login' === route.my_slug) {
-			window.aio_login__object.routes[i].component = require('./pages/passwordless-otp-login.vue').default;
+			assignFreeOrPro('otp-login', function () {
+				return require('./pages/passwordless-otp-login.vue').default;
+			});
 		}
 
 		if ('login-link' === route.my_slug) {
-			window.aio_login__object.routes[i].component = require('./pages/passwordless-login-link.vue').default;
+			assignFreeOrPro('login-link', null);
 		}
 	});
 }

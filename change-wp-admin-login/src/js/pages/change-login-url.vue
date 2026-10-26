@@ -5,7 +5,7 @@
 			v-on:handle-submit="submitHandler"
 		>
 			<template v-slot:title>
-				<span>{{ $t("Change wp-admin login") }}</span>
+				<span>{{ $t('Change wp-admin login') }}</span>
 				<aio-login-tooltip
 					:content="tooltipContent.changeLoginUrl.content"
 					placement="bottom"
@@ -15,7 +15,7 @@
 			<template v-slot:form-fields>
 				<tr>
 					<th scope="row">
-						<label for="enable">{{ $t("Enable") }}</label>
+						<label for="enable">{{ $t('Enable') }}</label>
 					</th>
 					<td>
 						<aio-login-toggle
@@ -26,14 +26,16 @@
 						/>
 
 						<p class="desc">
-							<strong>{{ $t("Enable to customize your admin login URL.") }}</strong>
+							<strong>
+								{{ $t('Enable to customize your admin login URL.') }}
+							</strong>
 						</p>
 					</td>
 				</tr>
 
 				<tr v-if="form_data.enabled">
 					<th scope="row">
-						<label for="login-url">{{ $t("Login URL") }}</label>
+						<label for="login-url">{{ $t('Login URL') }}</label>
 					</th>
 					<td>
 						<code style="font-family: monospace">
@@ -50,14 +52,16 @@
 						</code>
 
 						<p class="desc">
-							<strong>{{ $t("Protect your website by changing the login page URL.") }}</strong>
+							<strong>
+								{{ $t('Protect your website by changing the login page URL.') }}
+							</strong>
 						</p>
 					</td>
 				</tr>
 
 				<tr v-if="form_data.enabled">
 					<th scope="row">
-						<label for="redirect-url">{{ $t("Redirect URL") }}</label>
+						<label for="redirect-url">{{ $t('Redirect URL') }}</label>
 					</th>
 					<td>
 						<code style="font-family: monospace">
@@ -73,7 +77,9 @@
 						</code>
 
 						<p class="desc">
-							<strong>{{ $t("Specify URL where attempts to access wp-login or wp-admin should be redirected to. If custom URL is set above, By default, this will redirect to your site's Home page unless you set it to something else.") }}</strong>
+							<strong>
+								{{ $t("Specify URL where attempts to access wp-login or wp-admin should be redirected to. If custom URL is set above, By default, this will redirect to your site's Home page unless you set it to something else.") }}
+							</strong>
 						</p>
 					</td>
 				</tr>

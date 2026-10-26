@@ -1,16 +1,19 @@
 <template>
-	<div
-		class="aio-login__snackbar"
-		@mouseenter="handleMouseEnter"
-		@mouseleave="handleMouseLeave"
-	>
-		<div class="aio-login__snackbar__content">
+	<!-- Teleport to body: #aio-login__app uses overflow-x:hidden, which clips
+	     position:fixed snackbars on short feature pages. -->
+	<Teleport to="body">
+		<div
+			class="aio-login__snackbar"
+			@mouseenter="handleMouseEnter"
+			@mouseleave="handleMouseLeave"
+		>
+			<div class="aio-login__snackbar__content">
+				{{ displayMessage }}
 
-			{{ message }}
-
-			<button type="button" @click="handleClose">&times;</button>
+				<button type="button" @click="handleClose">&times;</button>
+			</div>
 		</div>
-	</div>
+	</Teleport>
 </template>
 
 <script>
@@ -20,7 +23,7 @@ export default {
 	props: {
 		message: {
 			type: String,
-			required: true,
+			default: '',
 		},
 
 		duration: {
@@ -41,6 +44,13 @@ export default {
 		isHovered: false,
 	} ),
 
+	computed: {
+		displayMessage() {
+			const msg = typeof this.message === 'string' ? this.message.trim() : '';
+			return msg || 'Settings saved successfully';
+		},
+	},
+
 	watch: {
 		disable( value ) {
 			if ( value ) {
@@ -60,16 +70,14 @@ export default {
 		scheduleDismiss( delayMs ) {
 			this.clearDismissTimer();
 			const delay = Math.max( 0, Number( delayMs ) || 0 );
-			if ( delay <= 0 ) {
-				this.disable = true;
-				return;
-			}
+			// Never auto-dismiss immediately (undefined/0 duration from prop mismatches).
+			const safeDelay = delay > 0 ? delay : 5000;
 			this.dismissTimer = setTimeout( () => {
 				this.dismissTimer = null;
 				if ( ! this.isHovered ) {
 					this.disable = true;
 				}
-			}, delay );
+			}, safeDelay );
 		},
 
 		handleClose() {

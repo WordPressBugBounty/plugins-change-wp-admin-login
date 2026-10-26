@@ -1,45 +1,33 @@
 <template>
-	<div class="aio-login__meta-container">
+	<div class="aio-login__meta-container" ref="metaContainer">
 		<div>
 			<aio-login-metadata
-				:title="$t('Custom Login URL')"
-				:description="$t('Attackers often try exploits on /wp-login or /wp-admin as a default login URL for WordPress. Change it to avoid these attacks and have an easily memorizable login URL.')"
+				title="Custom Login URL"
+				description="Attackers often try exploits on /wp-login or /wp-admin as a default login URL for WordPress. Change it to avoid these attacks and have an easily memorizable login URL."
 			>
 				<template v-slot:configuration>
 					<div class="aio-login__configuration-switch aio-login-configuration-btn-wrapper">
-						<a class="aio-login-configuration-btn" :href="adminURL + '&tab=login-protection'">{{ $t("Configure") }}</a>
+						<a class="aio-login-configuration-btn" :href="adminURL + '&tab=login-protection'">{{ $t('Configure') }}</a>
 					</div>
 				</template>
 			</aio-login-metadata>
 		</div>
 		<div>
 			<aio-login-metadata
-				:title="$t('Limit Login Attempts')"
-				:description="$t('Limit the number of times a user IP can attempt to log in to your wp-admin with incorrect credentials. Once the login attempt limit is reached, the IP from which the attempts have originated will be blocked for default period of time.')"
-				@click="iWasTriggered"
+				title="Disable Common Usernames"
+				description="Block commonly used or custom usernames to prevent brute-force attacks and strengthen login security."
 			>
 				<template v-slot:configuration>
-					<div class="aio-login__configuration-switch">
-						<select
-							class="aio-login__configuration-select"
-							:class="{ 'aio-login__configuration-select--locked': !has_pro }"
-							v-model="limit_login_attempts"
-							@change="limitLoginAttempts"
-							@mousedown="handleLimitLoginSelectInteraction"
-							@click="handleLimitLoginSelectInteraction"
-						>
-							<option value="on">{{ $t("On") }}</option>
-							<option value="off">{{ $t("Off") }}</option>
-						</select>
+					<div class="aio-login__configuration-switch aio-login-configuration-btn-wrapper">
+						<a class="aio-login-configuration-btn" :href="adminURL + '&tab=login-protection#/disable-common-usernames'">{{ $t('Configure') }}</a>
 					</div>
 				</template>
 			</aio-login-metadata>
 		</div>
 		<div>
 			<aio-login-metadata
-				:title="$t('Two Factor Authentication')"
-				:description="$t('Two-factor authentication forces admin users to login only after providing a token, generated from the Authenticator applications. When you enable this option, all admin users will be asked to configure their two-factor authentication in the Authenticator app on their next login.')"
-				@click="handleTwoFactorCardClick"
+				title="Two Factor Authentication"
+				description="Two-factor authentication adds a verification step after password login. Enable it here, then choose Email OTP (or Authenticator App with Pro) under 2FA → Authentication Methods."
 			>
 				<template v-slot:configuration>
 					<div class="aio-login__configuration-switch">
@@ -47,7 +35,6 @@
 							<aio-login-toggle
 								id="toggle-tfa"
 								name="toggle-tfa"
-								:disabled="!has_pro || !two_factor_allowed"
 								v-on:toggle-input="twoFactorAuthenticationSettings"
 								:enabled="two_factor_auth"
 							/>
@@ -58,9 +45,8 @@
 		</div>
 		<div>
 			<aio-login-metadata
-				:title="$t('Block IP Address')"
-				:description="$t('By default your WordPress login can be accessed by any IP or user. You can use this feature to allow login only for specific IPs or users in order to prevent brute-force attacks or malicious login attempts.')"
-				@click="iWasTriggered"
+				title="Block IP Address"
+				description="By default your WordPress login can be accessed by any IP or user. You can use this feature to allow login only for specific IPs or users in order to prevent brute-force attacks or malicious login attempts."
 			>
 				<template v-slot:configuration>
 					<div class="aio-login__configuration-switch">
@@ -68,7 +54,6 @@
 							<aio-login-toggle
 								id="toggle-bipa"
 								name="toggle-bipa"
-								:disabled="! has_pro"
 								v-on:toggle-input="blockIPAddressSettings"
 								:enabled="block_ip_address"
 							/>
@@ -96,71 +81,27 @@ export default {
 	data: ( vm ) => ( {
 		adminURL: aio_login__app_object.admin_url,
 
-		has_pro: 'true' === aio_login__app_object.has_pro,
-		two_factor_allowed: 'true' === aio_login__app_object['2fa_authenticator_allowed'],
-
-		limit_login_attempts: 'off',
-
 		two_factor_auth: false,
 		block_ip_address: false,
 
+		resizeTimer: null,
+
 		snackbar: {
-			message: '',
+			message: 'Settings saved successfully',
 			duration: 3000,
 			show: false
 		},
 	} ),
 
-	watch: {
-	},
-
 	methods: {
-
-		iWasTriggered() {
-			if ( ! this.has_pro ) {
-				this.$parent.$parent.popup = true;
-			}
-		},
-
-		handleTwoFactorCardClick() {
-			if ( ! this.has_pro || ! this.two_factor_allowed ) {
-				this.$parent.$parent.popup = true;
-			}
-		},
-
-		limitLoginAttempts() {
-			if ( ! this.has_pro ) {
-				this.iWasTriggered();
-				return;
-			}
-			axios.post( 'aio-login/dashboard/update/limit-login-attempts', {
-				value: this.limit_login_attempts,
-			} )
-			.then( response => {
-				if ( 'success' === response.data.status	) {
-					if ( 'on' === this.limit_login_attempts ) {
-						window.location.href = aio_login__app_object.admin_url + '&tab=login-protection#/limit-login-attempts';
-					}
-				}
-
-				this.snackbar.message = response.data.message;
-				this.snackbar.show = true;
-			} )
-			.catch( error => {
-
-			}  );
-		},
-
 		handleCloseSnackbar() {
 			this.snackbar.show = false;
 		},
 
 		twoFactorAuthenticationSettings( i ) {
-			if ( ! this.has_pro || ! this.two_factor_allowed ) {
-				this.handleTwoFactorCardClick();
-				return;
-			}
 			var value = i ? 'on' : 'off';
+			var previous = this.two_factor_auth;
+			this.two_factor_auth = i;
 
 			axios.post( 'aio-login/dashboard/update/two-factor-authentication', {
 				value: value
@@ -170,29 +111,22 @@ export default {
 						if ( i ) {
 							window.location.href = aio_login__app_object.admin_url + '&tab=2fa#/authentication-methods';
 						}
+					} else {
+						this.two_factor_auth = previous;
 					}
 
 					this.snackbar.message = response.data.message;
 					this.snackbar.show = true;
 				} )
-				.catch( error => {
-
+				.catch( () => {
+					this.two_factor_auth = previous;
 				}  );
-		},
-
-		handleLimitLoginSelectInteraction( event ) {
-			if ( this.has_pro ) {
-				return;
-			}
-			if ( event ) {
-				event.preventDefault();
-				event.stopPropagation();
-			}
-			this.iWasTriggered();
 		},
 
 		blockIPAddressSettings( i ) {
 			var value = i ? 'on' : 'off';
+			var previous = this.block_ip_address;
+			this.block_ip_address = i;
 
 			axios.post( 'aio-login/dashboard/update/block-ip-address', {
 				value: value
@@ -202,27 +136,53 @@ export default {
 						if ( i ) {
 							window.location.href = aio_login__app_object.admin_url + '&tab=security#/block-ip-addresses';
 						}
+					} else {
+						this.block_ip_address = previous;
 					}
 
 					this.snackbar.message = response.data.message;
 					this.snackbar.show = true;
 				} )
-				.catch( error => {
-
+				.catch( () => {
+					this.block_ip_address = previous;
 				}  );
 		},
 
+		/** CSS Grid rows size independently, so match all 4 card heights to the tallest one via JS. */
+		equalizeCardHeights() {
+			const cards = this.$refs.metaContainer
+				? this.$refs.metaContainer.querySelectorAll( '.aio-login__metadata-container' )
+				: [];
+			if ( ! cards.length ) {
+				return;
+			}
+			cards.forEach( ( card ) => { card.style.minHeight = ''; } );
+			const tallest = Math.max( ...Array.from( cards ).map( ( card ) => card.offsetHeight ) );
+			cards.forEach( ( card ) => { card.style.minHeight = tallest + 'px'; } );
+		},
 
+		onResize() {
+			clearTimeout( this.resizeTimer );
+			this.resizeTimer = setTimeout( () => this.equalizeCardHeights(), 100 );
+		},
 	},
 
 	mounted() {
 		axios.get( 'aio-login/dashboard/get-settings' )
 			.then( response => {
-				this.limit_login_attempts = response.data.limit_login_attempts;
-				this.two_factor_auth = 'on' === response.data.two_factor_auth;
-				this.block_ip_address = 'on' === response.data.block_ip_address;
+				this.two_factor_auth = response.data.two_factor_auth === 'on';
+				this.block_ip_address = response.data.block_ip_address === 'on';
+				this.$nextTick( () => this.equalizeCardHeights() );
 			} )
-			.catch( error => {} );
+			.catch( () => {} );
+
+		window.addEventListener( 'resize', this.onResize );
+		this.$nextTick( () => this.equalizeCardHeights() );
+	},
+
+	beforeUnmount() {
+		window.removeEventListener( 'resize', this.onResize );
+		clearTimeout( this.resizeTimer );
 	},
 }
 </script>
@@ -253,22 +213,6 @@ export default {
 	text-decoration: none;
 	font-size: 16px;
 	font-weight: 600;
-}
-
-.aio-login__configuration-select {
-	margin-top: 0 !important;
-	padding: 12px 16px !important;
-	width: 100px !important;
-	font-size: 14px !important;
-	line-height: 14px !important;
-	font-weight: 600 !important;
-	color: #9516DF !important;
-	border: 1px solid #9516DF !important;
-}
-
-.aio-login__configuration-select--locked {
-	opacity: 0.6;
-	cursor: not-allowed;
 }
 
 .aio-login__configuration-switch {

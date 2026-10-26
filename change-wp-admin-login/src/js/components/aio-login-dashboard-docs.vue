@@ -1,79 +1,81 @@
 <template>
 	<section class="aio-login-dashboard-docs">
 		<div class="aio-login-dashboard-docs__head">
-			<h2>{{ $t("Guides and Documentation") }}</h2>
-			<a :href="docsBaseUrl" target="_blank" rel="noopener noreferrer">{{ $t("View All") }}</a>
+			<h2>{{ $t('Guides and Documentation') }}</h2>
+			<a :href="docsBaseUrl" target="_blank" rel="noopener noreferrer">{{ $t('View All') }}</a>
 		</div>
 		<div class="aio-login-dashboard-docs__grid">
 			<article v-for="section in docSections" :key="section.title" class="aio-login-dashboard-docs__card">
-				<h3>{{ $t(section.title) }}</h3>
+				<h3>{{ section.title }}</h3>
 				<ul>
 					<li v-for="item in section.items" :key="item.label">
-						<a :href="item.url" target="_blank" rel="noopener noreferrer">{{ $t(item.label) }}</a>
+						<a :href="item.url" target="_blank" rel="noopener noreferrer">{{ item.label }}</a>
 					</li>
 				</ul>
-				<a class="aio-login-dashboard-docs__more" :href="section.moreUrl" target="_blank" rel="noopener noreferrer">{{ $t("More →") }}</a>
+				<a class="aio-login-dashboard-docs__more" :href="section.moreUrl" target="_blank" rel="noopener noreferrer">{{ $t('More →') }}</a>
 			</article>
 		</div>
 	</section>
 </template>
 
 <script>
+import { t } from '../i18n.js';
+
 export default {
 	name: 'aio-login-dashboard-docs',
 	data: () => ( {
 		docsBaseUrl: 'https://aiologin.com/docs/',
 		docSections: [
 			{
-				title: 'Getting Started',
+				title: t( 'Getting Started' ),
 				moreUrl: 'https://aiologin.com/docs/getting-started/',
 				items: [
-					{ label: 'Installation and Activation Guide', url: 'https://aiologin.com/docs/getting-started/installation-and-activation-guide/' },
-					{ label: 'AIO Login Pro Installation and Activation Guide', url: 'https://aiologin.com/docs/getting-started/aio-login-pro-installation-and-activation-guide/' },
-					{ label: 'AIO Login Dashboard', url: 'https://aiologin.com/docs/getting-started/aio-login-dashboard/' },
+					{ label: t( 'Installation and Activation Guide' ), url: 'https://aiologin.com/docs/getting-started/installation-and-activation-guide/' },
+					{ label: t( 'AIO Login Pro Installation and Activation Guide' ), url: 'https://aiologin.com/docs/getting-started/aio-login-pro-installation-and-activation-guide/' },
+					{ label: t( 'AIO Login Dashboard' ), url: 'https://aiologin.com/docs/getting-started/aio-login-dashboard/' },
 				],
 			},
 			{
-				title: 'WordPress Login Protection',
+				title: t( 'WordPress Login Protection' ),
 				moreUrl: 'https://aiologin.com/docs/wordpress-login-protection/',
 				items: [
-					{ label: 'Change your WP-Admin Login URL', url: 'https://aiologin.com/docs/wordpress-login-protection/change-your-wp-admin-login-url/' },
-					{ label: 'Enabling Limit Login Attempts', url: 'https://aiologin.com/docs/wordpress-login-protection/enabling-limit-login-attempts/' },
-					{ label: 'Blocking WordPress IP Addresses', url: 'https://aiologin.com/docs/wordpress-login-protection/blocking-wordpress-ip-addresses/' },
+					{ label: t( 'Change your WP-Admin Login URL' ), url: 'https://aiologin.com/docs/wordpress-login-protection/change-your-wp-admin-login-url/' },
+					{ label: t( 'Enabling Limit Login Attempts' ), url: 'https://aiologin.com/docs/wordpress-login-protection/enabling-limit-login-attempts/' },
+					{ label: t( 'Blocking WordPress IP Addresses' ), url: 'https://aiologin.com/docs/wordpress-login-protection/blocking-wordpress-ip-addresses/' },
 				],
 			},
 			{
-				title: 'WordPress Login Security',
+				title: t( 'WordPress Login Security' ),
 				moreUrl: 'https://aiologin.com/docs/wordpress-login-security/',
 				items: [
-					{ label: 'Setting Up Google reCAPTCHA', url: 'https://aiologin.com/docs/wordpress-login-security/setting-up-google-recaptcha/' },
-					{ label: 'Two Factor Authentication', url: 'https://aiologin.com/docs/wordpress-login-security/two-factor-authentication/' },
-					{ label: 'Temporary Access', url: 'https://aiologin.com/docs/wordpress-login-security/temporary-access/' },
+					{ label: t( 'Setting Up Google reCAPTCHA' ), url: 'https://aiologin.com/docs/wordpress-login-security/setting-up-google-recaptcha/' },
+					{ label: t( 'Two Factor Authentication' ), url: 'https://aiologin.com/docs/wordpress-login-security/two-factor-authentication/' },
+					{ label: t( 'Temporary Access' ), url: 'https://aiologin.com/docs/wordpress-login-security/temporary-access/' },
 				],
 			},
 			{
-				title: 'Activity Logs',
+				title: t( 'Activity Logs' ),
 				moreUrl: 'https://aiologin.com/docs/wordpress-login-page-activity-log/',
 				items: [
-					{ label: 'Lockout Users Activity Logs', url: 'https://aiologin.com/docs/wordpress-login-page-activity-log/activity-logs-for-lockout-users/' },
-					{ label: 'Failed Login Attempts Logs', url: 'https://aiologin.com/docs/wordpress-login-page-activity-log/activity-logs-for-failed-login-attempts/' },
-					{ label: 'User Enumeration Logs', url: 'https://aiologin.com/docs/wordpress-login-page-activity-log/logs-for-users-enumeration/' },
+					{ label: t( 'Lockout Users Activity Logs' ), url: 'https://aiologin.com/docs/wordpress-login-page-activity-log/activity-logs-for-lockout-users/' },
+					{ label: t( 'Failed Login Attempts Logs' ), url: 'https://aiologin.com/docs/wordpress-login-page-activity-log/activity-logs-for-failed-login-attempts/' },
+					{ label: t( 'User Enumeration Logs' ), url: 'https://aiologin.com/docs/wordpress-login-page-activity-log/logs-for-users-enumeration/' },
 				],
 			},
 			{
-				title: 'Social Login Apps',
+				title: t( 'Social Login Apps' ),
 				moreUrl: 'https://aiologin.com/docs/social-login-apps/',
 				items: [
-					{ label: 'Google Social Login App', url: 'https://aiologin.com/docs/social-login-apps/google-social-login-app/' },
-					{ label: 'Microsoft Social Login App', url: 'https://aiologin.com/docs/social-login-apps/microsoft-social-login-app/' },
-					{ label: 'Facebook Social Login App', url: 'https://aiologin.com/docs/social-login-apps/facebook-social-login-app/' },
+					{ label: t( 'Google Social Login App' ), url: 'https://aiologin.com/docs/social-login-apps/google-social-login-app/' },
+					{ label: t( 'Microsoft Social Login App' ), url: 'https://aiologin.com/docs/social-login-apps/microsoft-social-login-app/' },
+					{ label: t( 'Facebook Social Login App' ), url: 'https://aiologin.com/docs/social-login-apps/facebook-social-login-app/' },
 				],
 			},
 			{
-				title: 'Integrations',
+				title: t( 'Integrations' ),
 				moreUrl: 'https://aiologin.com/docs/integrations/',
 				items: [
-					{ label: 'WooCommerce Integration', url: 'https://aiologin.com/docs/integrations/aiologin-woocommerce-integrations/' },
+					{ label: t( 'WooCommerce Integration' ), url: 'https://aiologin.com/docs/integrations/aiologin-woocommerce-integrations/' },
 				],
 			},
 		],

@@ -72,10 +72,12 @@
 }
 
 
-/* DataTables 2 uses flex layout — floats stretch/misalign length + search. */
-.dt-layout-cell.dt-layout-start,
+.dt-layout-cell.dt-layout-start {
+  float: left;
+}
+
 .dt-layout-cell.dt-layout-end {
-  float: none;
+  float: right;
 }
 
 .dt-layout-row::after {
@@ -115,23 +117,8 @@
   cursor: not-allowed;
 }
 
-/* Keep "entries per page" select compact and aligned with the table toolbar. */
-#aio-login__app div.dt-container .dt-length {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  flex: 0 0 auto;
-  max-width: 100%;
-}
-
-#aio-login__app div.dt-container .dt-length select.dt-input,
-#aio-login__app select.dt-input {
-  width: auto !important;
-  min-width: 3.25em;
-  max-width: 4.75em;
-  box-sizing: border-box;
-  padding: 2px 28px 2px 8px;
-  vertical-align: middle;
+select.dt-input {
+  width: 60px !important;
 }
 
 
@@ -567,9 +554,34 @@ table.dataTable td:last-child {
 	padding: 9px 11px;
 	font-size: 13px;
 	color: #1f2937;
-	background: #fff;
+	background-color: #fff;
+	background-image: none;
+	background-repeat: no-repeat;
 	box-sizing: border-box;
 	transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+select.aio-login-2fa-methods__input {
+	appearance: none;
+	-webkit-appearance: none;
+	-moz-appearance: none;
+	padding-right: 32px;
+	background-color: #fff;
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12' fill='none'%3E%3Cpath d='M3 4.5L6 7.5L9 4.5' stroke='%2364748b' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+	background-repeat: no-repeat;
+	background-position: right 10px center;
+	background-size: 12px 12px;
+	cursor: pointer;
+}
+
+select.aio-login-2fa-methods__input:disabled {
+	background-color: #f9fafb;
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12' fill='none'%3E%3Cpath d='M3 4.5L6 7.5L9 4.5' stroke='%239ca3af' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+	background-repeat: no-repeat;
+	background-position: right 10px center;
+	background-size: 12px 12px;
+	color: #9ca3af;
+	cursor: not-allowed;
 }
 
 .aio-login-2fa-methods__input:focus,
@@ -580,13 +592,77 @@ table.dataTable td:last-child {
 }
 
 .aio-login-2fa-methods__input:disabled {
-	background: #f9fafb;
+	background-color: #f9fafb;
 	color: #9ca3af;
 }
 
 /* Passwordless OTP Login — admin cards (matches 2FA Policies) */
 .aio-login-otp-login .aio-login-2fa-methods__title .aio-login-tooltip-wrap {
 	vertical-align: middle;
+}
+
+.aio-login-2fa-methods__title .aio-login-network-tag-wrap {
+	display: inline-flex;
+	vertical-align: middle;
+}
+
+.aio-login-form-title {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 8px;
+}
+
+.aio-login-form-title .aio-login-network-tag-wrap {
+	margin-left: auto;
+}
+
+/* Ban / Whitelist IP — Mode select matches regular-text field width (AIOL-774 #4). */
+.aio-login-ipa-wrapper .form-table td select#mode,
+.aio-login-ipa-wrapper .form-table td select.aio-login-ipa-mode-select {
+	-webkit-appearance: none;
+	appearance: none;
+	width: 25em;
+	max-width: 100%;
+	box-sizing: border-box;
+	/* Right padding clears the custom chevron so long labels do not overlap it. */
+	padding: 6px 36px 6px 10px;
+	min-height: 36px;
+	line-height: 1.4;
+	background-color: #fff;
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 20 20'%3E%3Cpath fill='%2350575e' d='M5 8l5 5 5-5H5z'/%3E%3C/svg%3E");
+	background-repeat: no-repeat;
+	background-position: right 8px center;
+	background-size: 16px 16px;
+}
+
+.aio-login-ipa-wrapper .form-table td select#mode option,
+.aio-login-ipa-wrapper .form-table td select.aio-login-ipa-mode-select option {
+	padding: 10px 14px;
+}
+
+.button.aio-login__primary {
+	border: 1px solid #9516df !important;
+	background-color: #9416de !important;
+	color: #ffffff !important;
+}
+
+.button.aio-login__primary:hover:not(:disabled) {
+	background-color: #8310c7 !important;
+	color: #ffffff !important;
+}
+
+.button.aio-login__primary:disabled,
+.button.aio-login__primary[disabled],
+.wp-core-ui .button.aio-login__primary:disabled,
+.wp-core-ui .button.aio-login__primary[disabled] {
+	background-color: #9416de !important;
+	color: #ffffff !important;
+	opacity: 0.5 !important;
+	border-color: #9416de !important;
+	cursor: not-allowed !important;
+	box-shadow: none !important;
+	text-shadow: none !important;
 }
 
 .aio-login-otp-login__section-title {
@@ -875,17 +951,6 @@ table.dataTable td:last-child {
 	}
 }
 
-
-.aio-login-lr-load-error {
-  margin: 0 0 16px;
-  padding: 12px 14px;
-  border: 1px solid #f5c2c7;
-  border-radius: 8px;
-  background: #f8d7da;
-  color: #842029;
-  font-size: 14px;
-  font-weight: 600;
-}
 
 .aio-login-lr-rules-head {
   display: flex;
@@ -1179,7 +1244,7 @@ table.dataTable td:last-child {
 }
 
 #aio-login__app .aio-login-lr-datatable-table col.aio-login-lr-col--order {
-  width: 10%;
+  width: 9%;
 }
 
 #aio-login__app .aio-login-lr-datatable-table col.aio-login-lr-col--actions {
@@ -1218,7 +1283,6 @@ table.dataTable td:last-child {
 
 #aio-login__app .aio-login-lr-datatable-table .col-order {
   text-align: center;
-  vertical-align: middle;
 }
 
 #aio-login__app .aio-login-lr-datatable-table .cell-order.is-locked {
@@ -1227,27 +1291,11 @@ table.dataTable td:last-child {
 
 #aio-login__app .aio-login-lr-order-th {
   display: inline-flex;
-  flex-direction: row;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: 8px;
   flex-wrap: nowrap;
   white-space: nowrap;
-  line-height: 1;
-  vertical-align: middle;
-}
-
-/* Keep PRO badge optically level with "Order" header text (AIOL-662). */
-#aio-login__app .aio-login-lr-order-th .aio-login-lr-condtype-pro {
-  padding: 2px 5px;
-  min-width: 0;
-  min-height: 16px;
-  font-size: 10px;
-  line-height: 1.2;
-  align-self: center;
-  position: static;
-  transform: none;
-  margin: 0;
 }
 
 #aio-login__app .aio-login-lr-grid>label.aio-login-lr-order-label {
@@ -1568,8 +1616,13 @@ table.dataTable td:last-child {
   line-height: 1.35;
 }
 
-#aio-login__app .aio-login-lr-grid .regular-text.aio-login-lr-input-error,
-#aio-login__app .aio-login-2fa-methods__input.aio-login-lr-input-error {
+#aio-login__app .aio-login-lr-grid .regular-text.aio-login-lr-input-error {
+  border-color: #f87171 !important;
+  box-shadow: 0 0 0 1px rgba(248, 113, 113, 0.35);
+}
+
+#aio-login__app .aio-login-2fa-methods__input.aio-login-lr-input-error,
+#aio-login__app select.aio-login-2fa-methods__input.aio-login-lr-input-error {
   border-color: #f87171 !important;
   box-shadow: 0 0 0 1px rgba(248, 113, 113, 0.35);
 }
@@ -2122,6 +2175,46 @@ table.dataTable td:last-child {
   flex-shrink: 0;
 }
 
+/* Configure modal Credentials row — same as Pro Social Login step 2 */
+#aio-login__app .aio-login-pro__step2__title-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 12px;
+  margin-bottom: 8px;
+}
+
+#aio-login__app .aio-login-pro__step2__title-row .aio-login-pro__step2__title {
+  margin: 0;
+}
+
+#aio-login__app .aio-login-pro__step2__title-row .aio-login-network-tag-wrap {
+  margin-left: 0;
+}
+
+#aio-login__app .aio-login-pro__step2__title-row .toggle-switch {
+  display: inline-flex;
+  align-items: center;
+  margin: 0;
+}
+
+#aio-login__app .aio-login-pro__step2__title-row .aio-login__toggle-switch-wrapper {
+  flex-shrink: 0;
+  overflow: visible;
+}
+
+#aio-login__app .aio-login-pro__credentials-fieldset {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+}
+
+#aio-login__app .aio-login-pro__credentials-fieldset:disabled {
+  opacity: 0.65;
+  pointer-events: none;
+}
+
 @media (max-width: 768px) {
   .aio-login-lr-grid {
     grid-template-columns: 1fr;
@@ -2131,4 +2224,183 @@ table.dataTable td:last-child {
   .aio-login-lr-grid>label {
     margin-top: 0;
   }
+}
+
+/* Verify Email OTP popup (Free demo — match Pro) */
+.aio-login__popup-container.aio-login-2fa-verify-popup {
+  width: 420px !important;
+  max-width: min(420px, 92vw) !important;
+  height: auto !important;
+  min-height: 0 !important;
+  border-radius: 12px !important;
+  border: 1px solid #e5e7eb !important;
+  box-shadow: 0 25px 50px -12px rgba(17, 24, 39, 0.18) !important;
+  overflow: hidden;
+}
+
+#aio-login__app .aio-login__popup-container.aio-login-2fa-verify-popup .container {
+  padding: 28px 28px 40px !important;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.aio-login__popup-container.aio-login-2fa-verify-popup .aio-login__popup-title {
+  height: auto !important;
+  margin: 0 0 16px;
+  padding: 0 40px 14px 0;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.aio-login__popup-container.aio-login-2fa-verify-popup .aio-login__popup-title h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.35;
+  color: #111827;
+  text-align: left;
+}
+
+.aio-login__popup-container.aio-login-2fa-verify-popup .aio-login__popup-content {
+  padding: 0;
+}
+
+.aio-login__popup-container.aio-login-2fa-verify-popup .aio-login__popup-footer {
+  height: 0 !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  overflow: hidden;
+}
+
+#aio-login__app .aio-login__popup-container.aio-login-2fa-verify-popup .aio-login__popup-close {
+  top: 22px;
+  right: 22px;
+}
+
+#aio-login__app .aio-login__popup-container.aio-login-2fa-verify-popup .aio-login__popup-close button {
+  color: #9ca3af !important;
+  font-size: 22px;
+  line-height: 1;
+  padding: 4px 6px;
+  border-radius: 6px;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+
+#aio-login__app .aio-login__popup-container.aio-login-2fa-verify-popup .aio-login__popup-close button:hover {
+  color: #111827 !important;
+  background: #f3f4f6;
+}
+
+.aio-login-2fa-methods__verify {
+  padding: 0;
+  text-align: left;
+}
+
+.aio-login-2fa-methods__verify-sub {
+  font-size: 14px;
+  line-height: 1.5;
+  color: #6b7280;
+  margin-bottom: 20px;
+}
+
+.aio-login__popup-container.aio-login-2fa-verify-popup .aio-login-2fa-methods__verify-sub {
+  margin-bottom: 22px;
+}
+
+.aio-login__popup-container.aio-login-2fa-verify-popup .aio-login-2fa-methods__otp-boxes {
+  justify-content: center;
+  margin-bottom: 28px;
+}
+
+.aio-login-2fa-methods__otp-boxes {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.aio-login-2fa-methods__otp-box {
+  width: 44px;
+  height: 44px;
+  border: 1px solid #dbe2ea;
+  border-radius: 8px;
+  text-align: center;
+  font-size: 18px;
+  font-weight: 700;
+  color: #111827;
+  background: #fff;
+}
+
+.aio-login-2fa-methods__otp-box:focus {
+  outline: none;
+  border-color: #9516df;
+  box-shadow: 0 0 0 3px rgba(149, 22, 223, 0.14);
+}
+
+.aio-login__popup-container.aio-login-2fa-verify-popup .aio-login-2fa-methods__otp-box {
+  border: 1px solid #d1d5db;
+  box-shadow: none !important;
+}
+
+.aio-login__popup-container.aio-login-2fa-verify-popup .aio-login-2fa-methods__otp-box:focus,
+.aio-login__popup-container.aio-login-2fa-verify-popup .aio-login-2fa-methods__otp-box:focus-visible {
+  outline: none !important;
+  border-color: #9516df !important;
+  box-shadow: 0 0 0 3px rgba(149, 22, 223, 0.2) !important;
+}
+
+.aio-login-2fa-methods__verify-submit {
+  width: 100% !important;
+  max-width: none !important;
+  margin-top: 0;
+  padding: 12px 24px !important;
+  border-radius: 8px !important;
+}
+
+.aio-login-2fa-methods__ready-btn {
+  border: 2px solid #9516df !important;
+  background-image: none !important;
+  color: #9516df !important;
+  padding: 8px 24px !important;
+  border-radius: 6px !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  box-shadow: none !important;
+  text-shadow: none !important;
+  transition: background-color 0.2s ease, border-color 0.2s ease !important;
+}
+
+.aio-login-2fa-methods__ready-btn:hover,
+.aio-login-2fa-methods__ready-btn:focus {
+  background-color: #8216c2 !important;
+  background-image: none !important;
+  border-color: #8216c2 !important;
+  color: #fff !important;
+  box-shadow: none !important;
+}
+
+.aio-login__popup-container.aio-login-2fa-verify-popup button.aio-login-2fa-methods__ready-btn.aio-login-2fa-methods__verify-submit {
+  background: #9416de !important;
+  background-image: none !important;
+  border: 1px solid #9516df !important;
+  color: #fff !important;
+  box-shadow: none !important;
+  text-shadow: none !important;
+  min-height: 46px !important;
+  line-height: 1.3 !important;
+}
+
+.aio-login__popup-container.aio-login-2fa-verify-popup button.aio-login-2fa-methods__ready-btn.aio-login-2fa-methods__verify-submit:hover,
+.aio-login__popup-container.aio-login-2fa-verify-popup button.aio-login-2fa-methods__ready-btn.aio-login-2fa-methods__verify-submit:focus {
+  background: #8216c2 !important;
+  background-image: none !important;
+  border-color: #8216c2 !important;
+  color: #fff !important;
+  box-shadow: none !important;
+}
+
+button.aio-login-2fa-methods__ready-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
 }

@@ -90,41 +90,20 @@ class Customize_Control_Template_Grid extends \WP_Customize_Control {
 				?>
 			</div>
 			<?php if ( count( $this->choices ) > 1 ) : ?>
-				<?php if ( $this->has_pro ) : ?>
+				<?php
+				// Guideline 5: Free never renders locked Pro template teasers — only unlocked choices.
+				$catalog_to_show = $this->has_pro ? $catalog_rest : $catalog_free;
+				?>
+				<?php if ( ! empty( $catalog_to_show ) ) : ?>
 			<div class="aio-login__customizer-pro-gate-area">
 				<div class="aio-login__customizer-template-grid aio-login__customizer-template-grid--catalog" role="list" aria-label="<?php esc_attr_e( 'Login design templates', 'change-wp-admin-login' ); ?>">
 					<?php
-					foreach ( $catalog_rest as $slug => $label ) {
+					foreach ( $catalog_to_show as $slug => $label ) {
 						$this->render_template_button( (string) $slug, (string) $label, $value, false );
 					}
 					?>
 				</div>
 			</div>
-				<?php else : ?>
-					<?php if ( ! empty( $catalog_free ) ) : ?>
-			<div class="aio-login__customizer-template-catalog-free">
-				<div class="aio-login__customizer-template-grid aio-login__customizer-template-grid--catalog" role="list" aria-label="<?php esc_attr_e( 'Free login design templates', 'change-wp-admin-login' ); ?>">
-					<?php
-					foreach ( $catalog_free as $slug => $label ) {
-						$this->render_template_button( (string) $slug, (string) $label, $value, false );
-					}
-					?>
-				</div>
-			</div>
-					<?php endif; ?>
-					<?php if ( ! empty( $catalog_pro ) ) : ?>
-			<div class="aio-login__customizer-pro-gate-area has-pro-gate">
-				<div class="aio-login__customizer-template-grid aio-login__customizer-template-grid--catalog" role="list" aria-label="<?php esc_attr_e( 'Pro login design templates', 'change-wp-admin-login' ); ?>">
-					<?php
-					foreach ( $catalog_pro as $slug => $label ) {
-						$this->render_template_button( (string) $slug, (string) $label, $value, true );
-					}
-					?>
-				</div>
-				<div class="aio-login__customizer-font-pro-unified-overlay" aria-hidden="true">
-				</div>
-			</div>
-					<?php endif; ?>
 				<?php endif; ?>
 			<?php endif; ?>
 			<input type="hidden" id="<?php echo esc_attr( $input_id ); ?>" <?php $this->link(); ?> value="<?php echo esc_attr( $value ); ?>" />
@@ -158,19 +137,37 @@ class Customize_Control_Template_Grid extends \WP_Customize_Control {
 	}
 
 	/**
-	 * Preview image URL for a template slug (bundled in free aio-login assets).
+	 * Preview image URL for a template slug.
+	 * Free thumbs ship in Free; premium thumbs 01–07 live in Pro assets (Guideline 5).
 	 *
 	 * @param string $slug Setting value e.g. template-8.
 	 * @return string
 	 */
 	public static function thumb_url_for_slug( $slug ) {
-		$base = '';
-		if ( defined( 'AIO_LOGIN__DIR_URL' ) ) {
+		$slug       = (string) $slug;
+		$free_slugs = array( 'default', 'template-8' );
+		$base       = '';
+
+		if ( in_array( $slug, $free_slugs, true ) && defined( 'AIO_LOGIN__DIR_URL' ) ) {
+			$base = AIO_LOGIN__DIR_URL;
+		} elseif ( defined( 'AIO_LOGIN_PRO__DIR_URL' ) ) {
+			$base = AIO_LOGIN_PRO__DIR_URL;
+		} elseif ( defined( 'AIO_LOGIN__DIR_URL' ) ) {
 			$base = AIO_LOGIN__DIR_URL;
 		}
+
+		/**
+		 * Filter template thumbnail base URL / full URL resolution.
+		 *
+		 * @param string $base Plugin assets base URL.
+		 * @param string $slug Template slug.
+		 */
+		$base = (string) apply_filters( 'aio_login_customizer_template_thumb_base', $base, $slug );
+
 		if ( '' === $base ) {
 			return '';
 		}
+
 		$map = array(
 			'default'    => 'assets/images/templates/default.jpg',
 			'template-1' => 'assets/images/templates/template-01.jpg',
@@ -182,9 +179,26 @@ class Customize_Control_Template_Grid extends \WP_Customize_Control {
 			'template-7' => 'assets/images/templates/template-07.png',
 			'template-8' => 'assets/images/templates/template-08.png',
 		);
+
+		/**
+		 * Filter relative thumb path map (Pro may extend).
+		 *
+		 * @param array<string, string> $map Slug => relative path under plugin root.
+		 */
+		$map = apply_filters( 'aio_login_customizer_template_thumb_map', $map );
+
 		if ( ! isset( $map[ $slug ] ) ) {
-			return '';
+			$url = '';
+		} else {
+			$url = $base . $map[ $slug ];
 		}
-		return $base . $map[ $slug ];
+
+		/**
+		 * Filter final template thumbnail URL.
+		 *
+		 * @param string $url  Absolute URL or empty.
+		 * @param string $slug Template slug.
+		 */
+		return (string) apply_filters( 'aio_login_customizer_template_thumb_url', $url, $slug );
 	}
 }

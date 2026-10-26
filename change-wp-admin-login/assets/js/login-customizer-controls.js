@@ -38,7 +38,8 @@
 			return;
 		}
 		try {
-			iframe.contentWindow.postMessage({ type: 'aioLoginSetting', id: id, value: value }, '*');
+			var targetOrigin = window.location.origin || '*';
+			iframe.contentWindow.postMessage({ type: 'aioLoginSetting', id: id, value: value }, targetOrigin);
 		} catch (e) {}
 	}
 
@@ -526,7 +527,76 @@
 		});
 	}
 
+	// Prevent WordPress Customizer from downgrading AIO Login settings to 'refresh'
+	// or calling setting.previewer.refresh() when previewerAlive is toggled.
+	if (wp.customize && wp.customize.Setting) {
+		var origSettingPreview = wp.customize.Setting.prototype.preview;
+		wp.customize.Setting.prototype.preview = function () {
+			if (this.id && this.id.indexOf('aio_login') === 0 && this.transport === 'postMessage') {
+				if (this.previewer && typeof this.previewer.send === 'function') {
+					this.previewer.send('setting', [this.id, this()]);
+				}
+				return;
+			}
+			return origSettingPreview.apply(this, arguments);
+		};
+	}
+
+	// Prevent previewer.cheatin() from wiping the admin document body on iframe load issues.
+	if (wp.customize && wp.customize.Previewer) {
+		wp.customize.Previewer.prototype.cheatin = function () {
+			console.warn('AIO Login: suppressed previewer.cheatin()');
+		};
+	}
+
 	wp.customize.bind('ready', function () {
+		// Ensure previewer points to wp-login.php and not wp-admin dashboard
+		try {
+			if (wp.customize && wp.customize.previewer && wp.customize.previewer.previewUrl) {
+				var ensureLoginUrl = function () {
+					var curUrl = wp.customize.previewer.previewUrl.get();
+					if (!curUrl || curUrl.indexOf('wp-login.php') === -1) {
+						var loginUrl = (window.aioLoginCustomizer && window.aioLoginCustomizer.loginPhpUrl) || (window.location.origin + '/wp-login.php');
+						var targetUrl = loginUrl + (loginUrl.indexOf('?') === -1 ? '?' : '&') + 'aio_login_customizer_preview=1';
+						wp.customize.previewer.previewUrl.set(targetUrl);
+					}
+				};
+				ensureLoginUrl();
+				wp.customize.previewer.previewUrl.bind(function (newUrl) {
+					if (newUrl && newUrl.indexOf('wp-login.php') === -1) {
+						ensureLoginUrl();
+					}
+				});
+			}
+		} catch (eUrl) {}
+
+		// Keep previewerAlive state permanently true so WP never forces refresh
+		try {
+			if (wp.customize.state) {
+				var aliveState = wp.customize.state('previewerAlive');
+				if (aliveState) {
+					aliveState.set(true);
+					aliveState.bind(function (isAlive) {
+						if (!isAlive) {
+							aliveState.set(true);
+						}
+					});
+				}
+			}
+		} catch (eAlive) {}
+
+		// Heartbeat to prevent keep-alive timeout
+		setInterval(function () {
+			try {
+				if (wp.customize && wp.customize.previewer && typeof wp.customize.previewer.trigger === 'function') {
+					wp.customize.previewer.trigger('keep-alive');
+				}
+				if (wp.customize && wp.customize.state && wp.customize.state('previewerAlive')) {
+					wp.customize.state('previewerAlive').set(true);
+				}
+			} catch (ePing) {}
+		}, 1000);
+
 		SETTING_IDS.forEach(bindSetting);
 
 		try {
@@ -660,6 +730,7 @@
 			} catch (err) {
 				$input.val(slug).trigger('change');
 			}
+			sendToPreview('aio_login__customization_templates', slug);
 			aioLoginInjectStaleDarkNeutralizerInPreview(slug);
 			setTimeout(function () {
 				aioLoginInjectStaleDarkNeutralizerInPreview(slug);
@@ -667,14 +738,6 @@
 			setTimeout(function () {
 				aioLoginInjectStaleDarkNeutralizerInPreview(slug);
 			}, 450);
-			// transport=refresh: some builds do not reload the login iframe from setting.set() alone (custom grid control).
-			setTimeout(function () {
-				try {
-					if (wp.customize.previewer && typeof wp.customize.previewer.refresh === 'function') {
-						wp.customize.previewer.refresh();
-					}
-				} catch (e2) {}
-			}, 50);
 		});
 
 		// Google Fonts grid (replaces &lt;select&gt;).

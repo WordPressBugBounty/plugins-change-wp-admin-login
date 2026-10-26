@@ -1,7 +1,7 @@
 <template>
 	<div class="aio-login__metadata-container container">
-		<h2>{{ title }}</h2>
-		<p>{{ description }}</p>
+		<h2>{{ translatedTitle }}</h2>
+		<p>{{ translatedDescription }}</p>
 		<slot name="configuration"></slot>
 	</div>
 </template>
@@ -19,7 +19,16 @@ export default {
 			type: String,
 			default: ''
 		}
-	}
+	},
+
+	computed: {
+		translatedTitle() {
+			return this.title ? this.$t( this.title ) : '';
+		},
+		translatedDescription() {
+			return this.description ? this.$t( this.description ) : '';
+		},
+	},
 }
 </script>
 
@@ -28,7 +37,7 @@ export default {
 	display: flex;
 	flex-direction: column;
 	height: auto;
-	min-height: 180px;
+	min-height: 210px;
 	position: relative;
 	border: 1px solid #ebebeb;
 	background: #fff;

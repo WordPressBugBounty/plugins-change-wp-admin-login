@@ -26,19 +26,71 @@ if ( ! class_exists( __NAMESPACE__ . '\Admin_JS_I18n' ) ) {
 		public static function get_map() {
 			$domain = 'change-wp-admin-login';
 			$locale = function_exists( 'determine_locale' ) ? determine_locale() : get_locale();
-			$mo_map = self::load_mo_translations( $domain, $locale );
 
 			self::ensure_textdomain_loaded( $domain, $locale );
 
 			$map = array();
+
+			// Loco-friendly catalog (__()) first.
+			if ( class_exists( __NAMESPACE__ . '\Admin_I18n' ) ) {
+				$loco = Admin_I18n::strings();
+				if ( is_array( $loco ) ) {
+					foreach ( $loco as $english => $translated ) {
+						if ( is_string( $english ) && '' !== $english && is_string( $translated ) && '' !== $translated ) {
+							$map[ $english ] = $translated;
+						}
+					}
+				}
+			}
+
+			// Direct .mo parse wins when present (covers JIT / missing textdomain cases).
+			$mo_map = self::load_mo_translations( $domain, $locale );
+			foreach ( $mo_map as $english => $translated ) {
+				if ( ! is_string( $english ) || '' === $english || ! is_string( $translated ) || '' === $translated ) {
+					continue;
+				}
+				$map[ $english ] = $translated;
+				// Legacy catalogs stored HTML entities in msgids — also index decoded keys for JS lookup.
+				$decoded = html_entity_decode( $english, ENT_QUOTES | ENT_HTML5, 'UTF-8' );
+				if ( $decoded !== $english ) {
+					$map[ $decoded ] = html_entity_decode( $translated, ENT_QUOTES | ENT_HTML5, 'UTF-8' );
+				}
+				// Tooltips look up <p>…</p> while .mo often stores plain msgid — alias both ways.
+				if ( 0 !== strpos( $english, '<p>' ) ) {
+					$html_key = '<p>' . $english . '</p>';
+					if ( ! isset( $map[ $html_key ] ) || $map[ $html_key ] === $html_key ) {
+						$map[ $html_key ] = '<p>' . $translated . '</p>';
+					}
+				}
+			}
+			// Drop identity "translations" from Admin_I18n when a real MO hit exists for the unwrapped string.
+			foreach ( $map as $english => $translated ) {
+				if ( $translated !== $english ) {
+					continue;
+				}
+				if ( preg_match( '#^<p>(.*)</p>$#s', $english, $m ) && isset( $mo_map[ $m[1] ] ) && '' !== $mo_map[ $m[1] ] ) {
+					$map[ $english ] = '<p>' . $mo_map[ $m[1] ] . '</p>';
+				}
+			}
 			foreach ( self::get_strings() as $string ) {
+				if ( isset( $map[ $string ] ) && '' !== $map[ $string ] ) {
+					continue;
+				}
 				if ( isset( $mo_map[ $string ] ) && '' !== $mo_map[ $string ] ) {
 					$map[ $string ] = $mo_map[ $string ];
 					continue;
 				}
-				$map[ $string ] = translate( $string, $domain ); // phpcs:ignore WordPress.WP.I18n.NonSingularString
+				// Leave English; do not call dynamic translate()/__() (Plugin Check / AIOL-770).
+				$map[ $string ] = $string;
 			}
-			return $map;
+
+			/**
+			 * Filter the admin Vue/JS English→translated map.
+			 *
+			 * @param array<string, string> $map    Translation map.
+			 * @param string                $locale Active locale.
+			 */
+			return apply_filters( 'aio_login_admin_js_i18n_map', $map, $locale );
 		}
 
 		/**
@@ -194,7 +246,7 @@ if ( ! class_exists( __NAMESPACE__ . '\Admin_JS_I18n' ) ) {
 				'Basque',
 				'Bengali',
 				'Blacklist',
-				'Blacklist mode - block access to specific IPs, lockout all others',
+				'Blacklist mode - block access to specific IPs, allow all others',
 				'Block IP Address',
 				'Block IP functionality will be implemented in the next update.',
 				'Block Message',
@@ -259,9 +311,12 @@ if ( ! class_exists( __NAMESPACE__ . '\Admin_JS_I18n' ) ) {
 				'Custom URL',
 				'Custom Webhook URL',
 				'Customize Design',
+				'Customize Now',
 				'Customize the login page background with images, colors, or slideshows.',
+				'Customize Your WP Login',
 				'Customize your',
 				'Customize your login page with templates, fonts, and styling options to match your brand and improve UX.',
+				'Personalize your login page with real-time customization and instant preview.',
 				'Czech',
 				'Danish',
 				'Date & Time',
@@ -313,6 +368,10 @@ if ( ! class_exists( __NAMESPACE__ . '\Admin_JS_I18n' ) ) {
 				'Enable to set rules to improve user password security.',
 				'Enable to track failed logins to spot potential threats.',
 				'Enable to view logs of locked-out users and attempts.',
+				'IP geolocation (country / city)',
+				'IP geolocation disabled.',
+				'IP geolocation enabled.',
+				'Pro feature. Off by default. When enabled, visitor IPs from failed logins and lockouts are sent to ipapi.co to look up approximate country and city.',
 				'Enable users to log in using their Microsoft account for fast and secure authentication.',
 				'Enabling Limit Login Attempts',
 				'Enforce custom password rules for registrations and resets to ensure strong credentials.',
@@ -370,6 +429,13 @@ if ( ! class_exists( __NAMESPACE__ . '\Admin_JS_I18n' ) ) {
 				'Georgian',
 				'German',
 				'Get AIO Login Pro',
+				'Unlock More Power with Pro',
+				'Upgrade to PRO',
+				'Powerful security, integrations, and customization features designed to give you complete control over your login experience.',
+				'Multisite Compatibility',
+				'Social Logins',
+				'Authenticator App 2FA',
+				'Real-Time Customer Templates & Fonts',
 				'Get Business Plan Now',
 				'Get Pro',
 				'Get Lifetime Deal Now',
@@ -412,6 +478,7 @@ if ( ! class_exists( __NAMESPACE__ . '\Admin_JS_I18n' ) ) {
 				'Invalid Slack webhook. Please try Connect with Slack again.',
 				'Italian',
 				'Japanese',
+				'Join over 60K smart website owners who use AIO Login to improve their',
 				'Join over 90K smart website owners who use AIO Login to improve their',
 				'Kannada',
 				'Korean',
@@ -425,6 +492,7 @@ if ( ! class_exists( __NAMESPACE__ . '\Admin_JS_I18n' ) ) {
 				'Let users log in via Google, Facebook, Apple, Discord, and GitHub for a fast, secure, and seamless experience.',
 				'Let users log in with their Facebook account for a seamless and trusted login experience.',
 				'Lets Go',
+				"Let's Go",
 				'Limit Login Attempts',
 				'Limit the number of times a user IP can attempt to log in to your wp-admin with incorrect credentials. Once the login attempt limit is reached, the IP from which the attempts have originated will be blocked for default period of time.',
 				'Lithuanian',
@@ -487,6 +555,7 @@ if ( ! class_exists( __NAMESPACE__ . '\Admin_JS_I18n' ) ) {
 				'No rules found.',
 				'No users match your search.',
 				'Norwegian',
+				'Network Admin Settings',
 				'Note:',
 				'Note: You can only enable one captcha at a time.',
 				'Notifications',
@@ -499,7 +568,7 @@ if ( ! class_exists( __NAMESPACE__ . '\Admin_JS_I18n' ) ) {
 				'Obfuscates comment author names to prevent username enumeration through comments.',
 				'Off',
 				'On',
-				'Only one site-wide method can be active: turn on either Email OTP or Authenticator App, not both.',
+				'Only one site-wide method can be active: turn on either Email One-Time Code or Authenticator App, not both.',
 				'Only phone numbers from selected countries can request SMS OTP login. At least one country is required.',
 				'Order',
 				'Password Strength Checker',
@@ -518,6 +587,7 @@ if ( ! class_exists( __NAMESPACE__ . '\Admin_JS_I18n' ) ) {
 				'Persian',
 				'Pick an internal page or choose Custom URL to enter any external link.',
 				'Please choose a login redirect destination.',
+				'Please fill in all required Twilio configuration fields.',
 				'Please enter a login redirect URL when Custom URL is selected.',
 				'Please install and activate the WooCommerce plugin to use this feature.',
 				'Please select at least one role.',
@@ -613,6 +683,7 @@ if ( ! class_exists( __NAMESPACE__ . '\Admin_JS_I18n' ) ) {
 				'Stop oEmbed Calls Revealing User IDs',
 				'Stored encrypted. Leave blank when saving other settings to keep the existing token.',
 				'Success',
+				'Successful Logins',
 				'Swahili',
 				'Swedish',
 				'Tamil',
@@ -641,7 +712,7 @@ if ( ! class_exists( __NAMESPACE__ . '\Admin_JS_I18n' ) ) {
 				'Toggle Email OTP Login settings',
 				'Toggle SMS OTP Login settings',
 				'Track attempts to fetch usernames or user IDs to monitor unauthorized enumeration activity.',
-				'Track users who reached the maximum login attempts and were locked out to monitor security threats.',
+				'View and monitor login lockouts to identify suspicious activity and potential security threats.',
 				'Turkish',
 				'Turn on to send security notifications to your Slack workspace using an incoming webhook.',
 				'Turnstile',
@@ -649,6 +720,7 @@ if ( ! class_exists( __NAMESPACE__ . '\Admin_JS_I18n' ) ) {
 				'Turnstile render returned no widget id.',
 				'Twilio Configuration',
 				'Two Factor Authentication',
+				'Two-factor authentication adds a verification step after password login. Enable it here, then choose Email OTP (or Authenticator App with Pro) under 2FA → Authentication Methods.',
 				'Two-factor authentication forces admin users to login only after providing a token, generated from the Authenticator applications. When you enable this option, all admin users will be asked to configure their two-factor authentication in the Authenticator app on their next login.',
 				'Type:',
 				'Ukrainian',
@@ -674,12 +746,13 @@ if ( ! class_exists( __NAMESPACE__ . '\Admin_JS_I18n' ) ) {
 				'Verify Again',
 				'Vietnamese',
 				'View All',
+				'Welcome to Dashboard!',
 				'View All Activity',
 				'View configuration guide',
 				'View lockouts and failed login attempts in one place. Switch between Login Attempt Logs and Failed Login Attempts to monitor security.',
 				'WP Login',
 				'Webhook Notifications',
-				'When enabled, a successful passwordless OTP login counts as completing AIO Login two-factor authentication, so users are not asked for 2FA again in the same session. Requires AIO Login Pro with 2FA enabled.',
+				'When enabled, a successful passwordless OTP login counts as completing AIO Login two-factor authentication, so users are not asked for 2FA again in the same session.',
 				'When enabled, registered users can request a secure one-time sign-in link by email from the login page.',
 				'When enabled, users can mark their device as trusted after a successful OTP verification. They won\'t be prompted for OTP again on that device for the configured duration. Applies to both Email OTP and TOTP.',
 				'When enabled, users who sign in with SMS OTP are not prompted for AIO Login two-factor authentication.',

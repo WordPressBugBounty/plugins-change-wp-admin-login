@@ -1,7 +1,7 @@
 <?php
 /**
- * Login / logout redirection (free): rules, REST, runtime filters.
- * Per-user and per-role conditions require Pro plan feature {@see login_redirection_advanced}.
+ * Login / logout redirection (free): enable/disable, all_users rules, REST, fallback URL.
+ * Per-user / per-role matching and sanitization live in Pro (filters below; Guideline 5).
  * Unreachable login URL on the highest-priority rule that defines one uses fallback (when enabled), not a lower-order rule.
  * Fallback applies to logout only when the top matching rule defines a logout URL that is unreachable (404 / HEAD failure).
  * No logout URL on the rule ("No logout redirect") uses WordPress default logout — never fallback.
@@ -58,26 +58,21 @@ if ( ! class_exists( 'AIO_Login\\Login_Controller\\Login_Redirection' ) ) {
 		 * @return bool
 		 */
 		public static function advanced_conditions_allowed() {
-			return class_exists( '\AIO_Login_Pro\Plan\Plan_Features' )
-				&& \AIO_Login_Pro\Plan\Plan_Features::can( 'login_redirection_advanced' );
+			/**
+			 * Advanced per-user / per-role rules live in the Pro add-on (Guideline 5).
+			 */
+			return (bool) apply_filters( 'aio_login_login_redirection_advanced_allowed', false );
 		}
 
 		/**
-		 * Whether rule priority order (1, 2, …) is allowed for this site license.
+		 * Whether rule priority order (1, 2, …) is allowed.
+		 *
+		 * Free unlocks priority for G5 (PLUGIN-G05-001). Pro may still filter this.
 		 *
 		 * @return bool
 		 */
 		public static function rule_order_allowed() {
-			if ( ! \AIO_Login\AIO_Login::has_pro() ) {
-				return false;
-			}
-			if ( function_exists( 'aiologin_pro_can_use_premium_code' ) && ! aiologin_pro_can_use_premium_code() ) {
-				return false;
-			}
-			if ( class_exists( '\AIO_Login_Pro\Plan\Plan_Features' ) ) {
-				return \AIO_Login_Pro\Plan\Plan_Features::can( 'login_redirection' );
-			}
-			return true;
+			return (bool) apply_filters( 'aio_login_login_redirection_rule_order_allowed', true );
 		}
 
 		/**
@@ -201,86 +196,8 @@ if ( ! class_exists( 'AIO_Login\\Login_Controller\\Login_Redirection' ) ) {
 		}
 
 		/**
-		 * @param mixed $raw Stored condition_value or request body fragment.
-		 * @return int[]
-		 */
-		private function login_redirection_parse_condition_user_ids( $raw ) {
-			if ( is_array( $raw ) ) {
-				return array_values(
-					array_unique(
-						array_filter(
-							array_map( 'absint', $raw )
-						)
-					)
-				);
-			}
-			if ( is_numeric( $raw ) ) {
-				$n = absint( $raw );
-				return $n ? array( $n ) : array();
-			}
-			$s = (string) $raw;
-			if ( '' === trim( $s ) ) {
-				return array();
-			}
-			return array_values(
-				array_unique(
-					array_filter(
-						array_map( 'absint', preg_split( '/\s*,\s*/', $s, -1, PREG_SPLIT_NO_EMPTY ) )
-					)
-				)
-			);
-		}
-
-		/**
-		 * @param int    $user_id WordPress user ID.
-		 * @param string $stored  Saved condition_value string.
-		 */
-		private function login_redirection_user_matches_rule( $user_id, $stored ) {
-			$user_id = absint( $user_id );
-			if ( ! $user_id ) {
-				return false;
-			}
-			$allowed = $this->login_redirection_parse_condition_user_ids( $stored );
-			return ! empty( $allowed ) && in_array( $user_id, $allowed, true );
-		}
-
-		/**
-		 * @param mixed $raw Stored condition_value or request body fragment.
-		 * @return string[]
-		 */
-		private function login_redirection_parse_condition_role_slugs( $raw ) {
-			global $wp_roles;
-
-			if ( ! isset( $wp_roles->roles ) || ! is_array( $wp_roles->roles ) ) {
-				return array();
-			}
-
-			$valid_keys = array_keys( $wp_roles->roles );
-			$pieces     = array();
-
-			if ( is_array( $raw ) ) {
-				$pieces = $raw;
-			} else {
-				$s = (string) $raw;
-				if ( '' === trim( $s ) ) {
-					return array();
-				}
-				$pieces = preg_split( '/\s*,\s*/', $s, -1, PREG_SPLIT_NO_EMPTY );
-			}
-
-			$out = array();
-			foreach ( $pieces as $piece ) {
-				$key = sanitize_key( (string) $piece );
-				if ( '' !== $key && in_array( $key, $valid_keys, true ) ) {
-					$out[] = $key;
-				}
-			}
-
-			return array_values( array_unique( $out ) );
-		}
-
-		/**
-		 * Normalize condition value for duplicate-rule comparison (order-insensitive lists).
+		 * Normalize condition value for duplicate-rule comparison.
+		 * Free only understands all_users; Pro normalizes user / user_role via filter.
 		 *
 		 * @param string $type   all_users|user_role|user.
 		 * @param string $stored Raw stored condition_value.
@@ -290,35 +207,20 @@ if ( ! class_exists( 'AIO_Login\\Login_Controller\\Login_Redirection' ) ) {
 			if ( 'all_users' === $type ) {
 				return '';
 			}
-			if ( 'user_role' === $type ) {
-				$slugs = $this->login_redirection_parse_condition_role_slugs( $stored );
-				sort( $slugs, SORT_STRING );
-				return implode( ',', $slugs );
-			}
-			if ( 'user' === $type ) {
-				$ids = $this->login_redirection_parse_condition_user_ids( $stored );
-				sort( $ids, SORT_NUMERIC );
-				return implode( ',', array_map( 'strval', $ids ) );
-			}
-			return (string) $stored;
-		}
 
-		/**
-		 * @param \WP_User $user   User.
-		 * @param string   $stored Comma-separated role keys (or legacy single role).
-		 */
-		private function login_redirection_user_role_matches_rule( $user, $stored ) {
-			if ( ! $user instanceof \WP_User ) {
-				return false;
-			}
-
-			$wanted = $this->login_redirection_parse_condition_role_slugs( $stored );
-			if ( empty( $wanted ) ) {
-				return false;
-			}
-
-			$overlap = array_intersect( $wanted, array_values( array_unique( (array) $user->roles ) ) );
-			return ! empty( $overlap );
+			/**
+			 * Normalize an advanced condition value for duplicate detection (Pro).
+			 *
+			 * @param string $normalized Default raw stored string.
+			 * @param string $type       Condition type (user|user_role).
+			 * @param string $stored     Raw stored condition_value.
+			 */
+			return (string) apply_filters(
+				'aio_login_login_redirection_normalize_condition_value',
+				(string) $stored,
+				$type,
+				$stored
+			);
 		}
 
 		/**
@@ -705,26 +607,17 @@ if ( ! class_exists( 'AIO_Login\\Login_Controller\\Login_Redirection' ) ) {
 				return array();
 			}
 
-			$advanced = self::advanced_conditions_allowed();
+			// Free core: all_users only. Pro add-on appends advanced matches via filter.
 			$matching = array();
 			foreach ( $rules as $rule ) {
 				if ( ! isset( $rule['condition_type'] ) ) {
 					continue;
 				}
-				$condition_type = (string) $rule['condition_type'];
-				if ( ! $advanced && ( 'user' === $condition_type || 'user_role' === $condition_type ) ) {
-					continue;
-				}
-				$value = isset( $rule['condition_value'] ) ? (string) $rule['condition_value'] : '';
-
-				if ( 'all_users' === $condition_type ) {
-					$matching[] = $rule;
-				} elseif ( 'user_role' === $condition_type && $this->login_redirection_user_role_matches_rule( $user, $value ) ) {
-					$matching[] = $rule;
-				} elseif ( 'user' === $condition_type && $this->login_redirection_user_matches_rule( (int) $user->ID, $value ) ) {
+				if ( 'all_users' === (string) $rule['condition_type'] ) {
 					$matching[] = $rule;
 				}
 			}
+			$matching = apply_filters( 'aio_login_login_redirection_matching_rules', $matching, $user, $rules );
 
 			if ( empty( $matching ) ) {
 				return array();
@@ -942,6 +835,11 @@ if ( ! class_exists( 'AIO_Login\\Login_Controller\\Login_Redirection' ) ) {
 				return $redirect_to;
 			}
 
+			// Never clobber a pending 2FA OTP challenge URL.
+			if ( is_string( $redirect_to ) && false !== strpos( $redirect_to, 'aio_login_pro__two_factor_auth' ) ) {
+				return $redirect_to;
+			}
+
 			$rule_url = $this->find_matching_rule_url( $user, 'login' );
 			if ( ! empty( $rule_url ) ) {
 				$rule_redirect = $this->get_rule_redirect_url( $rule_url );
@@ -1011,31 +909,24 @@ if ( ! class_exists( 'AIO_Login\\Login_Controller\\Login_Redirection' ) ) {
 				);
 			}
 
-			global $wp_roles;
-			$role_options = array();
-			if ( $wp_roles && isset( $wp_roles->roles ) ) {
-				foreach ( $wp_roles->roles as $role_key => $role_data ) {
-					$role_options[] = array(
-						'value' => (string) $role_key,
-						'label' => isset( $role_data['name'] ) ? (string) $role_data['name'] : (string) $role_key,
-					);
-				}
+			/**
+			 * Role options for advanced (per-role) rules — populated by Pro.
+			 *
+			 * @param array<int, array{value:string,label:string}> $roles Role options.
+			 */
+			$role_options = apply_filters( 'aio_login_login_redirection_meta_roles', array() );
+			if ( ! is_array( $role_options ) ) {
+				$role_options = array();
 			}
 
-			$user_options = array();
-			$users        = get_users(
-				array(
-					'number'  => 200,
-					'orderby' => 'login',
-					'order'   => 'ASC',
-					'fields'  => array( 'ID', 'user_login' ),
-				)
-			);
-			foreach ( (array) $users as $u ) {
-				$user_options[] = array(
-					'value' => (string) $u->ID,
-					'label' => (string) $u->user_login,
-				);
+			/**
+			 * User options for advanced (per-user) rules — populated by Pro.
+			 *
+			 * @param array<int, array{value:string,label:string}> $users User options.
+			 */
+			$user_options = apply_filters( 'aio_login_login_redirection_meta_users', array() );
+			if ( ! is_array( $user_options ) ) {
+				$user_options = array();
 			}
 
 			$admin_path = wp_parse_url( admin_url(), PHP_URL_PATH );
@@ -1110,47 +1001,43 @@ if ( ! class_exists( 'AIO_Login\\Login_Controller\\Login_Redirection' ) ) {
 			}
 
 			$condition_type = isset( $params['condition_type'] ) ? sanitize_text_field( $params['condition_type'] ) : 'all_users';
-			if ( ! in_array( $condition_type, array( 'all_users', 'user_role', 'user' ), true ) ) {
-				return new \WP_Error( 'invalid_condition', __( 'Invalid condition type.', 'change-wp-admin-login' ), array( 'status' => 400 ) );
-			}
 
-			if ( ( 'user' === $condition_type || 'user_role' === $condition_type ) && ! self::advanced_conditions_allowed() ) {
-				return new \WP_Error(
-					'plan_restricted',
-					__( 'User and role-based redirect rules require an eligible Pro plan.', 'change-wp-admin-login' ),
-					array( 'status' => 403 )
+			// Free only implements all_users. Advanced types are sanitized/validated by Pro via filter.
+			if ( 'user' === $condition_type || 'user_role' === $condition_type ) {
+				/**
+				 * Sanitize advanced condition_value for user / user_role rules (Pro).
+				 *
+				 * Return a CSV string, WP_Error, or null when Pro is inactive / feature off.
+				 *
+				 * @param string|\WP_Error|null $value Default null.
+				 * @param string                $type  user|user_role.
+				 * @param array<string,mixed>   $params Request params.
+				 */
+				$advanced_value = apply_filters(
+					'aio_login_login_redirection_sanitize_advanced_condition',
+					null,
+					$condition_type,
+					$params
 				);
+				if ( is_wp_error( $advanced_value ) ) {
+					return $advanced_value;
+				}
+				if ( ! is_string( $advanced_value ) ) {
+					return new \WP_Error(
+						'pro_required',
+						__( 'User and role-based redirect rules require the AIO Login Pro add-on.', 'change-wp-admin-login' ),
+						array( 'status' => 403 )
+					);
+				}
+				$condition_value_stored = $advanced_value;
+			} elseif ( 'all_users' === $condition_type ) {
+				$condition_value_stored = '';
+			} else {
+				return new \WP_Error( 'invalid_condition', __( 'Invalid condition type.', 'change-wp-admin-login' ), array( 'status' => 400 ) );
 			}
 
 			$existing_id = isset( $params['id'] ) ? sanitize_text_field( $params['id'] ) : '';
 			$rule_id     = '' !== $existing_id ? $existing_id : 'rule_' . wp_generate_password( 12, false, false ) . '_' . time();
-
-			$condition_value_stored = '';
-			if ( 'all_users' === $condition_type ) {
-				$condition_value_stored = '';
-			} elseif ( 'user_role' === $condition_type ) {
-				$role_slugs = $this->login_redirection_parse_condition_role_slugs(
-					isset( $params['condition_value'] ) ? $params['condition_value'] : array()
-				);
-				if ( empty( $role_slugs ) ) {
-					return new \WP_Error(
-						'empty_role_condition',
-						__( 'Please select at least one role.', 'change-wp-admin-login' ),
-						array( 'status' => 400 )
-					);
-				}
-				$condition_value_stored = implode( ',', $role_slugs );
-			} elseif ( 'user' === $condition_type ) {
-				$user_ids = $this->login_redirection_parse_condition_user_ids( isset( $params['condition_value'] ) ? $params['condition_value'] : array() );
-				if ( empty( $user_ids ) ) {
-					return new \WP_Error(
-						'empty_user_condition',
-						__( 'Please select at least one user.', 'change-wp-admin-login' ),
-						array( 'status' => 400 )
-					);
-				}
-				$condition_value_stored = implode( ',', $user_ids );
-			}
 
 			$login_target_type  = isset( $params['login_target_type'] ) && 'page' === $params['login_target_type'] ? 'page' : 'custom';
 			$logout_target_type = isset( $params['logout_target_type'] ) && 'page' === $params['logout_target_type'] ? 'page' : 'custom';

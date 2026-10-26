@@ -1,17 +1,28 @@
 <template>
-<table>
-	<thead>
-	<tr>
-		<th v-for="header in headers">{{ header['value'] }}</th>
-	</tr>
-	</thead>
-
-	<tfoot>
-	<tr>
-		<th v-for="header in headers">{{ header['value'] }}</th>
-	</tr>
-	</tfoot>
-</table>
+	<div class="aio-login-datatable-wrap">
+		<table ref="table">
+			<thead>
+				<tr>
+					<th
+						v-for="header in headers"
+						:key="header.key"
+					>
+						{{ header.value }}
+					</th>
+				</tr>
+			</thead>
+			<tfoot>
+				<tr>
+					<th
+						v-for="header in headers"
+						:key="header.key"
+					>
+						{{ header.value }}
+					</th>
+				</tr>
+			</tfoot>
+		</table>
+	</div>
 </template>
 
 <script>
@@ -34,32 +45,73 @@ export default {
 
 	data: () => ( {
 		datatable: null,
+		rebuildTimer: null,
 	} ),
 
 	watch: {
-		rows() {
-			if ( this.datatable ) {
-				this.datatable.destroy();
-			}
-			this.datatable = this.createDatatableInstance();
-		}
+		rows: {
+			handler() {
+				this.scheduleRebuild();
+			},
+			deep: true,
+		},
+		headers: {
+			handler() {
+				this.scheduleRebuild();
+			},
+			deep: true,
+		},
 	},
 
 	methods: {
 		getColumns() {
-			return this.headers.map( header => {
+			return this.headers.map( ( header ) => {
 				if ( header.callback ) {
 					return {
-						title: header['value'],
-						data: header['key'],
+						title: header.value,
+						data: header.key,
+						defaultContent: '',
 						render: header.callback,
 					};
 				}
 				return {
-					title: header['value'],
-					data: header['key'],
+					title: header.value,
+					data: header.key,
+					defaultContent: '',
 				};
 			} );
+		},
+
+		getTableEl() {
+			return this.$refs.table || null;
+		},
+
+		destroyDatatable() {
+			if ( this.datatable ) {
+				try {
+					this.datatable.destroy();
+				} catch ( e ) {
+					// Ignore — table may already be torn down by Vue.
+				}
+				this.datatable = null;
+			}
+
+			const el = this.getTableEl();
+			if ( ! el ) {
+				return;
+			}
+
+			// Clear any leftover DataTables class/state if destroy left it registered.
+			try {
+				if ( window.jQuery && window.jQuery.fn && window.jQuery.fn.dataTable ) {
+					const $el = window.jQuery( el );
+					if ( window.jQuery.fn.dataTable.isDataTable( $el ) ) {
+						$el.DataTable().destroy();
+					}
+				}
+			} catch ( e ) {
+				// Ignore.
+			}
 		},
 
 		getLanguage() {
@@ -83,32 +135,62 @@ export default {
 		},
 
 		createDatatableInstance() {
+			const el = this.getTableEl();
+			if ( ! el ) {
+				return null;
+			}
+
 			const timeColumnIndex = this.headers.findIndex(
-				header => header && header.key === 'time'
+				( header ) => header && header.key === 'time'
 			);
 
-			var kf = {
+			const options = {
 				columns: this.getColumns(),
-				data: this.rows,
+				data: Array.isArray( this.rows ) ? this.rows : [],
 				responsive: true,
+				destroy: true,
 				language: this.getLanguage(),
-			}
+			};
+
 			if ( timeColumnIndex >= 0 ) {
-				kf.order = [ [ timeColumnIndex, 'desc' ] ];
+				options.order = [ [ timeColumnIndex, 'desc' ] ];
 			}
-			return new Datatable.default(
-				this.$el,
-				kf
-			);
-		}
+
+			return new Datatable.default( el, options );
+		},
+
+		scheduleRebuild() {
+			if ( this.rebuildTimer ) {
+				clearTimeout( this.rebuildTimer );
+			}
+			this.rebuildTimer = setTimeout( () => {
+				this.rebuildTimer = null;
+				this.$nextTick( () => {
+					this.destroyDatatable();
+					this.$nextTick( () => {
+						this.datatable = this.createDatatableInstance();
+					} );
+				} );
+			}, 0 );
+		},
 	},
 
 	mounted() {
 		this.datatable = this.createDatatableInstance();
 	},
-}
+
+	beforeUnmount() {
+		if ( this.rebuildTimer ) {
+			clearTimeout( this.rebuildTimer );
+			this.rebuildTimer = null;
+		}
+		this.destroyDatatable();
+	},
+};
 </script>
 
 <style scoped>
+.aio-login-datatable-wrap {
+	width: 100%;
+}
 </style>
-

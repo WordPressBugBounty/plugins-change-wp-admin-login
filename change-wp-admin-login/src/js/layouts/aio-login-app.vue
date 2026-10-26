@@ -7,13 +7,19 @@
 			<template v-slot:version>
 				<div class="aio-login-header-version">
 					<span class="aio-login-header-version__badge aio-login-header-version__badge--free">
-						{{ $t('Free') }} v{{ version }}
+						Free v{{ version }}
 					</span>
 					<span
-						v-if="show_pro_version"
+						v-if="show_pro_version && ! show_network_license"
 						class="aio-login-header-version__badge aio-login-header-version__badge--pro"
 					>
-						{{ $t('Pro') }} v{{ pro_version }}
+						Pro v{{ pro_version }}
+					</span>
+					<span
+						v-if="show_network_license"
+						class="aio-login-header-version__badge aio-login-header-version__badge--network"
+					>
+						Network License <strong>· Active</strong>
 					</span>
 				</div>
 			</template>
@@ -31,22 +37,14 @@
 			<div class="aio-login__container">
 
 				<div v-if="hasSubTabs()">
-
-					<div
-						class="aio-login-pro-feature"
-						:class="{
-							'aio-login-pro-overlay': is_two_factor_locked,
-							'aio-login-subtabs-locked': is_two_factor_locked
-						}"
-						@click="is_two_factor_locked ? openProPopup() : null"
-					>
-						<aio-login-sub-tabs
-							:sub-tabs="sub_tabs"
-							:class="{ 'aio-login-sub-tabs--locked': is_two_factor_locked }"
-						>
-						</aio-login-sub-tabs>
-					</div>
-
+					<aio-login-sub-tabs :sub-tabs="sub_tabs">
+						<template v-slot:actions v-if="getActiveTab() === '2fa'">
+							<aio-login-network-notice
+								feature="two_factor_authentication"
+								:inline="true"
+							/>
+						</template>
+					</aio-login-sub-tabs>
 				</div>
 
 				<div class="aio-login__content-wrapper" style="position: relative;">
@@ -55,23 +53,11 @@
 					</div>
 
 					<div v-else>
-						<router-view v-if="isTwoFactor()"></router-view>
+						<router-view v-if="!isDashboard() && !isGetPro()"></router-view>
 
 						<aio-login-dashboard
 							v-if="isDashboard()"
 						></aio-login-dashboard>
-
-						<aio-login-temp-access
-							v-if="isTempAccess()"
-						></aio-login-temp-access>
-
-						<aio-login-social-login-main
-							v-if="isSocialLogin()"
-						></aio-login-social-login-main>
-
-						<aio-login-integrations
-							v-if="isIntegrations()"
-						></aio-login-integrations>
 
 						<aio-login-getpro
 							v-if="isGetPro()"
@@ -113,13 +99,21 @@ export default {
 			return this.has_pro_enabled && !!this.pro_version;
 		},
 
+		show_network_license() {
+			const o = window.aio_login__app_object || {};
+			const licensed = o.has_active_license === true || o.has_active_license === 'true';
+			const networkAdmin = o.is_network_admin === true || o.is_network_admin === 'true';
+			return (
+				licensed
+				&& ( o.is_multisite === true || o.is_multisite === 'true' )
+				&& networkAdmin
+			);
+		},
+
 		has_pro_enabled() {
 			return window.aio_login__app_object.has_pro === 'true' || window.aio_login__app_object.has_pro === true;
 		},
 
-		is_two_factor_locked() {
-			return this.getActiveTab() === '2fa' && ! this.has_pro_enabled;
-		},
 	},
 
 	watch: {
@@ -209,24 +203,8 @@ export default {
 			return this.getActiveTab() === 'dashboard';
 		},
 
-		isTempAccess() {
-			return this.getActiveTab() === 'temp-access';
-		},
-
-		isSocialLogin() {
-			return this.getActiveTab() === 'social-login';
-		},
-
-		isIntegrations() {
-			return this.getActiveTab() === 'integrations';
-		},
-
 		isGetPro() {
 			return this.getActiveTab() === 'getpro';
-		},
-
-		isTwoFactor() {
-			return this.getActiveTab() === '2fa';
 		},
 
 		closePopup() {
@@ -265,7 +243,7 @@ export default {
 .aio-login-header-version__badge {
 	display: inline-flex;
 	align-items: center;
-	padding: 6px 10px;
+	padding: 8px 14px;
 	border-radius: 999px;
 	font-size: 12px;
 	font-weight: 700;
@@ -274,15 +252,29 @@ export default {
 }
 
 .aio-login-header-version__badge--free {
-	color: #4a5568;
-	background: #edf2f7;
-	border: 1px solid #d5dee9;
+	font-size: 12px;
+	font-weight: 600;
+	color: #606c80;
+	background: #fff;
+	border: 1px solid #606c80;
 }
 
 .aio-login-header-version__badge--pro {
 	color: #ffffff;
 	background: linear-gradient(180deg, #9516df 0%, #510c79 100%);
 	border: 1px solid #7a27bf;
+}
+
+.aio-login-header-version__badge--network {
+	color: #6e16df;
+	background: #efe2ff;
+	border: 1px solid #6e16df;
+	font-weight: 600;
+	font-size: 11px;
+}
+
+.aio-login-header-version__badge--network strong {
+	font-weight: 700;
 }
 
 .aio-login__container {

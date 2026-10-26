@@ -1,6 +1,6 @@
 <?php
 /**
- * Encrypt sensitive option values (e.g. Twilio auth token).
+ * Encrypt sensitive option values (e.g. API tokens).
  *
  * @package AIO_Login
  */

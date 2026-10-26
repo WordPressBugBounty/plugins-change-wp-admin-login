@@ -98,20 +98,15 @@ class Customize_Control_Google_Fonts_Grid extends \WP_Customize_Control {
 				}
 				?>
 			</div>
-			<?php if ( count( $this->choices ) > 1 ) : ?>
-			<div class="aio-login__customizer-pro-gate-area<?php echo ! $this->has_pro ? ' has-pro-gate' : ''; ?>">
+			<?php if ( count( $this->choices ) > 1 && $this->has_pro ) : ?>
+			<div class="aio-login__customizer-pro-gate-area">
 				<div class="aio-login__customizer-font-grid aio-login__customizer-font-grid--catalog" role="list" aria-label="<?php esc_attr_e( 'Google Fonts catalog', 'change-wp-admin-login' ); ?>">
 					<?php
 					foreach ( $catalog_rest as $slug => $label ) {
-						$is_locked = ! $this->has_pro && (string) $slug !== (string) $this->free_value;
-						$this->render_font_button( (string) $slug, (string) $label, $value, $is_locked );
+						$this->render_font_button( (string) $slug, (string) $label, $value, false );
 					}
 					?>
 				</div>
-				<?php if ( $show_pro_overlay ) : ?>
-				<div class="aio-login__customizer-font-pro-unified-overlay" aria-hidden="true">
-				</div>
-				<?php endif; ?>
 			</div>
 			<?php endif; ?>
 			<input type="hidden" id="<?php echo esc_attr( $input_id ); ?>" <?php $this->link(); ?> value="<?php echo esc_attr( $value ); ?>" />

@@ -112,10 +112,11 @@ body.login:not(.interim-login) #lostpasswordform > .language-switcher form#langu
 body.login:not(.interim-login) #registerform > .language-switcher form#language-switcher {
 	display: flex !important;
 	flex-direction: row !important;
-	flex-wrap: nowrap !important;
+	flex-wrap: wrap !important;
 	align-items: center !important;
 	justify-content: center !important;
-	gap: 8px !important;
+	row-gap: 8px !important;
+	column-gap: 8px !important;
 	margin: 0 auto !important;
 	width: 100% !important;
 	max-width: 100% !important;
@@ -139,10 +140,11 @@ body.login:not(.interim-login) #registerform > .language-switcher select {
 	height: auto !important;
 	vertical-align: middle !important;
 	margin: 0 !important;
-	flex: 1 1 12rem !important;
-	min-width: 140px !important;
+	/* Grow to fill the row when there is room, but always allow full-width wrapping instead of clipping text. */
+	flex: 1 1 200px !important;
+	min-width: 200px !important;
+	max-width: 100% !important;
 	width: auto !important;
-	max-width: none !important;
 	align-self: center !important;
 	padding-right: 2.25rem !important;
 	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%2350575e%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpolyline points=%226,9 12,15 18,9%22/%3E%3C/svg%3E") !important;
@@ -176,15 +178,6 @@ body.login:not(.interim-login) #registerform > .language-switcher .button {
 	box-shadow: none !important;
 	text-shadow: none !important;
 }
-@media screen and (max-width: 480px) {
-	body.login:not(.interim-login) #login > .language-switcher form#language-switcher,
-	body.login:not(.interim-login) #loginform > .language-switcher form#language-switcher,
-	body.login:not(.interim-login) #lostpasswordform > .language-switcher form#language-switcher,
-	body.login:not(.interim-login) #registerform > .language-switcher form#language-switcher {
-		flex-wrap: wrap !important;
-		justify-content: center !important;
-	}
-}
 ';
 			wp_add_inline_style( 'login', $css );
 		}
@@ -196,6 +189,10 @@ body.login:not(.interim-login) #registerform > .language-switcher .button {
 		 */
 		public function print_login_language_switcher_move_script() {
 			if ( ! empty( $GLOBALS['interim_login'] ) ) {
+				return;
+			}
+			if ( function_exists( '\AIO_Login\Login_Customization\aio_login_is_login_customizer_preview_request' )
+				&& \AIO_Login\Login_Customization\aio_login_is_login_customizer_preview_request() ) {
 				return;
 			}
 			$script = $this->get_login_language_switcher_move_script();
@@ -212,9 +209,7 @@ body.login:not(.interim-login) #registerform > .language-switcher .button {
 		 * @return string
 		 */
 		private function get_login_language_switcher_move_script() {
-			return <<<JS
-document.addEventListener('DOMContentLoaded',function(){var login=document.getElementById('login');if(!login){return;}var ls=document.querySelector('body.login .language-switcher');var moveLs=!!ls&&!login.contains(ls);if(document.body.classList.contains('aio-login__template-01')){if(moveLs){var f01=document.getElementById('loginform')||document.getElementById('lostpasswordform')||document.getElementById('registerform');if(f01){var n01=document.getElementById('nav');var b01=document.getElementById('backtoblog');if(n01&&n01.parentNode===login){f01.appendChild(n01);}if(b01&&b01.parentNode===login){f01.appendChild(b01);}f01.appendChild(ls);}else{login.appendChild(ls);}}if(!login.querySelector('.aio-login__template-01-scroll')){var pane=document.createElement('div');pane.className='aio-login__template-01-scroll';Array.prototype.slice.call(login.children).forEach(function(n){pane.appendChild(n);});login.insertBefore(pane,login.firstChild);}return;}if(!moveLs){return;}if(document.body.classList.contains('aio-login__template-09')){var pf=document.getElementById('loginform')||document.getElementById('lostpasswordform')||document.getElementById('registerform');if(pf){pf.appendChild(ls);}else{login.appendChild(ls);}return;}var bb=document.getElementById('backtoblog');var nav=document.getElementById('nav');var anchor=(bb&&bb.parentNode===login)?bb:((nav&&nav.parentNode===login)?nav:null);if(anchor){if(anchor.nextSibling){anchor.parentNode.insertBefore(ls,anchor.nextSibling);}else{anchor.parentNode.appendChild(ls);}}else{login.appendChild(ls);}});
-JS;
+			return "document.addEventListener('DOMContentLoaded',function(){var login=document.getElementById('login');if(!login){return;}var ls=document.querySelector('body.login .language-switcher');var moveLs=!!ls&&!login.contains(ls);if(document.body.classList.contains('aio-login__template-01')){var f01=document.getElementById('loginform')||document.getElementById('lostpasswordform')||document.getElementById('registerform');if(f01){var n01=document.getElementById('nav');var b01=document.getElementById('backtoblog');if(n01&&!f01.contains(n01)){f01.appendChild(n01);}if(b01&&!f01.contains(b01)){f01.appendChild(b01);}if(moveLs){f01.appendChild(ls);}}else if(moveLs){login.appendChild(ls);}if(!login.querySelector('.aio-login__template-01-scroll')){var pane=document.createElement('div');pane.className='aio-login__template-01-scroll';Array.prototype.slice.call(login.children).forEach(function(n){pane.appendChild(n);});login.insertBefore(pane,login.firstChild);}return;}if(!moveLs){return;}if(document.body.classList.contains('aio-login__template-09')){var pf=document.getElementById('loginform')||document.getElementById('lostpasswordform')||document.getElementById('registerform');if(pf){pf.appendChild(ls);}else{login.appendChild(ls);}return;}var bb=document.getElementById('backtoblog');var nav=document.getElementById('nav');var anchor=(bb&&login.contains(bb))?bb:((nav&&login.contains(nav))?nav:null);if(anchor&&anchor.parentNode){if(anchor.nextSibling){anchor.parentNode.insertBefore(ls,anchor.nextSibling);}else{anchor.parentNode.appendChild(ls);}}else{login.appendChild(ls);}});";
 		}
 
 		/**

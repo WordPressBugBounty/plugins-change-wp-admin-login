@@ -79,16 +79,6 @@ if ( ! class_exists( 'AIO_Login\\Passwordless_Otp\\OTP_Service' ) ) {
 				);
 			}
 
-			if ( OTP_Lockout::is_passwordless_verify_blocked( $ip, $identifier, $channel ) ) {
-				return new \WP_Error(
-					'verify_blocked',
-					OTP_Lockout::get_passwordless_verify_blocked_message( $ip, $identifier, $channel ),
-					array(
-						'length' => OTP_Settings::get_otp_length( $channel ),
-					)
-				);
-			}
-
 			$send_check = OTP_Lockout::record_send_attempt( $ip, $channel );
 			if ( is_wp_error( $send_check ) ) {
 				return $send_check;
@@ -98,7 +88,36 @@ if ( ! class_exists( 'AIO_Login\\Passwordless_Otp\\OTP_Service' ) ) {
 				$identifier = strtolower( sanitize_email( (string) $identifier ) );
 			}
 
-			$id_send = OTP_Lockout::record_identifier_send( $identifier, $channel );
+			return OTP_Lockout::with_identifier_lock(
+				$identifier,
+				$channel,
+				static function () use ( $channel, $identifier, $user_id, $ip ) {
+					return OTP_Service::create_challenge_under_lock( $channel, $identifier, $user_id, $ip );
+				}
+			);
+		}
+
+		/**
+		 * Mint a session while the identifier lock is already held.
+		 *
+		 * @param string $channel    email|sms.
+		 * @param string $identifier Email or phone.
+		 * @param int    $user_id    User ID.
+		 * @param string $ip         Client IP.
+		 * @return array{token:string,otp:string,resend_in:int}|\WP_Error
+		 */
+		public static function create_challenge_under_lock( $channel, $identifier, $user_id, $ip ) {
+			if ( OTP_Lockout::is_passwordless_verify_blocked( $ip, $identifier, $channel, true ) ) {
+				return new \WP_Error(
+					'verify_blocked',
+					OTP_Lockout::get_passwordless_verify_blocked_message( $ip, $identifier, $channel ),
+					array(
+						'length' => OTP_Settings::get_otp_length( $channel ),
+					)
+				);
+			}
+
+			$id_send = OTP_Lockout::record_identifier_send( $identifier, $channel, true );
 			if ( is_wp_error( $id_send ) ) {
 				return $id_send;
 			}
@@ -154,7 +173,31 @@ if ( ! class_exists( 'AIO_Login\\Passwordless_Otp\\OTP_Service' ) ) {
 				);
 			}
 
-			if ( OTP_Lockout::is_passwordless_verify_blocked( $ip, $identifier, $channel ) ) {
+			$send_check = OTP_Lockout::record_send_attempt( $ip, $channel );
+			if ( is_wp_error( $send_check ) ) {
+				return $send_check;
+			}
+
+			return OTP_Lockout::with_identifier_lock(
+				$identifier,
+				$channel,
+				static function () use ( $token, $ip, $channel, $identifier ) {
+					return OTP_Service::resend_challenge_under_lock( $token, $ip, $channel, $identifier );
+				}
+			);
+		}
+
+		/**
+		 * Resend while the identifier lock is already held.
+		 *
+		 * @param string $token      Session token.
+		 * @param string $ip         Client IP.
+		 * @param string $channel    email|sms.
+		 * @param string $identifier Email or phone.
+		 * @return array{otp:string,resend_in:int}|\WP_Error
+		 */
+		public static function resend_challenge_under_lock( $token, $ip, $channel, $identifier ) {
+			if ( OTP_Lockout::is_passwordless_verify_blocked( $ip, $identifier, $channel, true ) ) {
 				return new \WP_Error(
 					'verify_blocked',
 					OTP_Lockout::get_passwordless_verify_blocked_message( $ip, $identifier, $channel ),
@@ -164,12 +207,12 @@ if ( ! class_exists( 'AIO_Login\\Passwordless_Otp\\OTP_Service' ) ) {
 				);
 			}
 
-			$send_check = OTP_Lockout::record_send_attempt( $ip, $channel );
-			if ( is_wp_error( $send_check ) ) {
-				return $send_check;
+			$session = self::get_session( $token, true );
+			if ( is_wp_error( $session ) ) {
+				return $session;
 			}
 
-			$id_send = OTP_Lockout::record_identifier_send( $identifier, $channel );
+			$id_send = OTP_Lockout::record_identifier_send( $identifier, $channel, true );
 			if ( is_wp_error( $id_send ) ) {
 				return $id_send;
 			}
@@ -224,7 +267,36 @@ if ( ! class_exists( 'AIO_Login\\Passwordless_Otp\\OTP_Service' ) ) {
 				$channel = 'email';
 			}
 
-			if ( OTP_Lockout::is_passwordless_verify_blocked( $ip, $identifier, $channel ) ) {
+			$otp = preg_replace( '/\D/', '', (string) $otp );
+			$max = OTP_Lockout::get_verify_attempt_limit( $channel );
+
+			return OTP_Lockout::with_identifier_lock(
+				$identifier,
+				$channel,
+				static function () use ( $token, $otp, $ip, $channel, $identifier, $max ) {
+					return OTP_Service::verify_challenge_under_lock( $token, $otp, $ip, $channel, $identifier, $max );
+				}
+			);
+		}
+
+		/**
+		 * Verify while the identifier lock is already held.
+		 *
+		 * @param string $token      Session token.
+		 * @param string $otp        Digits only.
+		 * @param string $ip         Client IP.
+		 * @param string $channel    email|sms.
+		 * @param string $identifier Email or phone.
+		 * @param int    $max        Attempt limit.
+		 * @return array{user_id:int,channel:string}|\WP_Error
+		 */
+		public static function verify_challenge_under_lock( $token, $otp, $ip, $channel, $identifier, $max ) {
+			$session = self::get_session( $token, true );
+			if ( is_wp_error( $session ) ) {
+				return $session;
+			}
+
+			if ( OTP_Lockout::is_passwordless_verify_blocked( $ip, $identifier, $channel, true ) ) {
 				return new \WP_Error(
 					'verify_blocked',
 					OTP_Lockout::get_passwordless_verify_blocked_message( $ip, $identifier, $channel )
@@ -240,81 +312,69 @@ if ( ! class_exists( 'AIO_Login\\Passwordless_Otp\\OTP_Service' ) ) {
 				);
 			}
 
-			$otp = preg_replace( '/\D/', '', (string) $otp );
-			$max = OTP_Lockout::get_verify_attempt_limit( $channel );
+			$fail_count = OTP_Lockout::get_identifier_failure_count( $identifier, $channel, true );
+			if ( $fail_count >= $max ) {
+				OTP_Lockout::block_ip( $identifier, $ip, $channel );
+				self::destroy_session( $token );
+				return new \WP_Error( 'max_attempts', OTP_Lockout::get_blocked_message( $ip ) );
+			}
 
-			$result = OTP_Lockout::with_identifier_lock(
-				$identifier,
-				$channel,
-				static function () use ( $token, $otp, $ip, $session, $channel, $identifier, $max ) {
-					if ( OTP_Lockout::is_passwordless_verify_blocked( $ip, $identifier, $channel ) ) {
-						return new \WP_Error(
-							'verify_blocked',
-							OTP_Lockout::get_passwordless_verify_blocked_message( $ip, $identifier, $channel )
-						);
-					}
+			if ( wp_check_password( $otp, $session['hash'] ) ) {
+				self::destroy_session( $token );
+				OTP_Lockout::clear_send_count( $ip );
+				OTP_Lockout::clear_send_lockout( $ip );
+				OTP_Lockout::clear_verify_lockout( $ip );
+				OTP_Lockout::clear_account_lockout( (int) ( $session['user_id'] ?? 0 ), $identifier, $channel );
+				OTP_Lockout::clear_active_session( $identifier, $channel, $token );
+				Helper::update_user_attempt_count( $ip, true );
 
-					$fail_count = OTP_Lockout::get_identifier_failure_count( $identifier, $channel );
-					if ( $fail_count >= $max ) {
-						OTP_Lockout::block_ip( $identifier, $ip, $channel );
-						self::destroy_session( $token );
-						return new \WP_Error( 'max_attempts', OTP_Lockout::get_blocked_message( $ip ) );
-					}
-
-					if ( wp_check_password( $otp, $session['hash'] ) ) {
-						self::destroy_session( $token );
-						OTP_Lockout::clear_send_count( $ip );
-						OTP_Lockout::clear_send_lockout( $ip );
-						OTP_Lockout::clear_verify_lockout( $ip );
-						OTP_Lockout::clear_account_lockout( (int) ( $session['user_id'] ?? 0 ), $identifier, $channel );
-						OTP_Lockout::clear_active_session( $identifier, $channel, $token );
-						Helper::update_user_attempt_count( $ip, true );
-
-						$user_id = self::ensure_user_for_verified_session( $session );
-						if ( is_wp_error( $user_id ) ) {
-							return $user_id;
-						}
-
-						return array(
-							'user_id' => (int) $user_id,
-							'channel' => $channel,
-						);
-					}
-
-					$fail_count = OTP_Lockout::increment_identifier_failure( $identifier, $channel );
-					OTP_Service::log_failed_attempt_public( $identifier );
-					OTP_Lockout::record_shared_password_limiter_failure( $ip );
-
-					if ( $fail_count >= $max ) {
-						self::destroy_session( $token );
-						OTP_Lockout::clear_active_session( $identifier, $channel, $token );
-						OTP_Lockout::block_ip( $identifier, $ip, $channel );
-						return new \WP_Error( 'max_attempts', OTP_Lockout::get_blocked_message( $ip ) );
-					}
-
-					$remaining = max( 0, $max - $fail_count );
-
-					return new \WP_Error(
-						'invalid_otp',
-						sprintf(
-							/* translators: %s: remaining attempts phrase */
-							__( 'Invalid OTP. Please enter the correct verification code. %s', 'change-wp-admin-login' ),
-							sprintf(
-								/* translators: %d: remaining verification attempts */
-								_n(
-									'You have %d attempt remaining.',
-									'You have %d attempts remaining.',
-									$remaining,
-									'change-wp-admin-login'
-								),
-								$remaining
-							)
-						)
-					);
+				$user_id = self::ensure_user_for_verified_session( $session );
+				if ( is_wp_error( $user_id ) ) {
+					return $user_id;
 				}
-			);
 
-			return $result;
+				return array(
+					'user_id' => (int) $user_id,
+					'channel' => $channel,
+				);
+			}
+
+			$fail_count = OTP_Lockout::increment_identifier_failure( $identifier, $channel );
+			self::log_failed_attempt_public( $identifier );
+			$shared = OTP_Lockout::record_shared_password_limiter_failure( $ip );
+			if ( false === $shared ) {
+				return new \WP_Error(
+					'rate_limited',
+					__( 'Please try again.', 'change-wp-admin-login' )
+				);
+			}
+
+			if ( $fail_count >= $max ) {
+				self::destroy_session( $token );
+				OTP_Lockout::clear_active_session( $identifier, $channel, $token );
+				OTP_Lockout::block_ip( $identifier, $ip, $channel );
+				return new \WP_Error( 'max_attempts', OTP_Lockout::get_blocked_message( $ip ) );
+			}
+
+			$remaining = max( 0, $max - $fail_count );
+
+			return new \WP_Error(
+				'invalid_otp',
+				sprintf(
+					/* translators: %s: remaining attempts phrase */
+					__( 'Invalid OTP. Please enter the correct verification code. %s', 'change-wp-admin-login' ),
+					sprintf(
+						/* translators: %d: remaining verification attempts */
+						_n(
+							'You have %d attempt remaining.',
+							'You have %d attempts remaining.',
+							$remaining,
+							'change-wp-admin-login'
+						),
+						$remaining
+					)
+				)
+			);
 		}
 
 		/**
@@ -366,15 +426,21 @@ if ( ! class_exists( 'AIO_Login\\Passwordless_Otp\\OTP_Service' ) ) {
 
 		/**
 		 * @param string $token Token.
+		 * @param bool   $fresh Bypass stale per-request transient cache.
 		 * @return array<string, mixed>|\WP_Error
 		 */
-		public static function get_session( $token ) {
+		public static function get_session( $token, $fresh = false ) {
 			$token = self::normalize_session_token( $token );
 			if ( strlen( $token ) < 20 ) {
 				return new \WP_Error( 'invalid_session', __( 'Your session has expired. Please start again.', 'change-wp-admin-login' ) );
 			}
 
-			$session = get_transient( self::TRANSIENT_PREFIX . $token );
+			$key = self::TRANSIENT_PREFIX . $token;
+			if ( $fresh ) {
+				OTP_Lockout::refresh_transient( $key );
+			}
+
+			$session = get_transient( $key );
 			if ( ! is_array( $session ) ) {
 				return new \WP_Error( 'invalid_session', __( 'Your session has expired. Please start again.', 'change-wp-admin-login' ) );
 			}
@@ -401,7 +467,7 @@ if ( ! class_exists( 'AIO_Login\\Passwordless_Otp\\OTP_Service' ) ) {
 		 * @return string
 		 */
 		private static function generate_numeric_otp( $length ) {
-			$length = max( 4, min( 8, (int) $length ) );
+			$length = max( 6, min( 8, (int) $length ) );
 			$min    = (int) pow( 10, $length - 1 );
 			$max    = (int) pow( 10, $length ) - 1;
 			return (string) wp_rand( $min, $max );
@@ -586,6 +652,10 @@ if ( ! class_exists( 'AIO_Login\\Passwordless_Otp\\OTP_Service' ) ) {
 				return null;
 			}
 
+			if ( ! class_exists( __NAMESPACE__ . '\\OTP_Country_Codes' ) ) {
+				return null;
+			}
+
 			$digits        = $matches[1];
 			$preferred_iso = strtoupper( sanitize_text_field( (string) $preferred_iso ) );
 			$allowed       = OTP_Settings::get_sms_allowed_country_isos();
@@ -736,6 +806,10 @@ if ( ! class_exists( 'AIO_Login\\Passwordless_Otp\\OTP_Service' ) ) {
 			$country_iso = strtoupper( sanitize_text_field( (string) $country_iso ) );
 			if ( '' !== $country_iso ) {
 				return in_array( $country_iso, $allowed, true );
+			}
+
+			if ( ! class_exists( __NAMESPACE__ . '\\OTP_Country_Codes' ) ) {
+				return false;
 			}
 
 			$map = OTP_Country_Codes::calling_code_map();

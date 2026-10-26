@@ -3,13 +3,13 @@
 		<div>
 			<aio-login-card
 				type="success"
-				:title="$t('Success')"
+				:title="$t('Successful Logins')"
 			></aio-login-card>
 		</div>
 		<div>
 			<aio-login-card
 				type="failed"
-				:title="$t('Failed')"
+				:title="$t('Failed Logins')"
 			></aio-login-card>
 		</div>
 		<div>
@@ -26,7 +26,7 @@
 
 <script>
 export default {
-	name: 'aio-login-cards'
+	name: 'aio-login-cards',
 }
 </script>
 
@@ -34,7 +34,8 @@ export default {
 .aio-login__cards-container {
 	display: grid;
 	grid-template-columns: repeat(4, minmax(0, 1fr));
-	gap: 15px;
+	gap: 24px;
+	overflow: visible;
 }
 
 @media screen and (max-width: 1200px) {

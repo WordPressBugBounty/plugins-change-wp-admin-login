@@ -7,6 +7,8 @@
 
 namespace AIO_Login\User_Enumeration_Protection;
 
+use AIO_Login\Multisite\Network_Settings;
+
 defined( 'ABSPATH' ) || exit;
 
 /**
@@ -53,7 +55,7 @@ class User_Enumeration_Protection {
 	 * Check if protection is enabled
 	 */
 	private function is_protection_enabled() {
-		return get_option( 'aio_login_user_enumeration_enable', 'off' ) === 'on';
+		return Network_Settings::get_option( 'aio_login_user_enumeration_enable', 'off' ) === 'on';
 	}
 
 	/**
@@ -102,11 +104,9 @@ class User_Enumeration_Protection {
 			add_filter( 'the_content', array( $this, 'obfuscate_author_in_content' ) );
 		}
 
-		// Logging
-		if ( $this->is_logging_enabled() ) {
-			add_action( 'wp_login_failed', array( $this, 'log_failed_login' ) );
-			add_action( 'user_register', array( $this, 'log_registration_attempt' ) );
-		}
+		// Enumeration attempt detection is announced for Pro logging via
+		// do_action( 'aio_login_user_enumeration_detected', $type, $details ).
+		// Free does not store or render enumeration logs (G5).
 	}
 
 
@@ -126,8 +126,7 @@ class User_Enumeration_Protection {
 				return;
 			}
 
-			// Log the attempt
-			$this->log_enumeration_attempts();
+			$this->detect_enumeration_attempt( 'author_page_access' );
 
 			// Obfuscate the page content
 			$this->obfuscate_author_page();
@@ -151,7 +150,12 @@ class User_Enumeration_Protection {
 		if ( $this->is_author_sitemaps_disabled() ) {
 			global $wp;
 			if ( strpos( $wp->request, 'wp-sitemap-users' ) !== false ) {
-				wp_die( 'Author sitemap not available.', 'Not Found', array( 'response' => 404 ) );
+				$this->detect_enumeration_attempt( 'sitemap_access' );
+				wp_die(
+					esc_html__( 'Author sitemap not available.', 'change-wp-admin-login' ),
+					esc_html__( 'Not Found', 'change-wp-admin-login' ),
+					array( 'response' => 404 )
+				);
 			}
 		}
 	}
@@ -205,7 +209,7 @@ class User_Enumeration_Protection {
 		add_action( 'wp_head', array( $this, 'remove_author_meta' ) );
 
 		// Add CSS to hide sensitive elements
-		add_action( 'wp_head', array( $this, 'add_obfuscation_css' ) );
+		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_obfuscation_css' ) );
 	}
 
 	/**
@@ -272,18 +276,17 @@ class User_Enumeration_Protection {
 	}
 
 	/**
-	 * Add obfuscation CSS
+	 * Enqueue author obfuscation CSS.
 	 */
-	public function add_obfuscation_css() {
-		echo '<style>
-			.author-bio, .author-description, .author-email, .author-url, .author-meta, .author-posts-link, .author-archive-link { display: none !important; }
-			.author-name::after { content: " (Protected)"; }
-		</style>';
+	public function enqueue_obfuscation_css() {
+		$css = '.author-bio,.author-description,.author-email,.author-url,.author-meta,.author-posts-link,.author-archive-link{display:none!important}.author-name::after{content:" (Protected)"}';
+		wp_register_style( 'aio-login-ue-obfuscation', false, array(), defined( 'AIO_LOGIN__VERSION' ) ? AIO_LOGIN__VERSION : null );
+		wp_enqueue_style( 'aio-login-ue-obfuscation' );
+		wp_add_inline_style( 'aio-login-ue-obfuscation', $css );
 	}
 
 	/**
-	 * Protect REST API user endpoints from public enumeration.
-	 * Do not block /users/me — WordPress admin (api-fetch) needs it.
+	 * Protect REST API user endpoints
 	 */
 	public function protect_rest_api( $result ) {
 		// If there's already an error, return it
@@ -291,22 +294,21 @@ class User_Enumeration_Protection {
 			return $result;
 		}
 
-		// Authenticated requests are fine (and cookie auth may still be resolving).
-		if ( is_user_logged_in() ) {
-			return $result;
+		// Check if this is a user-related endpoint
+		$request_uri = $_SERVER['REQUEST_URI'] ?? '';
+		if ( strpos( $request_uri, '/wp-json/wp/v2/users' ) !== false ) {
+			// Only allow authenticated requests
+			if ( ! is_user_logged_in() ) {
+				$this->detect_enumeration_attempt( 'rest_api_access' );
+				return new \WP_Error(
+					'rest_forbidden',
+					__( 'User enumeration not allowed.', 'change-wp-admin-login' ),
+					array( 'status' => 403 )
+				);
+			}
 		}
 
-		$request_uri = isset( $_SERVER['REQUEST_URI'] ) ? (string) $_SERVER['REQUEST_URI'] : '';
-		if ( '' === $request_uri || false === strpos( $request_uri, '/wp-json/wp/v2/users' ) ) {
-			return $result;
-		}
-
-		// Current-user endpoint is not enumeration — used heavily by wp-admin.
-		if ( preg_match( '#/wp-json/wp/v2/users/me(?:/|\?|$)#', $request_uri ) ) {
-			return $result;
-		}
-
-		return new \WP_Error( 'rest_forbidden', 'User enumeration not allowed.', array( 'status' => 403 ) );
+		return $result;
 	}
 
 	/**
@@ -323,7 +325,7 @@ class User_Enumeration_Protection {
 	 * Generic login error message
 	 */
 	public function generic_login_error( $error ) {
-		return 'Invalid username or password.';
+		return __( 'Invalid username or password.', 'change-wp-admin-login' );
 	}
 
 	/**
@@ -333,14 +335,14 @@ class User_Enumeration_Protection {
 		// Remove specific error messages that might reveal user information
 		if ( isset( $errors->errors['username_exists'] ) ) {
 			unset( $errors->errors['username_exists'] );
-			$errors->add( 'username_exists', 'Registration failed. Please try again.' );
+			$errors->add( 'username_exists', __( 'Registration failed. Please try again.', 'change-wp-admin-login' ) );
 		}
-		
+
 		if ( isset( $errors->errors['email_exists'] ) ) {
 			unset( $errors->errors['email_exists'] );
-			$errors->add( 'email_exists', 'Registration failed. Please try again.' );
+			$errors->add( 'email_exists', __( 'Registration failed. Please try again.', 'change-wp-admin-login' ) );
 		}
-		
+
 		return $errors;
 	}
 
@@ -375,130 +377,28 @@ class User_Enumeration_Protection {
 	}
 
 	/**
-	 * Log failed login attempts
+	 * Announce an enumeration attempt for Pro (and other listeners) to handle.
+	 *
+	 * Free does not persist logs; Pro listeners may write to aio_login_enumeration_logs.
+	 *
+	 * @param string $type     Attempt type slug.
+	 * @param string $username Optional username involved.
 	 */
-	public function log_failed_login( $username ) {
-		$this->log_enumeration_attempt( 'failed_login', $username );
-	}
-
-	/**
-	 * Log registration attempts
-	 */
-	public function log_registration_attempt( $user_id ) {
-		$user = get_user_by( 'id', $user_id );
-		if ( $user ) {
-			$this->log_enumeration_attempt( 'registration_attempt', $user->user_login );
-		}
-	}
-
-	/**
-	 * Log enumeration attempts
-	 */
-	public function log_enumeration_attempts() {
-		$this->log_enumeration_attempt( 'author_page_access' );
-	}
-
-	/**
-	 * Log enumeration attempt
-	 */
-	private function log_enumeration_attempt( $type, $username = '' ) {
-		if ( ! $this->is_logging_enabled() ) {
-			return;
-		}
-
-		global $wpdb;
-
-		$ip_address = $this->get_client_ip();
-		$user_agent = $_SERVER['HTTP_USER_AGENT'] ?? '';
-		$duration = get_option( 'aio_login_user_enumeration_duration', 30 );
-		$blocked_until = time() + ( $duration * 24 * 60 * 60 );
-
-		// Check if IP is already logged
-		$existing_log = $this->get_existing_log( $ip_address );
-
-		if ( $existing_log ) {
-			// Update existing log
-			$this->update_enumeration_log( $existing_log->id, $type, $username, $blocked_until );
-		} else {
-			// Create new log
-			$this->create_enumeration_log( $ip_address, $type, $username, $user_agent, $blocked_until );
-		}
-
-		do_action( 'aio_login_enumeration_logged', $type, $username, $ip_address );
-	}
-
-	/**
-	 * Get client IP address
-	 */
-	private function get_client_ip() {
-		$ip_keys = array( 'HTTP_CLIENT_IP', 'HTTP_X_FORWARDED_FOR', 'REMOTE_ADDR' );
-		
-		foreach ( $ip_keys as $key ) {
-			if ( array_key_exists( $key, $_SERVER ) === true ) {
-				foreach ( explode( ',', $_SERVER[ $key ] ) as $ip ) {
-					$ip = trim( $ip );
-					if ( filter_var( $ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE ) !== false ) {
-						return $ip;
-					}
-				}
-			}
-		}
-
-		return $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
-	}
-
-	/**
-	 * Get existing log for IP
-	 */
-	private function get_existing_log( $ip_address ) {
-		global $wpdb;
-		$table_name = $wpdb->prefix . 'aio_login_enumeration_logs';
-		
-		return $wpdb->get_row( $wpdb->prepare(
-			"SELECT * FROM $table_name WHERE ip_address = %s ORDER BY created_at DESC LIMIT 1",
-			$ip_address
-		) );
-	}
-
-	/**
-	 * Create enumeration log
-	 */
-	private function create_enumeration_log( $ip_address, $type, $username, $user_agent, $blocked_until ) {
-		global $wpdb;
-		$table_name = $wpdb->prefix . 'aio_login_enumeration_logs';
-		
-		$wpdb->insert(
-			$table_name,
+	private function detect_enumeration_attempt( $type, $username = '' ) {
+		/**
+		 * Fires when Free User Enumeration Protection blocks or detects an attempt.
+		 *
+		 * @param string $type    Attempt type (author_page_access, sitemap_access, rest_api_access, …).
+		 * @param array  $details {
+		 *     @type string $username Related username when available.
+		 * }
+		 */
+		do_action(
+			'aio_login_user_enumeration_detected',
+			$type,
 			array(
-				'ip_address' => $ip_address,
-				'type' => $type,
-				'username' => $username,
-				'user_agent' => $user_agent,
-				'blocked_until' => date( 'Y-m-d H:i:s', $blocked_until ),
-				'created_at' => current_time( 'mysql' ),
-			),
-			array( '%s', '%s', '%s', '%s', '%s', '%s' )
-		);
-	}
-
-	/**
-	 * Update enumeration log
-	 */
-	private function update_enumeration_log( $log_id, $type, $username, $blocked_until ) {
-		global $wpdb;
-		$table_name = $wpdb->prefix . 'aio_login_enumeration_logs';
-		
-		$wpdb->update(
-			$table_name,
-			array(
-				'type' => $type,
-				'username' => $username,
-				'blocked_until' => date( 'Y-m-d H:i:s', $blocked_until ),
-				'updated_at' => current_time( 'mysql' ),
-			),
-			array( 'id' => $log_id ),
-			array( '%s', '%s', '%s', '%s' ),
-			array( '%d' )
+				'username' => (string) $username,
+			)
 		);
 	}
 
@@ -537,12 +437,5 @@ class User_Enumeration_Protection {
 	 */
 	private function is_comment_protection_enabled() {
 		return get_option( 'aio_login_user_enumeration_comments', 'off' ) === 'on';
-	}
-
-	/**
-	 * Check if logging is enabled
-	 */
-	private function is_logging_enabled() {
-		return get_option( 'aio_login_user_enumeration_log', 'off' ) === 'on';
 	}
 } 

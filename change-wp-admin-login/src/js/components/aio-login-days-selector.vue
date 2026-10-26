@@ -20,7 +20,7 @@
 						@click="updateDays"
 						checked
 					>
-					{{ $t("Today") }}
+					{{ $t('Today') }}
 				</label>
 			</div>
 			<div>
@@ -32,7 +32,7 @@
 						value="last_7_days"
 						@click="updateDays"
 					>
-					{{ $t("Last 7 days") }}
+					{{ $t('Last 7 days') }}
 				</label>
 			</div>
 			<div>
@@ -44,7 +44,7 @@
 						value="last_14_days"
 						@click="updateDays"
 					>
-					{{ $t("Last 14 days") }}
+					{{ $t('Last 14 days') }}
 				</label>
 			</div>
 			<div>
@@ -56,7 +56,7 @@
 						value="last_month"
 						@click="updateDays"
 					>
-					{{ $t("Last month") }}
+					{{ $t('Last month') }}
 				</label>
 			</div>
 		</div>
@@ -133,22 +133,29 @@ export default {
 <style scoped>
 .aio-login__selector {
 	display: inline-block;
-	margin-left: 5px;
-	margin-bottom: 5px;
 	width: 7px;
 	height: 7px;
-	border-top-width: 1px;
+	border-top-width: 1.5px;
 	border-top-style: solid;
-	border-left-width: 1px;
+	border-left-width: 1.5px;
 	border-left-style: solid;
 	transform: rotate( 225deg );
+	flex-shrink: 0;
+}
+
+.aio-login__card-selector-container {
+	position: relative;
 }
 
 .aio-login__card-selector-container p {
+	margin: 0;
 	font-size: 18px;
 	font-weight: 500;
-	line-height: 21.6px;
+	line-height: 1.2;
 	cursor: pointer;
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
 }
 
 .container-success .aio-login__selector {
@@ -167,32 +174,85 @@ export default {
 	position: absolute;
 	background: #fff;
 	border: 1px solid #ebebeb;
-	box-shadow: 0px 4px 16px 0px #00000014;
-	top: 85px;
-	left: 23px;
+	box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.08);
+	top: calc(100% + 8px);
+	left: 0;
 	border-radius: 8px;
-	padding-top: 25px !important;
-	padding-bottom: 25px !important;
-	z-index: 1;
+	padding: 10px 12px !important;
+	z-index: 30;
+	min-width: 168px;
+	box-sizing: border-box;
+}
+
+.aio-login__days-selector > div + div {
+	margin-top: 4px;
 }
 
 .aio-login__days-selector label {
-	font-size: 16px;
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	margin: 0;
+	padding: 6px 4px;
+	font-size: 14px;
 	font-weight: 500;
 	color: #405980;
-	line-height: 25px;
+	line-height: 1.3;
+	cursor: pointer;
+	border-radius: 4px;
 }
 
+.aio-login__days-selector label:hover {
+	background: #f6f7f7;
+}
+
+/* Override WP admin radio chrome — compact brand radios. */
 .aio-login__days-selector input[type="radio"] {
-	width: 20px;
-	height: 20px;
-	border-color: #9516DF;
+	-webkit-appearance: none;
+	appearance: none;
+	width: 16px !important;
+	height: 16px !important;
+	min-width: 16px;
+	margin: 0 !important;
+	padding: 0 !important;
+	border: 1.5px solid #9516DF !important;
+	border-radius: 50% !important;
+	background: #fff !important;
+	box-shadow: none !important;
+	flex-shrink: 0;
+	cursor: pointer;
+	position: relative;
 }
 
 .aio-login__days-selector input[type="radio"]::before {
-	background-color: #9516DF;
-	width: 12px;
-	height: 12px;
+	content: "" !important;
+	display: block !important;
+	width: 8px !important;
+	height: 8px !important;
+	margin: 0 !important;
+	border-radius: 50%;
+	background: transparent !important;
+	box-shadow: none !important;
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%) scale(0);
+	transition: transform 0.12s ease-in-out;
+}
+
+.aio-login__days-selector input[type="radio"]:checked {
+	border-color: #9516DF !important;
+	background: #fff !important;
+}
+
+.aio-login__days-selector input[type="radio"]:checked::before {
+	background: #9516DF !important;
+	transform: translate(-50%, -50%) scale(1);
+}
+
+.aio-login__days-selector input[type="radio"]:focus {
+	outline: none;
+	box-shadow: 0 0 0 1px #fff, 0 0 0 3px rgba(149, 22, 223, 0.25) !important;
 }
 
 </style>

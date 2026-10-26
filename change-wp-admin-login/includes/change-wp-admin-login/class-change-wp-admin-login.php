@@ -53,10 +53,10 @@ if ( ! class_exists( 'AIO_Login\\Change_WP_Admin_Login\\Change_WP_Admin_Login' )
 		}
 
 		/**
-		 * WP template loader.
+		 * Load the front-end 404 template without including core template-loader.php.
 		 */
 		private function wp_template_loader() {
-			global $pagenow;
+			global $pagenow, $wp_query;
 
 			// phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited
 			$pagenow = 'index.php';
@@ -67,11 +67,23 @@ if ( ! class_exists( 'AIO_Login\\Change_WP_Admin_Login\\Change_WP_Admin_Login' )
 
 			wp();
 
-			if ( $_SERVER['REQUEST_URI'] === $this->user_trailingslashit( str_repeat( '-/', 10 ) ) ) { // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotValidated
+			if ( isset( $_SERVER['REQUEST_URI'] ) && $_SERVER['REQUEST_URI'] === $this->user_trailingslashit( str_repeat( '-/', 10 ) ) ) {
 				$_SERVER['REQUEST_URI'] = $this->user_trailingslashit( '/wp-login-php/' );
 			}
 
-			require_once ABSPATH . WPINC . '/template-loader.php';
+			if ( $wp_query instanceof \WP_Query ) {
+				$wp_query->set_404();
+			}
+			status_header( 404 );
+			nocache_headers();
+
+			$template = get_404_template();
+			if ( ! $template ) {
+				$template = get_index_template();
+			}
+			if ( $template ) {
+				include $template; // phpcs:ignore WordPressVIPMinimum.Files.IncludingFile.UsingVariable
+			}
 
 			die;
 		}
@@ -183,24 +195,49 @@ if ( ! class_exists( 'AIO_Login\\Change_WP_Admin_Login\\Change_WP_Admin_Login' )
 		 * Wpmu options.
 		 */
 		public function wpmu_options() {
-			$out  = '<h3>' . __( 'Change wp-admin login', 'change-wp-admin-login' ) . '</h3>';
-			$out .= '<p>' . __( 'This option allows you to set a networkwide default, which can be overridden by individual sites. Simply go to to the siteâ€™s permalink settings to change the url.', 'change-wp-admin-login' ) . '</p>';
-			$out .= '<table class="form-table">';
-			$out .= '<tr valign="top">';
-			$out .= '<th scope="row">' . __( 'Networkwide default', 'change-wp-admin-login' ) . '</th>';
-			$out .= '<td><input id="rwl-page-input" type="text" name="rwl_page" value="' . get_site_option( 'rwl_page', 'login' ) . '"></td>';
-			$out .= '</tr>';
-			$out .= '</table>';
+			if ( ! current_user_can( 'manage_network_options' ) ) {
+				return;
+			}
 
-			echo wp_kses_post( $out );
+			$value = get_site_option( 'rwl_page', 'login' );
+			?>
+			<h3><?php echo esc_html__( 'Change wp-admin login', 'change-wp-admin-login' ); ?></h3>
+			<p>
+				<?php
+				echo esc_html__(
+					'This option allows you to set a networkwide default, which can be overridden by individual sites. Simply go to the site\'s permalink settings to change the url.',
+					'change-wp-admin-login'
+				);
+				?>
+			</p>
+			<table class="form-table">
+				<tr valign="top">
+					<th scope="row"><?php echo esc_html__( 'Networkwide default', 'change-wp-admin-login' ); ?></th>
+					<td>
+						<input
+							id="rwl-page-input"
+							type="text"
+							name="rwl_page"
+							value="<?php echo esc_attr( $value ); ?>"
+						/>
+					</td>
+				</tr>
+			</table>
+			<?php
 		}
 
 		/**
 		 * Update wpmu options.
 		 */
 		public function update_wpmu_options() {
-			if ( isset( $_POST['rwl_page'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Missing
-				$rwl_page = sanitize_title_with_dashes( wp_unslash( $_POST['rwl_page'] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Missing
+			if ( ! current_user_can( 'manage_network_options' ) ) {
+				return;
+			}
+
+			check_admin_referer( 'siteoptions' );
+
+			if ( isset( $_POST['rwl_page'] ) ) {
+				$rwl_page = sanitize_title_with_dashes( wp_unslash( $_POST['rwl_page'] ) );
 				if ( ! str_contains( $rwl_page, 'wp-login' ) && ! in_array( $rwl_page, $this->forbidden_slugs(), true ) ) {
 					update_site_option( 'rwl_page', $rwl_page );
 				}
@@ -269,8 +306,22 @@ if ( ! class_exists( 'AIO_Login\\Change_WP_Admin_Login\\Change_WP_Admin_Login' )
 				'aio_login__cwpal_sections'
 			);
 
-			register_setting( 'permalink', 'rwl_page_input' );
-			register_setting( 'permalink', 'rwl_redirect_field' );
+			register_setting(
+				'permalink',
+				'rwl_page_input',
+				array(
+					'type'              => 'string',
+					'sanitize_callback' => array( $this, 'sanitize_page_input' ),
+				)
+			);
+			register_setting(
+				'permalink',
+				'rwl_redirect_field',
+				array(
+					'type'              => 'string',
+					'sanitize_callback' => array( $this, 'sanitize_redirect_field' ),
+				)
+			);
 
 			register_setting( 'aio_login__cwpal_settings', 'aio_login__cwpal_enable', array( $this, 'sanitize_toggle_switch' ) );
 			register_setting( 'aio_login__cwpal_settings', 'rwl_page_input', array( $this, 'sanitize_page_input' ) );
@@ -323,9 +374,10 @@ if ( ! class_exists( 'AIO_Login\\Change_WP_Admin_Login\\Change_WP_Admin_Login' )
 				if ( is_multisite() && get_site_option( 'rwl_page', 'login' ) === $rwl_page ) {
 					return '';
 				}
+				return $rwl_page;
 			}
 
-			return $fields;
+			return sanitize_title_with_dashes( (string) $fields );
 		}
 
 		/**
@@ -358,8 +410,7 @@ if ( ! class_exists( 'AIO_Login\\Change_WP_Admin_Login\\Change_WP_Admin_Login' )
 		 * @return string
 		 */
 		public function sanitize_page_input( $fields ) {
-
-			return $fields;
+			return sanitize_text_field( wp_unslash( $fields ) );
 		}
 
 		/**

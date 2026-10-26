@@ -5,10 +5,10 @@
 				<div class="popup-header-title">
 					<img
 						:src="popupHeaderIcon"
-						:alt="$t('Google reCAPTCHA')"
+						alt="Google reCAPTCHA"
 						class="popup-header-title__icon"
 					/>
-					<h2 class="popup-header-title__text">{{ $t("Google reCAPTCHA Configuration") }}</h2>
+					<h2 class="popup-header-title__text">{{ $t('Google reCAPTCHA Configuration') }}</h2>
 				</div>
 				<button class="close-btn" @click="closePopup">&times;</button>
 			</div>
@@ -16,7 +16,7 @@
 			<!-- Step Indicators -->
 			<div class="popup-steps">
 				<div class="step-container">
-					<h4>{{ $t("Getting Started") }}</h4>
+					<h4>{{ $t('Getting Started') }}</h4>
 					<div 
 						class="step" 
 						:class="{ active: currentStep >= 1 }" 
@@ -27,7 +27,7 @@
 				<div class="connector" :style="{ backgroundColor: currentStep >= 2 ? '#9516DF' : '#C9D2E3' }"></div>
 				
 				<div class="step-container">
-					<h4>{{ $t("Configuration") }}</h4>
+					<h4>{{ $t('Configuration') }}</h4>
 					<div 
 						class="step" 
 						:class="{ active: currentStep >= 2 }" 
@@ -38,7 +38,7 @@
 				<div class="connector" :style="{ backgroundColor: currentStep >= 3 ? '#9516DF' : '#C9D2E3' }"></div>
 
 				<div class="step-container">
-					<h4>{{ $t("Settings") }}</h4>
+					<h4>{{ $t('Settings') }}</h4>
 					<div 
 						class="step" 
 						:class="{ active: currentStep >= 3 }" 
@@ -51,34 +51,44 @@
 			<div class="popup-modal-body">
 			<!-- Step 1: Getting Started -->
 			<div v-if="currentStep === 1" class="aio-login-pro__first-step">
-				<h4 class="aio-login-pro__first-step__title">{{ $t("Getting Started") }}</h4>
-				<p class="aio-login-pro__first-step__content">{{ $t("To protect your website from spam and bots, start by adding Google reCAPTCHA to your WordPress login page. First, register your site to generate your Site Key and Secret Key. After getting the keys, continue the setup to secure your site.") }}</p>
-				<h5 class="aio-login-pro__first-step__instruction">{{ $t("Instruction:") }}</h5>
-				<p class="aio-login-pro__first-step__instructions">{{ $t("1. Register your site and get the keys →") }} <a href="https://www.google.com/recaptcha/admin" target="_blank" class="aio-login-pro__first-step__doc-link">{{ $t("Click Here") }}</a></p>
-				<p class="aio-login-pro__first-step__instructions">{{ $t("2. Need help creating keys? →") }} <a href="https://aiologin.com/docs/wordpress-login-security/setting-up-google-recaptcha/" target="_blank" class="aio-login-pro__first-step__doc-link">{{ $t("Click Here") }}</a></p>
-				<p class="aio-login-pro__first-step__next-step-note">{{ $t("3. After getting the Google reCAPTCHA Site Key and Secret Key, click Next to input these credentials.") }}</p>
+				<h4 class="aio-login-pro__first-step__title">{{ $t('Getting Started') }}</h4>
+				<p class="aio-login-pro__first-step__content">{{ $t('To protect your website from spam and bots, start by adding Google reCAPTCHA to your WordPress login page. First, register your site to generate your Site Key and Secret Key. After getting the keys, continue the setup to secure your site.') }}</p>
+				<h5 class="aio-login-pro__first-step__instruction">{{ $t('Instruction:') }}</h5>
+				<p class="aio-login-pro__first-step__instructions">{{ $t('1. Register your site and get the keys →') }} <a href="https://www.google.com/recaptcha/admin" target="_blank" class="aio-login-pro__first-step__doc-link">{{ $t('Click Here') }}</a></p>
+				<p class="aio-login-pro__first-step__instructions">{{ $t('2. Need help creating keys? →') }} <a href="https://aiologin.com/docs/wordpress-login-security/setting-up-google-recaptcha/" target="_blank" class="aio-login-pro__first-step__doc-link">{{ $t('Click Here') }}</a></p>
+				<p class="aio-login-pro__first-step__next-step-note">{{ $t('3. After getting the Google reCAPTCHA Site Key and Secret Key, click Next to input these credentials.') }}</p>
 			</div>
 
 			<!-- Step 2: Configuration -->
 			<div v-if="currentStep === 2" class="aio-login-pro__step2">
+				<div class="aio-login-pro__step2__title-row">
+					<h4 class="aio-login-pro__step2__title">{{ $t('Credentials') }}</h4>
+					<aio-login-network-notice
+						feature="captcha"
+						:only-policies="['site_override_allowed']"
+						:show-override-toggle="true"
+						@can-edit="onNetworkCanEdit"
+					/>
+				</div>
 				<p class="aio-login-pro__step2__description">
-					{{ $t("Enter your credentials for Google reCAPTCHA to authenticate and configure the login process.") }}
+					{{ $t('Enter your credentials for Google reCAPTCHA to authenticate and configure the login process.') }}
 				</p>
+				<fieldset class="aio-login-pro__credentials-fieldset" :disabled="!canEdit">
 				<div class="aio-login-pro__inline-form">
 					<div class="aio-login-pro__form-group">
 						<label for="recaptcha-version" class="aio-login-pro__form-label">
-							{{ $t("Choose reCAPTCHA version:") }}
+							{{ $t('Choose reCAPTCHA version:') }}
 						</label>
 						<select id="recaptcha-version" v-model="formData.version" @change="onVersionChange" class="aio-login-pro__form-input">
-							<option value="v2">{{ $t("V2") }}</option>
-							<option value="v3">{{ $t("V3") }}</option>
+							<option value="v2">V2</option>
+							<option value="v3">V3</option>
 						</select>
 					</div>
 				</div>
 				<div class="aio-login-pro__inline-form">
 					<div class="aio-login-pro__form-group">
 						<label for="site-key" class="aio-login-pro__form-label">
-							{{ $t("Site Key") }} <span class="aio-login-pro__required">*</span>
+							{{ $t('Site Key') }} <span class="aio-login-pro__required">*</span>
 						</label>
 						<div class="input-with-delete">
 							<input
@@ -87,7 +97,7 @@
 								v-model="formData.siteKey"
 								class="aio-login-pro__form-input"
 								:class="{ 'aio-login-pro__error': showValidationError && !formData.siteKey.trim() }"
-								:placeholder="$t('Enter Site Key')"
+								placeholder="Enter Site Key"
 								autocomplete="off"
 							/>
 							<button v-if="formData.siteKey" @click="clearField('siteKey')" class="clear-btn">×</button>
@@ -96,12 +106,12 @@
 							v-if="showValidationError && !formData.siteKey.trim()" 
 							class="aio-login-pro__error-message"
 						>
-							{{ $t("This field is required") }}
+							{{ $t('This field is required') }}
 						</span>
 					</div>
 					<div class="aio-login-pro__form-group">
 						<label for="secret-key" class="aio-login-pro__form-label">
-							{{ $t("Secret Key") }} <span class="aio-login-pro__required">*</span>
+							{{ $t('Secret Key') }} <span class="aio-login-pro__required">*</span>
 						</label>
 						<div class="input-with-delete">
 							<input
@@ -110,7 +120,7 @@
 								v-model="formData.secretKey"
 								class="aio-login-pro__form-input"
 								:class="{ 'aio-login-pro__error': showValidationError && !formData.secretKey.trim() }"
-								:placeholder="$t('Enter Secret Key')"
+								placeholder="Enter Secret Key"
 								autocomplete="new-password"
 							/>
 							<button v-if="formData.secretKey" @click="clearField('secretKey')" class="clear-btn">×</button>
@@ -119,38 +129,40 @@
 							v-if="showValidationError && !formData.secretKey.trim()" 
 							class="aio-login-pro__error-message"
 						>
-							{{ $t("This field is required") }}
+							{{ $t('This field is required') }}
 						</span>
 					</div>
 				</div>
+				</fieldset>
 			</div>
 
 			<!-- Step 3: Settings -->
 			<div v-if="currentStep === 3" class="aio-login-pro__step3">
 				<p class="aio-login-pro__step3__description">
-					{{ $t("Configure the settings for your Google reCAPTCHA integration.") }}
+					{{ $t('Configure the settings for your Google reCAPTCHA integration.') }}
 				</p>
+				<fieldset class="aio-login-pro__credentials-fieldset" :disabled="!canEdit">
 				<div class="aio-login-pro__step3__layout">
 					<!-- Settings Column -->
 					<div class="aio-login-pro__step3__column">
 						<!-- V2 Settings -->
 						<div v-if="formData.version === 'v2'" class="aio-login-pro__form-group">
-							<label for="theme" class="aio-login-pro__form-label">{{ $t("Theme:") }}</label>
+							<label for="theme" class="aio-login-pro__form-label">{{ $t('Theme:') }}</label>
 							<select id="theme" v-model="formData.theme" class="aio-login-pro__form-input">
-								<option value="light">{{ $t("Light") }}</option>
-								<option value="dark">{{ $t("Dark") }}</option>
+								<option value="light">Light</option>
+								<option value="dark">Dark</option>
 							</select>
 						</div>
 
 						<!-- V3 Settings -->
 						<div v-if="formData.version === 'v3'" class="aio-login-pro__form-group">
-							<label for="threshold" class="aio-login-pro__form-label">{{ $t("Threshold Score:") }}</label>
+							<label for="threshold" class="aio-login-pro__form-label">{{ $t('Threshold Score:') }}</label>
 							<select id="threshold" v-model="formData.threshold" class="aio-login-pro__form-input">
 								<option value="0.1">0.1</option>
 								<option value="0.2">0.2</option>
 								<option value="0.3">0.3</option>
 								<option value="0.4">0.4</option>
-								<option value="0.5">{{ $t("0.5 (Default)") }}</option>
+								<option value="0.5">{{ $t('0.5 (Default)') }}</option>
 								<option value="0.6">0.6</option>
 								<option value="0.7">0.7</option>
 								<option value="0.8">0.8</option>
@@ -161,25 +173,28 @@
 				</div>
 
 				<aio-login-captcha-verify
+					v-if="canEdit"
 					:key="'recaptcha-verify-' + verifySessionKey"
 					:namespace="apiNamespace"
 					:nonce="apiNonce"
 					:payload="testPayload"
 					v-model:verified="connectionVerified"
 				/>
+				</fieldset>
 			</div>
 
 			</div>
 
 			<!-- Navigation buttons -->
 			<div class="popup-footer">
-				<button v-if="currentStep === 2" @click="prevStep" class="back-btn">{{ $t("Back") }}</button>
-				<button v-if="currentStep === 3" @click="prevStep" class="back-btn">{{ $t("Back") }}</button>
+				<button v-if="currentStep === 2" @click="prevStep" class="back-btn">{{ $t('Back') }}</button>
+				<button v-if="currentStep === 3" @click="prevStep" class="back-btn">{{ $t('Back') }}</button>
 				<div class="popup-footer-left">
-					<button v-if="currentStep === 1" @click="nextStep" class="next-btn">{{ $t("Next") }}</button>
+					<button v-if="currentStep === 1" @click="nextStep" class="next-btn">{{ $t('Next') }}</button>
 				</div>
-				<button v-if="currentStep === 2" @click="nextStep" class="next-btn">{{ $t("Next") }}</button>
-				<button v-if="currentStep === 3" @click="finish" class="finish-btn" :disabled="!connectionVerified">{{ $t("Finished") }}</button>
+				<button v-if="currentStep === 2" @click="nextStep" class="next-btn">{{ $t('Next') }}</button>
+				<button v-if="currentStep === 3 && !canEdit" type="button" @click="closePopup" class="finish-btn">{{ $t('Close') }}</button>
+				<button v-else-if="currentStep === 3" @click="finish" class="finish-btn" :disabled="!connectionVerified">{{ $t('Finished') }}</button>
 			</div>
 		</div>
 	</div>
@@ -207,6 +222,10 @@ export default {
 		apiNonce: {
 			type: String,
 			default: '',
+		},
+		canEdit: {
+			type: Boolean,
+			default: true,
 		},
 	},
 
@@ -257,7 +276,7 @@ export default {
 		show(newVal) {
 			if (newVal) {
 				this.currentStep = 1;
-				this.formData = { ...this.initialData };
+				this.formData = this.buildFormDataFromInitial( this.initialData );
 				this.connectionVerified = !!this.initialData.validated;
 				this.showValidationError = false;
 				this.verifySessionKey += 1;
@@ -273,6 +292,26 @@ export default {
 	},
 
 	methods: {
+		normalizeRecaptchaVersion( version ) {
+			const value = String( version || 'v2' ).toLowerCase().trim();
+			return ( 'v2' === value || 'v3' === value ) ? value : 'v2';
+		},
+
+		buildFormDataFromInitial( initial ) {
+			const data = initial && typeof initial === 'object' ? initial : {};
+			const version = this.normalizeRecaptchaVersion( data.version );
+			const siteFromVersion = 'v2' === version ? data.v2_site_key : data.v3_site_key;
+			const secretFromVersion = 'v2' === version ? data.v2_secret_key : data.v3_secret_key;
+
+			return {
+				version,
+				siteKey: String( data.siteKey || siteFromVersion || '' ).trim(),
+				secretKey: String( data.secretKey || secretFromVersion || '' ).trim(),
+				theme: data.theme || 'light',
+				threshold: data.threshold || '0.5',
+			};
+		},
+
 		closePopup() {
 			this.$emit('close');
 		},
@@ -305,7 +344,15 @@ export default {
 			this.formData[field] = '';
 		},
 
+		onNetworkCanEdit( canEdit ) {
+			this.$emit( 'can-edit', canEdit !== false );
+		},
+
 		finish() {
+			if ( ! this.canEdit ) {
+				this.closePopup();
+				return;
+			}
 			if (!this.connectionVerified) {
 				return;
 			}
@@ -792,4 +839,5 @@ body.aio-login-modal-open {
 .back-btn {
 	color: #404280;
 }
+
 </style>

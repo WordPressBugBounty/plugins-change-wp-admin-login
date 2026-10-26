@@ -1,19 +1,14 @@
 <template>
-	<div class="aio-login-pro-feature aio-login-2fa-subtabs">
-		<div
-			class="aio-login-2fa-subtabs__inner"
-			:class="{
-				'aio-login-pro-overlay': innerLocked,
-				'aio-login-2fa-subtabs__inner--locked': innerLocked
-			}"
-			@click="innerLocked ? handleProFeatureClick() : null"
-		>
+	<div class="aio-login-2fa-subtabs">
+		<div class="aio-login-2fa-subtabs__inner">
+			<!-- Free: Email OTP Authentication Methods. Pro overwrites this component when active. -->
 			<aio-login-two-factor-authentication
 				v-if="currentRouteSlug === 'authentication-methods'"
 				:key="currentRouteSlug"
 				:has-pro="has_pro"
 			/>
 
+			<!-- Pro injects Policies / Advanced sub-tabs + components via aio_login_pro.plugin. -->
 			<template v-else-if="currentRouteSlug === '2fa-policies'">
 				<aio-login-two-factor-policies
 					:key="currentRouteSlug"
@@ -55,57 +50,12 @@ export default {
 			const path = this.$route && this.$route.path ? this.$route.path : '';
 			return path.replace( '/', '' ) || 'authentication-methods';
 		},
-
-		/** Blur + block interactions on Authentication Methods when license is free (same pattern as other PRO screens). */
-		showProOverlay() {
-			return ! this.has_pro;
-		},
-
-		/** Policies / Advanced (and any plan-locked 2FA sub-tab): show UI under blur, click opens upgrade popup. */
-		showSubtabPlanOverlay() {
-			if ( this.is_limited_user ) {
-				return false;
-			}
-			return this.isTwoFaSubTabRouteLocked( this.currentRouteSlug );
-		},
-
-		innerLocked() {
-			return this.showProOverlay || this.showSubtabPlanOverlay;
-		},
 	},
 
 	mounted() {
 		if ( this.is_limited_user && this.currentRouteSlug !== 'authentication-methods' ) {
 			this.$router.replace( '/authentication-methods' );
 		}
-	},
-
-	methods: {
-		isTwoFaSubTabRouteLocked( slug ) {
-			const raw = typeof window !== 'undefined' && window.aio_login__object && window.aio_login__object.tabs;
-			if ( ! raw ) {
-				return false;
-			}
-			const twoFa = raw['2fa'];
-			if ( ! twoFa || ! twoFa['sub-tabs'] ) {
-				return false;
-			}
-			const subs = twoFa['sub-tabs'];
-			const list = Array.isArray( subs ) ? subs : Object.values( subs );
-			const found = list.find( ( st ) => st.slug === slug );
-			return !!( found && found['is-pro'] );
-		},
-
-		handleProFeatureClick() {
-			let p = this.$parent;
-			while ( p ) {
-				if ( 'popup' in p && typeof p.popup === 'boolean' ) {
-					p.popup = true;
-					return;
-				}
-				p = p.$parent;
-			}
-		},
 	},
 }
 </script>
@@ -119,19 +69,5 @@ export default {
 .aio-login-2fa-subtabs__inner {
 	position: relative;
 	min-height: inherit;
-}
-
-.aio-login-2fa-subtabs__inner--locked::after {
-	content: '';
-	position: absolute;
-	inset: 0;
-	background: rgba(255, 255, 255, 0.35);
-	backdrop-filter: blur(1px);
-	z-index: 20;
-	cursor: pointer;
-}
-
-.aio-login-2fa-subtabs__inner--locked * {
-	user-select: none;
 }
 </style>

@@ -193,11 +193,11 @@ if (!class_exists('AIO_Login\\Helper\\Helper')) {
 		}
 
 		/**
-		 * Getting the location of the user by IP.
+		 * Resolve optional country/city for an IP.
 		 *
-		 * Uses ipapi (https://ipapi.co) for IP geolocation and normalizes
-		 * the response to a simple associative array containing at least
-		 * 'country' and 'city' keys for use across the plugin.
+		 * Free never performs third-party geolocation. Pro may populate
+		 * country/city via the `aio_login_ip_location` filter (e.g. ipapi.co).
+		 * Callers always receive a normalized array; empty strings mean unknown.
 		 *
 		 * @param string $ip The IP address of the user.
 		 *
@@ -212,66 +212,38 @@ if (!class_exists('AIO_Login\\Helper\\Helper')) {
 				$ip = self::get_ip();
 			}
 
+			$location = array(
+				'country' => '',
+				'city'    => '',
+			);
+
 			// If we still don't have a valid IP, bail early.
 			if (empty($ip) || 'UNKNOWN' === $ip) {
-				return array(
-					'country' => '',
-					'city'    => '',
-				);
+				return $location;
 			}
 
-			// Cache lookups per IP to avoid repeated external requests.
-			$cache_key = 'aio_login_ip_location_' . md5($ip);
-			$cached    = get_transient($cache_key);
-			if (false !== $cached && is_array($cached)) {
-				return $cached;
+			/**
+			 * Filter IP geolocation for activity/security logs.
+			 *
+			 * Free leaves country/city empty (no external request). Pro may
+			 * look up approximate location when the site admin opts in.
+			 *
+			 * @param array  $location {
+			 *     @type string $country Country name.
+			 *     @type string $city    City name.
+			 * }
+			 * @param string $ip Visitor IP address.
+			 */
+			$filtered = apply_filters( 'aio_login_ip_location', $location, $ip );
+
+			if ( ! is_array( $filtered ) ) {
+				return $location;
 			}
 
-			// Use ipapi.co JSON API – no key required for basic data.
-			$url      = sprintf('https://ipapi.co/%s/json/', rawurlencode($ip));
-			$response = wp_remote_get(
-				$url,
-				array(
-					'timeout'   => 5,
-					'sslverify' => true,
-				)
+			return array(
+				'country' => isset( $filtered['country'] ) ? sanitize_text_field( (string) $filtered['country'] ) : '',
+				'city'    => isset( $filtered['city'] ) ? sanitize_text_field( (string) $filtered['city'] ) : '',
 			);
-
-			if (is_wp_error($response)) {
-				return array(
-					'country' => '',
-					'city'    => '',
-				);
-			}
-
-			$code = wp_remote_retrieve_response_code($response);
-			if (200 !== $code) {
-				return array(
-					'country' => '',
-					'city'    => '',
-				);
-			}
-
-			$body = wp_remote_retrieve_body($response);
-			$data = json_decode($body, true);
-
-			if (!is_array($data)) {
-				return array(
-					'country' => '',
-					'city'    => '',
-				);
-			}
-
-			// ipapi returns 'country_name' and 'city'. Normalize to 'country' and 'city'.
-			$location = array(
-				'country' => isset($data['country_name']) ? sanitize_text_field($data['country_name']) : '',
-				'city'    => isset($data['city']) ? sanitize_text_field($data['city']) : '',
-			);
-
-			// Cache for 1 day to balance freshness and performance.
-			set_transient($cache_key, $location, DAY_IN_SECONDS);
-
-			return $location;
 		}
 
 		/**
@@ -340,9 +312,13 @@ if (!class_exists('AIO_Login\\Helper\\Helper')) {
 				$ip = self::get_ip();
 			}
 
-			$location = self::get_location($ip);
-			$country = isset($location['country']) ? $location['country'] : 'Unknown';
-			$city = isset($location['city']) ? $location['city'] : 'Unknown';
+			$country = '';
+			$city    = '';
+			if ( class_exists( '\AIO_Login\AIO_Login' ) && \AIO_Login\AIO_Login::has_pro() ) {
+				$location = self::get_location( $ip );
+				$country  = isset( $location['country'] ) && '' !== $location['country'] ? $location['country'] : 'Unknown';
+				$city     = isset( $location['city'] ) && '' !== $location['city'] ? $location['city'] : 'Unknown';
+			}
 
 			$user_agent = 'Unknown';
 			if (isset($_POST['aio_login__user_agent'])) { // phpcs:ignore WordPress.Security.NonceVerification
@@ -374,7 +350,13 @@ if (!class_exists('AIO_Login\\Helper\\Helper')) {
 			}
 			$blocked_ip = Failed_Logins::is_user_blocked($ip);
 
-			if (\AIO_Login\Login_Controller\Login_Controller::get_instance()->is_enabled()) {
+			// Lockout enforcement is Pro LLA only (Guideline 5).
+			$lla_enabled = false;
+			if (class_exists('\AIO_Login_Pro\Login_Controller\Limit_Login_Attempts')) {
+				$lla_enabled = \AIO_Login_Pro\Login_Controller\Limit_Login_Attempts::get_instance()->is_enabled();
+			}
+
+			if ($lla_enabled) {
 				return $blocked_ip;
 			}
 
@@ -411,7 +393,7 @@ if (!class_exists('AIO_Login\\Helper\\Helper')) {
 		 * Atomic increment for Limit Login Attempts (OTP / magic-link share this budget).
 		 *
 		 * @param string $ip IP.
-		 * @return int New count.
+		 * @return int|false New count, or false when the exclusive lock could not be acquired.
 		 */
 		public static function increment_user_attempt_count_atomic($ip = '')
 		{
@@ -421,7 +403,12 @@ if (!class_exists('AIO_Login\\Helper\\Helper')) {
 
 			global $wpdb;
 			$lock_name = 'aio_lla_' . md5($ip);
-			$wpdb->get_var($wpdb->prepare('SELECT GET_LOCK(%s, %d)', $lock_name, 5)); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+			$got = $wpdb->get_var($wpdb->prepare('SELECT GET_LOCK(%s, %d)', $lock_name, 5)); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+
+			// Fail closed: callers must not treat an unchanged count as a recorded failure.
+			if ('1' !== (string) $got) {
+				return false;
+			}
 
 			try {
 				$attempts = (int) get_transient('aio_login__user_attempts_' . $ip);
@@ -568,23 +555,13 @@ if (!class_exists('AIO_Login\\Helper\\Helper')) {
 				'social' => array(),
 			);
 
-			// 1. Check hCaptcha
-			if (
-				\AIO_Login\Captcha\Captcha_Validation::is_active_for_frontend( 'hcaptcha' )
-			) {
-				$snapshot['captcha'][] = 'hcaptcha';
-			}
-
-			// 2. Check reCAPTCHA
-			if ( \AIO_Login\Captcha\Captcha_Validation::is_active_for_frontend( 'recaptcha' ) ) {
-				$snapshot['captcha'][] = 'recaptcha';
-			}
-
-			// 3. Check Cloudflare Turnstile
-			if (
-				\AIO_Login\Captcha\Captcha_Validation::is_active_for_frontend( 'turnstile' )
-			) {
-				$snapshot['captcha'][] = 'turnstile';
+			// Active captcha providers (Free: reCAPTCHA; Pro registers others via filter).
+			if ( class_exists( '\AIO_Login\Captcha\Captcha_Validation' ) ) {
+				foreach ( array_keys( \AIO_Login\Captcha\Captcha_Validation::get_providers() ) as $captcha_slug ) {
+					if ( \AIO_Login\Captcha\Captcha_Validation::is_active_for_frontend( $captcha_slug ) ) {
+						$snapshot['captcha'][] = $captcha_slug;
+					}
+				}
 			}
 
 			// 4. Check Social Providers

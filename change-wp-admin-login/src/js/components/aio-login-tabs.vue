@@ -2,14 +2,14 @@
 	<nav
 		class="aio-login__tabs-nav"
 		:class="{ 'has-scroll-controls': showScrollControls }"
-		:aria-label="$t('AIO Login sections')"
+		aria-label="AIO Login sections"
 	>
 		<button
 			v-show="showScrollControls"
 			type="button"
 			class="aio-login__scroll-btn aio-login__scroll-btn--prev"
 			:disabled="!canScrollLeft"
-			:aria-label="$t('Scroll tabs left')"
+			aria-label="Scroll tabs left"
 			@click="scrollTabs( -1 )"
 		>
 			<span class="dashicons dashicons-arrow-left-alt2" aria-hidden="true"></span>
@@ -27,6 +27,12 @@
 					:key="t"
 				>
 					<img
+						v-if="'getpro' === tab.slug"
+						class="aio-login__getpro-crown"
+						alt=""
+						:src="assetsUrl + 'images/pro-crown.svg'"
+					/>
+					<img
 						v-if="'getpro' !== tab.slug"
 						class="aio-login__tab-icon"
 						:class="{ 'aio-login__tab-icon--custom': isCustomSvgIcon( tab ) }"
@@ -34,13 +40,15 @@
 						:src="getSrc( tab )"
 					/>
 					<span class="aio-login__tab-label">{{ tab.title }}</span>
-					<img
-						v-if="'getpro' === tab.slug"
-						class="aio-login__getpro-crown"
-						alt=""
-						:src="assetsUrl + 'images/pro-crown.svg'"
-					/>
-					<span class="aio-login__pro-tab" v-if="tab['is-pro'] && ! hasPro">{{ $t("PRO") }}</span>
+					<span
+						v-if="tab.badge || ( tab.multisite && isMultisite )"
+						class="aio-login__multisite-badge"
+					>
+						{{ tab.badge || 'MULTISITE' }}
+					</span>
+					<span class="aio-login__pro-tab" v-if="tab['is-pro'] && ! hasPro">
+						PRO
+					</span>
 				</a>
 			</div>
 		</div>
@@ -49,7 +57,7 @@
 			type="button"
 			class="aio-login__scroll-btn aio-login__scroll-btn--next"
 			:disabled="!canScrollRight"
-			:aria-label="$t('Scroll tabs right')"
+			aria-label="Scroll tabs right"
 			@click="scrollTabs( 1 )"
 		>
 			<span class="dashicons dashicons-arrow-right-alt2" aria-hidden="true"></span>
@@ -82,6 +90,10 @@ export default {
 		hasPro() {
 			const h = window.aio_login__app_object && window.aio_login__app_object.has_pro;
 			return h === 'true' || h === true;
+		},
+		isMultisite() {
+			const m = window.aio_login__app_object && window.aio_login__app_object.is_multisite;
+			return m === 'true' || m === true;
 		},
 	},
 
@@ -344,7 +356,8 @@ export default {
 }
 
 .aio-login__link-wrapper.getpro {
-	background-image: linear-gradient(180deg, #9516df 0%, #510c79 100%);
+	/* Figma Brand Purple #6E16DF (AIOL-774 #5). */
+	background: #6E16DF;
 	color: #fff;
 	gap: 6px;
 	font-weight: 700;
@@ -385,5 +398,19 @@ export default {
 		min-width: 30px;
 		padding: 4px 5px;
 	}
+}
+
+.aio-login__multisite-badge {
+	display: inline-flex;
+	align-items: center;
+	margin-left: 6px;
+	padding: 2px 6px;
+	border-radius: 3px;
+	background: #2271b1;
+	color: #fff;
+	font-size: 10px;
+	font-weight: 700;
+	letter-spacing: 0.04em;
+	line-height: 1.2;
 }
 </style>

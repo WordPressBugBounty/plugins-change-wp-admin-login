@@ -74,10 +74,24 @@ if (!class_exists('AIO_Login\\Google_Recaptcha\\Google_Recaptcha')) {
 		/**
 		 * Google_Recaptcha constructor.
 		 */
+		/**
+		 * Normalize stored reCAPTCHA version (empty/invalid => v2).
+		 *
+		 * @param mixed $version Raw option value.
+		 * @return string v2|v3
+		 */
+		private function normalize_recaptcha_version( $version ) {
+			$version = strtolower( trim( (string) $version ) );
+			if ( in_array( $version, array( 'v2', 'v3' ), true ) ) {
+				return $version;
+			}
+			return 'v2';
+		}
+
 		public function __construct()
 		{
 			$this->is_enabled = get_option('aio_login_google_recaptcha_enable', 'off');
-			$this->version = get_option('aio_login_google_recaptcha_version', 'v2');
+			$this->version = $this->normalize_recaptcha_version( get_option( 'aio_login_google_recaptcha_version', 'v2' ) );
 			$this->site_key = get_option('aio_login_google_recaptcha_' . $this->version . '_site_key');
 			$this->secret_key = get_option('aio_login_google_recaptcha_' . $this->version . '_secret_key');
 			$this->theme = get_option('aio_login_google_recaptcha_v2_theme', 'light');
@@ -185,41 +199,12 @@ if (!class_exists('AIO_Login\\Google_Recaptcha\\Google_Recaptcha')) {
 			if ('v2' === $this->version) {
 				// Checkbox widget is ~304px; core #login is 320px with padding, so it clips
 				// and overlaps floated .forgetmenot without clear + room.
-				echo '<style type="text/css">
-					body.login #login {
-						width: 360px !important;
-						max-width: calc(100vw - 24px) !important;
-						overflow: visible !important;
-					}
-					body.login #loginform {
-						overflow: visible !important;
-					}
-					body.login #loginform .aio-login-wp-captcha {
-						clear: both !important;
-						display: block !important;
-						width: 100% !important;
-						max-width: 100% !important;
-						margin: 10px 0 16px !important;
-						padding: 0 !important;
-						overflow: visible !important;
-						box-sizing: border-box !important;
-						text-align: center;
-						min-height: 78px;
-					}
-					body.login #loginform .aio-login-wp-captcha .g-recaptcha,
-					body.login #loginform > .g-recaptcha {
-						display: inline-block !important;
-						margin: 0 auto 16px !important;
-						max-width: 100% !important;
-						transform: scale(0.95);
-						transform-origin: center top;
-						-webkit-transform: scale(0.95);
-						-webkit-transform-origin: center top;
-					}
-					body.login #loginform p.forgetmenot {
-						clear: both !important;
-					}
-				</style>';
+				wp_register_style( 'aio-login-recaptcha-v2-layout', false, array(), AIO_LOGIN__VERSION );
+				wp_enqueue_style( 'aio-login-recaptcha-v2-layout' );
+				wp_add_inline_style(
+					'aio-login-recaptcha-v2-layout',
+					'body.login #login{width:360px!important;max-width:calc(100vw - 24px)!important;overflow:visible!important;}body.login #loginform{overflow:visible!important;}body.login #loginform .aio-login-wp-captcha{clear:both!important;display:block!important;width:100%!important;max-width:100%!important;margin:10px 0 16px!important;padding:0!important;overflow:visible!important;box-sizing:border-box!important;text-align:center;min-height:78px;}body.login #loginform .aio-login-wp-captcha .g-recaptcha,body.login #loginform > .g-recaptcha{display:inline-block!important;margin:0 auto 16px!important;max-width:100%!important;transform:scale(0.95);transform-origin:center top;-webkit-transform:scale(0.95);-webkit-transform-origin:center top;}body.login #loginform p.forgetmenot{clear:both!important;}'
+				);
 
 				wp_enqueue_script(
 					'aio-login-form-captcha-position',
@@ -235,16 +220,86 @@ if (!class_exists('AIO_Login\\Google_Recaptcha\\Google_Recaptcha')) {
 
 			if ('v3' === $this->version) {
 				// phpcs:ignore WordPress.WP.EnqueuedResourceParameters.MissingVersion
-				wp_register_script('aio-login-g-recaptcha', 'https://www.google.com/recaptcha/api.js?render=' . $this->site_key, array(), null, true);
-				wp_add_inline_script(
-					'aio-login-g-recaptcha',
-					'grecaptcha.ready( function() {
-						grecaptcha.execute( "' . $this->site_key . '", { action: "login" } )
-							.then( function( token ) {
-								document.getElementById( "g-recaptcha-response" ).value = token;
-							} );
-					} );'
-				);
+				wp_register_script('aio-login-g-recaptcha', 'https://www.google.com/recaptcha/api.js?render=' . rawurlencode($this->site_key), array(), null, true);
+				$site_key_json = wp_json_encode($this->site_key);
+				$inline_script = '
+				(function() {
+					var siteKey = ' . $site_key_json . ';
+					function setToken(token) {
+						if (!token) return;
+						var inputs = document.querySelectorAll("input[name=\'g-recaptcha-response\']");
+						if (inputs.length === 0) {
+							var forms = document.querySelectorAll("#loginform, #lostpasswordform, #registerform");
+							forms.forEach(function(form) {
+								var inp = document.createElement("input");
+								inp.type = "hidden";
+								inp.name = "g-recaptcha-response";
+								inp.id = "g-recaptcha-response";
+								inp.value = token;
+								form.appendChild(inp);
+							});
+						} else {
+							inputs.forEach(function(inp) {
+								inp.value = token;
+							});
+						}
+					}
+
+					function executeV3(callback) {
+						if (typeof grecaptcha !== "undefined" && grecaptcha.ready) {
+							grecaptcha.ready(function() {
+								grecaptcha.execute(siteKey, { action: "login" }).then(function(token) {
+									setToken(token);
+									if (callback) callback(token);
+								}).catch(function() {
+									if (callback) callback("");
+								});
+							});
+						} else if (callback) {
+							callback("");
+						}
+					}
+
+					executeV3();
+
+					document.addEventListener("DOMContentLoaded", function() {
+						var forms = document.querySelectorAll("#loginform, #lostpasswordform, #registerform");
+						forms.forEach(function(form) {
+							var isSubmitting = false;
+							form.addEventListener("submit", function(e) {
+								if (isSubmitting) return;
+								var inp = form.querySelector("input[name=\'g-recaptcha-response\']");
+								if (!inp) {
+									inp = document.createElement("input");
+									inp.type = "hidden";
+									inp.name = "g-recaptcha-response";
+									inp.id = "g-recaptcha-response";
+									form.appendChild(inp);
+								}
+								if (typeof grecaptcha !== "undefined" && grecaptcha.execute) {
+									e.preventDefault();
+									var handled = false;
+									var proceed = function(token) {
+										if (handled) return;
+										handled = true;
+										if (token) inp.value = token;
+										isSubmitting = true;
+										form.submit();
+									};
+									setTimeout(function() { proceed(""); }, 3000);
+									grecaptcha.ready(function() {
+										grecaptcha.execute(siteKey, { action: "login" }).then(function(token) {
+											proceed(token);
+										}).catch(function() {
+											proceed("");
+										});
+									});
+								}
+							});
+						});
+					});
+				})();';
+				wp_add_inline_script('aio-login-g-recaptcha', $inline_script);
 			}
 
 			wp_enqueue_script('aio-login-g-recaptcha');
@@ -314,7 +369,7 @@ if (!class_exists('AIO_Login\\Google_Recaptcha\\Google_Recaptcha')) {
 			$response = array(
 				'enabled' => $this->is_enabled,
 				'validated' => Captcha_Validation::is_validated('recaptcha'),
-				'version' => $this->version,
+				'version' => $this->normalize_recaptcha_version( $this->version ),
 				'v2_site_key' => get_option('aio_login_google_recaptcha_v2_site_key', ''),
 				'v2_secret_key' => get_option('aio_login_google_recaptcha_v2_secret_key', ''),
 				'theme' => $this->theme,
@@ -324,6 +379,10 @@ if (!class_exists('AIO_Login\\Google_Recaptcha\\Google_Recaptcha')) {
 				'nonce' => wp_create_nonce('google-recaptcha'),
 			);
 
+			if ( class_exists( '\AIO_Login\Multisite\Network_Settings' ) ) {
+				$response['network'] = \AIO_Login\Multisite\Network_Settings::get_feature_context( 'google_recaptcha' );
+			}
+
 			return rest_ensure_response($response);
 		}
 
@@ -332,6 +391,17 @@ if (!class_exists('AIO_Login\\Google_Recaptcha\\Google_Recaptcha')) {
 			$params = $request->get_params();
 
 			if (isset($params['_wpnonce']) && wp_verify_nonce($params['_wpnonce'], 'google-recaptcha')) {
+				if ( class_exists( '\AIO_Login\Multisite\Network_Settings' ) ) {
+					$context = \AIO_Login\Multisite\Network_Settings::get_feature_context( 'google_recaptcha' );
+					if ( ! $context['can_edit'] ) {
+						return new \WP_Error(
+							'network_managed',
+							__( 'This setting is managed by the Network Administrator.', 'change-wp-admin-login' ),
+							array( 'status' => 403 )
+						);
+					}
+				}
+
 				$enabled = 'off';
 				$version = sanitize_text_field(wp_unslash($params['version']));
 				$v2_site_key = sanitize_text_field(wp_unslash($params['v2_site_key']));
@@ -376,10 +446,9 @@ if (!class_exists('AIO_Login\\Google_Recaptcha\\Google_Recaptcha')) {
 					Captcha_Validation::set_validated( 'recaptcha', true );
 				}
 
-				// If enabling reCAPTCHA, disable other captcha providers.
+				// If enabling reCAPTCHA, disable other registered captcha providers (Pro hooks).
 				if ( 'on' === $enabled ) {
-					update_option( 'aio_login_hcaptcha_enable', 'off' );
-					update_option( 'aio_login_turnstile_enable', 'off' );
+					Captcha_Validation::disable_other_providers( 'recaptcha' );
 				}
 
 				// Update snapshot for WooCommerce integration

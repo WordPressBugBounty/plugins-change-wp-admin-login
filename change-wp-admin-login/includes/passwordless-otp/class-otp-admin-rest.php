@@ -2,6 +2,9 @@
 /**
  * REST API for passwordless OTP admin settings.
  *
+ * Free saves email OTP only. Pro saves SMS/Twilio via
+ * `aio_login_otp_save_settings` (Guideline 5 / AIOL-745).
+ *
  * @package AIO_Login
  */
 
@@ -75,63 +78,67 @@ if ( ! class_exists( 'AIO_Login\\Passwordless_Otp\\OTP_Admin_Rest' ) ) {
 				return new \WP_Error( 'forbidden', __( 'Invalid security token.', 'change-wp-admin-login' ), array( 'status' => 403 ) );
 			}
 
-			$email_enable = ! empty( $params['email_enable'] ) ? 'on' : 'off';
-			update_option( 'aio_login_otp_email_enable', $email_enable, false );
+			$email_can_edit = \AIO_Login\Multisite\Network_Settings::current_user_can_edit_feature( 'email_otp' );
+			$sms_can_edit   = \AIO_Login\Multisite\Network_Settings::current_user_can_edit_feature( 'sms_otp' );
 
-			update_option(
-				'aio_login_otp_email_block_duration',
-				(string) max( 1, min( 1440, absint( $params['email_block_duration'] ?? 15 ) ) ),
-				false
-			);
-			update_option(
-				'aio_login_otp_email_skip_2fa',
-				! empty( $params['email_skip_2fa'] ) ? 'on' : 'off',
-				false
-			);
+			/**
+			 * Whether Pro (or another add-on) will handle SMS save for this request.
+			 *
+			 * @param bool               $will_save_sms Default false.
+			 * @param array<string,mixed> $params       Request params.
+			 */
+			$pro_will_save_sms = (bool) apply_filters( 'aio_login_otp_pro_will_save_sms', false, $params );
 
-			if ( 'on' === $email_enable ) {
-				$this->save_email_settings( $params );
-			}
-
-			$sms_enable = 'off';
-			if ( \AIO_Login\AIO_Login::has_pro() ) {
-				if ( ! empty( $params['sms_enable'] ) ) {
-					update_option( 'aio_login_otp_sms_enable', 'on', false );
-					$sms_enable = 'on';
-				} else {
-					OTP_Settings::disable_sms_channel();
-				}
-			}
-
-			if ( \AIO_Login\AIO_Login::has_pro() ) {
-				update_option(
-					'aio_login_otp_sms_block_duration',
-					(string) max( 1, min( 1440, absint( $params['sms_block_duration'] ?? 15 ) ) ),
-					false
-				);
-				update_option(
-					'aio_login_otp_sms_skip_2fa',
-					! empty( $params['sms_skip_2fa'] ) ? 'on' : 'off',
-					false
+			if ( ! $email_can_edit && ! ( $sms_can_edit && $pro_will_save_sms ) ) {
+				return new \WP_Error(
+					'aio_login_network_managed',
+					__( 'These settings are managed by the Network Administrator and cannot be changed on this site.', 'change-wp-admin-login' ),
+					array( 'status' => 403 )
 				);
 			}
 
-			if ( 'on' === $sms_enable && \AIO_Login\AIO_Login::has_pro() ) {
-				$twilio_error = $this->validate_twilio_settings( $params );
-				if ( is_wp_error( $twilio_error ) ) {
-					return $twilio_error;
+			if ( $email_can_edit ) {
+				$email_enable = ! empty( $params['email_enable'] ) ? 'on' : 'off';
+				$result       = \AIO_Login\Multisite\Network_Settings::update_option( 'aio_login_otp_email_enable', $email_enable );
+				if ( is_wp_error( $result ) ) {
+					return $result;
 				}
 
-				$allowed_isos = OTP_Settings::sanitize_sms_allowed_country_isos( $params['sms_allowed_countries'] ?? array() );
-				if ( empty( $allowed_isos ) ) {
-					return new \WP_Error(
-						'sms_allowed_countries_required',
-						__( 'Select at least one allowed country for SMS login.', 'change-wp-admin-login' ),
-						array( 'status' => 400 )
-					);
+				\AIO_Login\Multisite\Network_Settings::update_option(
+					'aio_login_otp_email_block_duration',
+					(string) max( 1, min( 1440, absint( $params['email_block_duration'] ?? 15 ) ) )
+				);
+				\AIO_Login\Multisite\Network_Settings::update_option(
+					'aio_login_otp_email_skip_2fa',
+					! empty( $params['email_skip_2fa'] ) ? 'on' : 'off'
+				);
+
+				if ( 'on' === $email_enable ) {
+					$this->save_email_settings( $params );
 				}
-				$this->save_sms_settings( $params );
 			}
+
+			/**
+			 * Let Pro save SMS/Twilio settings when has_pro (and network allows).
+			 *
+			 * Handlers may return \WP_Error to abort the request.
+			 *
+			 * @param null|true|\WP_Error $result  Null to continue; WP_Error to abort.
+			 * @param array<string,mixed> $params  Request params.
+			 * @param bool                $sms_can_edit Whether current user can edit sms_otp.
+			 */
+			$sms_result = apply_filters( 'aio_login_otp_settings_before_response', null, $params, $sms_can_edit );
+			if ( is_wp_error( $sms_result ) ) {
+				return $sms_result;
+			}
+
+			/**
+			 * Action after Free email save — Pro may persist SMS options here.
+			 *
+			 * @param array<string,mixed> $params       Request params.
+			 * @param bool                $sms_can_edit Whether current user can edit sms_otp.
+			 */
+			do_action( 'aio_login_otp_save_settings', $params, $sms_can_edit );
 
 			return rest_ensure_response(
 				array(
@@ -147,99 +154,13 @@ if ( ! class_exists( 'AIO_Login\\Passwordless_Otp\\OTP_Admin_Rest' ) ) {
 		 */
 		private function save_email_settings( $params ) {
 			$length = isset( $params['email_length'] ) ? absint( $params['email_length'] ) : 6;
-			if ( ! in_array( $length, array( 4, 6, 8 ), true ) ) {
+			if ( ! in_array( $length, array( 6, 8 ), true ) ) {
 				$length = 6;
 			}
-			update_option( 'aio_login_otp_email_length', (string) $length, false );
-			update_option( 'aio_login_otp_email_expiration', (string) max( 1, min( 60, absint( $params['email_expiration'] ?? 10 ) ) ), false );
-			update_option( 'aio_login_otp_email_resend_timer', (string) max( 30, min( 600, absint( $params['email_resend_timer'] ?? 60 ) ) ), false );
-			update_option( 'aio_login_otp_email_max_retries', (string) max( 1, min( 20, absint( $params['email_max_retries'] ?? 5 ) ) ), false );
-		}
-
-		/**
-		 * Require Twilio credentials when SMS OTP is enabled.
-		 *
-		 * @param array<string, mixed> $params Params.
-		 * @return true|\WP_Error
-		 */
-		private function validate_twilio_settings( $params ) {
-			$sid    = sanitize_text_field( $params['twilio_account_sid'] ?? '' );
-			$from   = sanitize_text_field( $params['twilio_sender_number'] ?? '' );
-			$token  = sanitize_text_field( $params['twilio_auth_token'] ?? '' );
-			$has_stored_token = '' !== (string) get_option( 'aio_login_otp_twilio_auth_token', '' );
-			$has_new_token    = '' !== $token && '••••••••••••' !== $token;
-
-			if ( '' === $sid ) {
-				return new \WP_Error(
-					'twilio_account_sid_required',
-					__( 'Account SID is required.', 'change-wp-admin-login' ),
-					array( 'status' => 400 )
-				);
-			}
-
-			if ( ! $has_stored_token && ! $has_new_token ) {
-				return new \WP_Error(
-					'twilio_auth_token_required',
-					__( 'Auth Token is required.', 'change-wp-admin-login' ),
-					array( 'status' => 400 )
-				);
-			}
-
-			if ( '' === $from ) {
-				return new \WP_Error(
-					'twilio_sender_number_required',
-					__( 'Sender number is required.', 'change-wp-admin-login' ),
-					array( 'status' => 400 )
-				);
-			}
-
-			return true;
-		}
-
-		/**
-		 * @param array<string, mixed> $params Params.
-		 */
-		private function save_sms_settings( $params ) {
-			$length = isset( $params['sms_length'] ) ? absint( $params['sms_length'] ) : 6;
-			if ( ! in_array( $length, array( 4, 6, 8 ), true ) ) {
-				$length = 6;
-			}
-			update_option( 'aio_login_otp_sms_length', (string) $length, false );
-			update_option( 'aio_login_otp_sms_expiration', (string) max( 1, min( 60, absint( $params['sms_expiration'] ?? 10 ) ) ), false );
-			update_option( 'aio_login_otp_sms_resend_timer', (string) max( 30, min( 600, absint( $params['sms_resend_timer'] ?? 60 ) ) ), false );
-			update_option( 'aio_login_otp_sms_max_retries', (string) max( 1, min( 20, absint( $params['sms_max_retries'] ?? 5 ) ) ), false );
-
-			update_option( 'aio_login_otp_twilio_account_sid', sanitize_text_field( $params['twilio_account_sid'] ?? '' ), false );
-			update_option( 'aio_login_otp_twilio_sender_number', sanitize_text_field( $params['twilio_sender_number'] ?? '' ), false );
-			$default_iso = strtoupper( sanitize_text_field( $params['sms_default_country_iso'] ?? 'US' ) );
-			if ( ! preg_match( '/^[A-Z]{2}$/', $default_iso ) ) {
-				$default_iso = 'US';
-			}
-			$iso_valid = false;
-			foreach ( OTP_Settings::get_country_codes() as $country ) {
-				if ( $country['iso'] === $default_iso ) {
-					$iso_valid = true;
-					break;
-				}
-			}
-			if ( ! $iso_valid ) {
-				$default_iso = 'US';
-			}
-
-			update_option( 'aio_login_otp_sms_default_country_iso', $default_iso, false );
-			update_option( 'aio_login_otp_sms_default_country', OTP_Settings::get_dial_code_for_country_iso( $default_iso ), false );
-
-			if ( ! empty( $params['twilio_auth_token'] ) && '••••••••••••' !== $params['twilio_auth_token'] ) {
-				$encrypted = OTP_Encryption::encrypt( sanitize_text_field( $params['twilio_auth_token'] ) );
-				if ( '' !== $encrypted ) {
-					update_option( 'aio_login_otp_twilio_auth_token', $encrypted, false );
-				}
-			}
-
-			$allowed = OTP_Settings::sanitize_sms_allowed_country_isos( $params['sms_allowed_countries'] ?? array() );
-			if ( ! empty( $allowed ) ) {
-				update_option( 'aio_login_otp_sms_allowed_countries', wp_json_encode( $allowed ), false );
-			}
+			\AIO_Login\Multisite\Network_Settings::update_option( 'aio_login_otp_email_length', (string) $length );
+			\AIO_Login\Multisite\Network_Settings::update_option( 'aio_login_otp_email_expiration', (string) max( 1, min( 60, absint( $params['email_expiration'] ?? 10 ) ) ) );
+			\AIO_Login\Multisite\Network_Settings::update_option( 'aio_login_otp_email_resend_timer', (string) max( 30, min( 600, absint( $params['email_resend_timer'] ?? 60 ) ) ) );
+			\AIO_Login\Multisite\Network_Settings::update_option( 'aio_login_otp_email_max_retries', (string) max( 1, min( 20, absint( $params['email_max_retries'] ?? 5 ) ) ) );
 		}
 	}
 }

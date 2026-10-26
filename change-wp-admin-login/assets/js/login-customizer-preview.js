@@ -1,6 +1,98 @@
 (function () {
 	'use strict';
 
+	// Notify WordPress Customizer parent messenger that preview is ready and keep-alive pinging
+	function sendMessengerReady() {
+		try {
+			if (window.parent && window.parent !== window) {
+				var channel = '';
+				var qs = String(window.location.search || '');
+				var match = /[?&]customize_messenger_channel=([^&]+)/.exec(qs);
+				if (match) {
+					channel = decodeURIComponent(match[1]);
+				}
+				var readyMsg = {
+					id: 'ready',
+					data: {
+						currentUrl: window.location.href,
+						activePanels: {},
+						activeSections: {},
+						activeControls: {}
+					}
+				};
+				if (channel) readyMsg.channel = channel;
+				window.parent.postMessage(JSON.stringify(readyMsg), '*');
+
+				setInterval(function () {
+					var ping = { id: 'keep-alive', data: {} };
+					if (channel) ping.channel = channel;
+					window.parent.postMessage(JSON.stringify(ping), '*');
+				}, 1500);
+			}
+		} catch (e) {}
+	}
+	sendMessengerReady();
+
+	function getAllowedMessageOrigin() {
+		try {
+			if (window.aioLoginPreviewConfig && window.aioLoginPreviewConfig.allowedOrigin) {
+				return String(window.aioLoginPreviewConfig.allowedOrigin);
+			}
+		} catch (e) {}
+		return window.location.origin;
+	}
+
+	function isTrustedCustomizerMessage(evt) {
+		if (!evt || typeof evt.data === 'undefined') {
+			return false;
+		}
+		var expected = getAllowedMessageOrigin();
+		if (!expected || !evt.origin || evt.origin !== expected) {
+			return false;
+		}
+		if (window.parent && window.parent !== window && evt.source && evt.source !== window.parent) {
+			return false;
+		}
+		return true;
+	}
+
+	function sanitizePreviewUrl(url) {
+		url = url === null || typeof url === 'undefined' ? '' : String(url).trim();
+		if (!url) {
+			return '';
+		}
+		if (url.charAt(0) === '/' && url.charAt(1) !== '/') {
+			return url;
+		}
+		if (url.charAt(0) === '?' || url.charAt(0) === '#') {
+			return url;
+		}
+		try {
+			var parsed = new URL(url, window.location.href);
+			if (parsed.protocol === 'http:' || parsed.protocol === 'https:') {
+				return parsed.href;
+			}
+		} catch (e) {}
+		return '';
+	}
+
+	function sanitizePreviewCustomCss(css) {
+		css = css === null || typeof css === 'undefined' ? '' : String(css);
+		if (!css) {
+			return '';
+		}
+		var lower = css.toLowerCase();
+		if (
+			lower.indexOf('javascript:') !== -1 ||
+			lower.indexOf('expression(') !== -1 ||
+			lower.indexOf('behavior:') !== -1 ||
+			lower.indexOf('-moz-binding') !== -1
+		) {
+			return '';
+		}
+		return css;
+	}
+
 	function ensureFontLink(fontFamily) {
 		var id = 'aio-login-pro-customizer-font';
 		var existing = document.getElementById(id);
@@ -82,6 +174,240 @@
 	 * $specific = body.login.{template}, $strong_specific = body.login.{template}.{template}
 	 * so live rules can override saved !important CSS.
 	 */
+	// Free ZIP: Modern Center + Future Tech only (Guideline 5). Premium templates live in aio-login-pro.
+	var TEMPLATE_DEF = {
+		'default':    { cls: 'aio-login__template-03', file: 'login-designer-template-03.css' },
+		'template-8': { cls: 'aio-login__template-09', file: 'login-designer-template-09.css' }
+	};
+
+	function applyTemplateToPreview(slug) {
+		var s = String(slug || 'default');
+		var tpl = TEMPLATE_DEF[s] || TEMPLATE_DEF['default'];
+
+		// 1. Update body classes
+		if (document.body) {
+			var oldClasses = String(document.body.className || '').split(/\s+/);
+			var newClasses = [];
+			for (var i = 0; i < oldClasses.length; i++) {
+				if (oldClasses[i] && oldClasses[i].indexOf('aio-login__template-') !== 0) {
+					newClasses.push(oldClasses[i]);
+				}
+			}
+			newClasses.push(tpl.cls);
+			document.body.className = newClasses.join(' ');
+		}
+
+		// 2. Update stylesheet <link> href for the active free template.
+		var link = document.getElementById('aio-login-pro-template-css') || document.getElementById('aio-login-free-template-css');
+		if (link && link.href) {
+			link.href = link.href.replace(/login-designer-template-\d+\.css/, tpl.file);
+		} else {
+			var links = document.querySelectorAll('link[rel="stylesheet"]');
+			for (var j = 0; j < links.length; j++) {
+				if (links[j].href && /login-designer-template-\d+\.css/.test(links[j].href)) {
+					links[j].href = links[j].href.replace(/login-designer-template-\d+\.css/, tpl.file);
+					break;
+				}
+			}
+		}
+
+		// 3. Move h1 into/out of form for template-09 (Future Tech)
+		var loginBox = document.getElementById('login');
+		var formEl = document.getElementById('loginform') || document.getElementById('lostpasswordform') || document.getElementById('registerform');
+		var h1 = document.querySelector('#login h1.wp-login-logo, #login h1');
+		if (tpl.cls === 'aio-login__template-09') {
+			if (formEl && h1 && h1.parentNode !== formEl) {
+				formEl.insertBefore(h1, formEl.firstChild);
+			}
+		} else {
+			if (loginBox && formEl && h1 && h1.parentNode === formEl) {
+				loginBox.insertBefore(h1, formEl);
+			}
+		}
+
+		syncPreviewLoginFooterDom();
+		render();
+	}
+
+	function hideCoreLoginFooterNodes() {
+		var nav = document.getElementById('nav');
+		var back = document.getElementById('backtoblog');
+		[nav, back].forEach(function (el) {
+			if (!el) {
+				return;
+			}
+			el.style.display = 'none';
+			el.setAttribute('aria-hidden', 'true');
+		});
+	}
+
+	function ensureTemplate09FooterLinksInForm(form) {
+		if (!form || form.querySelector('.aio-login__template-09-footer-links')) {
+			return;
+		}
+		var nav = document.getElementById('nav');
+		var back = document.getElementById('backtoblog');
+		if (!nav && !back) {
+			return;
+		}
+		var wrap = document.createElement('div');
+		wrap.className = 'aio-login__template-09-footer-links';
+		var row = document.createElement('div');
+		row.className = 'aio-login__template-09-footer-link aio-login__template-09-nav-row';
+		if (nav) {
+			while (nav.firstChild) {
+				row.appendChild(nav.firstChild);
+			}
+		}
+		wrap.appendChild(row);
+		if (back) {
+			var backWrap = document.createElement('div');
+			backWrap.className = 'aio-login__template-09-footer-link aio-login__template-09-back-to-site';
+			while (back.firstChild) {
+				backWrap.appendChild(back.firstChild);
+			}
+			wrap.appendChild(backWrap);
+		}
+		form.appendChild(wrap);
+	}
+
+	function syncTemplate09FormStructure(login, form) {
+		if (!login) {
+			login = document.getElementById('login');
+		}
+		if (!form) {
+			form =
+				document.getElementById('loginform') ||
+				document.getElementById('lostpasswordform') ||
+				document.getElementById('registerform');
+		}
+		if (!login || !form) {
+			return;
+		}
+
+		ensureTemplate09FooterLinksInForm(form);
+
+		var nodes = [];
+		var om = login.querySelector('#login > .message');
+		if (om && om.parentNode !== form) {
+			nodes.push(om);
+		}
+		var m = document.getElementById('login-message');
+		if (m && m.parentNode !== form) {
+			nodes.push(m);
+		}
+		var err = document.getElementById('login_error');
+		if (err) {
+			err.classList.add('aio-login__template-09-login-error');
+			if (err.parentNode !== form) {
+				nodes.push(err);
+			}
+		}
+		var lh = login.querySelector('#login > h1');
+		if (lh && lh.parentNode && lh.parentNode.id === 'login') {
+			nodes.push(lh);
+		}
+		for (var i = 0; i < nodes.length; i++) {
+			form.insertBefore(nodes[i], form.firstChild);
+		}
+
+		hideCoreLoginFooterNodes();
+
+		var links = form.querySelector('.aio-login__template-09-footer-links');
+		var submit = form.querySelector('p.submit');
+		if (links && submit && submit.parentNode === form) {
+			submit.insertAdjacentElement('afterend', links);
+		}
+		var dup = form.querySelectorAll('.aio-login__template-09-footer-links');
+		for (var d = dup.length - 1; d > 0; d--) {
+			dup[d].remove();
+		}
+	}
+
+	function getOrCreateLoginFooterNode(id) {
+		var el = document.getElementById(id);
+		if (el) {
+			el.style.display = '';
+			el.removeAttribute('aria-hidden');
+			return el;
+		}
+		el = document.createElement('p');
+		el.id = id;
+		return el;
+	}
+
+	function dissolveTemplate09FooterStructure(login) {
+		login = login || document.getElementById('login');
+		if (!login) {
+			return;
+		}
+		var blocks = login.querySelectorAll('.aio-login__template-09-footer-links');
+		if (!blocks.length) {
+			return;
+		}
+		var nav = getOrCreateLoginFooterNode('nav');
+		var back = getOrCreateLoginFooterNode('backtoblog');
+		for (var i = 0; i < blocks.length; i++) {
+			var block = blocks[i];
+			var navRow = block.querySelector('.aio-login__template-09-nav-row');
+			var backWrap = block.querySelector('.aio-login__template-09-back-to-site');
+			if (navRow) {
+				while (navRow.firstChild) {
+					nav.appendChild(navRow.firstChild);
+				}
+			}
+			if (backWrap) {
+				while (backWrap.firstChild) {
+					back.appendChild(backWrap.firstChild);
+				}
+			}
+			if (block.parentNode) {
+				block.parentNode.removeChild(block);
+			}
+		}
+		if (!document.getElementById('nav')) {
+			login.appendChild(nav);
+		}
+		if (!document.getElementById('backtoblog')) {
+			login.appendChild(back);
+		}
+	}
+
+	function moveFooterLinksToEndOfForm(form) {
+		if (!form) {
+			return;
+		}
+		var nav = document.getElementById('nav');
+		var back = document.getElementById('backtoblog');
+		if (nav) {
+			nav.style.display = '';
+			nav.removeAttribute('aria-hidden');
+			form.appendChild(nav);
+		}
+		if (back) {
+			back.style.display = '';
+			back.removeAttribute('aria-hidden');
+			form.appendChild(back);
+		}
+	}
+
+	function syncPreviewLoginFooterDom() {
+		if (!document.body) {
+			return;
+		}
+		var login = document.getElementById('login');
+		var form =
+			document.getElementById('loginform') ||
+			document.getElementById('lostpasswordform') ||
+			document.getElementById('registerform');
+		if (document.body.classList.contains('aio-login__template-09')) {
+			syncTemplate09FormStructure(login, form);
+			return;
+		}
+		dissolveTemplate09FooterStructure(login);
+		moveFooterLinksToEndOfForm(form);
+	}
+
 	function getTemplateSelectors() {
 		var b = document.body;
 		if (!b || !b.className) {
@@ -94,6 +420,9 @@
 				tpl = parts[i];
 				break;
 			}
+		}
+		if (!tpl && state.templateSlug && TEMPLATE_DEF[state.templateSlug]) {
+			tpl = TEMPLATE_DEF[state.templateSlug].cls;
 		}
 		if (!tpl) {
 			return { s: 'body.login', strong: 'body.login' };
@@ -337,7 +666,7 @@
 		}
 
 		// Custom CSS
-		if (state.customCss) css += '\n' + state.customCss;
+		if (state.customCss) css += '\n' + sanitizePreviewCustomCss(state.customCss);
 
 		// Future Tech: core #nav / #backtoblog after Additional CSS so preview cannot re-show them
 		if (body.indexOf('template-09') !== -1) {
@@ -658,9 +987,12 @@
 			}
 		}
 		if (state._logoUrlTouched && state.logoUrl) {
-			try {
-				a.setAttribute('href', state.logoUrl);
-			} catch (e) {}
+			var safeHref = sanitizePreviewUrl(state.logoUrl);
+			if (safeHref) {
+				try {
+					a.setAttribute('href', safeHref);
+				} catch (e) {}
+			}
 		}
 	}
 
@@ -684,6 +1016,7 @@
 			}
 		} catch (e) { }
 		ensureStyleEl().textContent = css;
+		syncPreviewLoginFooterDom();
 		ensureEditPins();
 		applyLogoLinkState();
 	}
@@ -697,8 +1030,13 @@
 	// initial render
 	render();
 
+	document.addEventListener('DOMContentLoaded', syncPreviewLoginFooterDom);
+
 	// Listen for setting updates pushed from Customizer controls.
 	window.addEventListener('message', function (evt) {
+		if (!isTrustedCustomizerMessage(evt)) {
+			return;
+		}
 		var d = evt && evt.data ? evt.data : null;
 		if (!d || d.type !== 'aioLoginSetting') return;
 		var id = String(d.id || '');
@@ -707,6 +1045,7 @@
 		switch (id) {
 			case 'aio_login__customization_templates':
 				state.templateSlug = v === null || typeof v === 'undefined' ? '' : String(v);
+				applyTemplateToPreview(state.templateSlug);
 				break;
 			case 'aio_login_background_color': state.bgColor = v; break;
 			case 'aio_login_el_background_repeat': state.bgRepeat = v; break;
@@ -725,7 +1064,7 @@
 				}
 				break;
 			case 'aio_login_logo_url':
-				state.logoUrl = v === null || typeof v === 'undefined' ? '' : String(v).trim();
+				state.logoUrl = sanitizePreviewUrl(v === null || typeof v === 'undefined' ? '' : String(v).trim());
 				if (state._logoUrlTouched || state.logoUrl !== '') {
 					state._logoUrlTouched = true;
 				}
@@ -761,7 +1100,7 @@
 			case 'aio_login_forgot_background_image':
 				state.forgotBgImageUrl = v && typeof v === 'object' && v.url ? String(v.url) : '';
 				break;
-			case 'aio_login_custom-css': state.customCss = v; break;
+			case 'aio_login_custom-css': state.customCss = sanitizePreviewCustomCss(v); break;
 			default:
 				// ignore
 				break;

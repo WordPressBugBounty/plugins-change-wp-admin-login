@@ -1,8 +1,10 @@
 /**
- * Remove leftover captcha provider DOM nodes injected outside Vue mounts.
- * Prevents reCAPTCHA/hCaptcha error chrome from persisting across modals (AIOL-656).
+ * Remove leftover reCAPTCHA DOM nodes injected outside Vue mounts.
+ * Prevents Google reCAPTCHA error chrome from persisting across modals (AIOL-656).
  *
- * @param {string} provider recaptcha|hcaptcha|turnstile|all
+ * Free ships reCAPTCHA only. Pro providers use Pro's captcha-dom-cleanup.js.
+ *
+ * @param {string} provider recaptcha|all
  * @param {HTMLElement|null} keepInside Optional mount to preserve.
  */
 export function cleanupCaptchaProviderDom( provider, keepInside ) {
@@ -16,17 +18,6 @@ export function cleanupCaptchaProviderDom( provider, keepInside ) {
 			'div.g-recaptcha',
 			'textarea.g-recaptcha-response',
 			'textarea[name="g-recaptcha-response"]',
-		],
-		hcaptcha: [
-			'iframe[src*="hcaptcha.com"]',
-			'iframe[data-hcaptcha-widget-id]',
-			'iframe[data-hcaptcha-response]',
-			'textarea[name="h-captcha-response"]',
-		],
-		turnstile: [
-			'iframe[src*="challenges.cloudflare.com"]',
-			'iframe[src*="turnstile"]',
-			'input[name="cf-turnstile-response"]',
 		],
 	};
 
@@ -42,7 +33,6 @@ export function cleanupCaptchaProviderDom( provider, keepInside ) {
 					if ( keepInside && keepInside.contains( node ) ) {
 						return;
 					}
-					// Do not strip widgets that are still inside the active config modal.
 					if ( node.closest && node.closest( '.aio-login-captcha-verify__widget' ) ) {
 						return;
 					}
@@ -59,13 +49,12 @@ export function cleanupCaptchaProviderDom( provider, keepInside ) {
 
 /**
  * Soft modal switch cleanup: remove leftover DOM only.
- * Do NOT yank provider scripts/globals — that breaks Turnstile/hCaptcha re-init.
  *
- * @param {string[]} keepProviders Providers that must keep their scripts (e.g. ['turnstile']).
+ * @param {string[]} keepProviders Providers that must keep their scripts.
  */
 export function cleanupForeignCaptchaDom( keepProviders ) {
 	keepProviders = keepProviders || [];
-	[ 'recaptcha', 'hcaptcha', 'turnstile' ].forEach( ( provider ) => {
+	[ 'recaptcha' ].forEach( ( provider ) => {
 		if ( keepProviders.indexOf( provider ) === -1 ) {
 			cleanupCaptchaProviderDom( provider );
 		}
@@ -94,7 +83,6 @@ function removeCaptchaNode( node, keepInside ) {
 		if ( keepInside && ( keepInside === parent || keepInside.contains( parent ) ) ) {
 			break;
 		}
-		// Only climb through empty-ish absolute wrappers, not general layout.
 		const style = parent.getAttribute && parent.getAttribute( 'style' );
 		const looksLikeOverlay = style && (
 			style.indexOf( 'position: absolute' ) !== -1 ||
@@ -144,32 +132,6 @@ function removeRecaptchaErrorBoxes( keepInside ) {
 }
 
 export function purgeCaptchaProviderGlobal( provider ) {
-	if ( 'hcaptcha' === provider ) {
-		// hCaptcha compat mode aliases window.grecaptcha — clear the fake hook too.
-		if ( window.grecaptcha && ( window.grecaptcha === window.hcaptcha || ! window.___grecaptcha_cfg ) ) {
-			try {
-				delete window.grecaptcha;
-			} catch ( e ) {
-				window.grecaptcha = undefined;
-			}
-		}
-		try {
-			delete window.hcaptcha;
-		} catch ( e ) {
-			window.hcaptcha = undefined;
-		}
-		return;
-	}
-
-	if ( 'turnstile' === provider ) {
-		try {
-			delete window.turnstile;
-		} catch ( e ) {
-			window.turnstile = undefined;
-		}
-		return;
-	}
-
 	if ( 'recaptcha' === provider ) {
 		try {
 			delete window.grecaptcha;
@@ -187,12 +149,10 @@ export function purgeCaptchaProviderGlobal( provider ) {
 /**
  * Remove provider script tags from the page.
  *
- * @param {string} provider recaptcha|hcaptcha|turnstile
+ * @param {string} provider recaptcha
  */
 export function removeCaptchaProviderScripts( provider ) {
 	const patterns = {
-		hcaptcha: [ 'js.hcaptcha.com' ],
-		turnstile: [ 'challenges.cloudflare.com/turnstile' ],
 		recaptcha: [ 'www.google.com/recaptcha', 'www.gstatic.com/recaptcha' ],
 	};
 	( patterns[ provider ] || [] ).forEach( ( pattern ) => {
@@ -214,24 +174,23 @@ export function unloadCaptchaProvider( provider ) {
 }
 
 /**
- * Keep only the active provider bootstrapped. Required because hCaptcha's default
- * recaptchacompat mode overwrites window.grecaptcha and makes Google reCAPTCHA render as hCaptcha.
+ * Keep only the active provider bootstrapped.
  *
  * @param {string} activeProvider
+ * @param {HTMLElement|null} keepInside Optional mount to preserve for the active provider.
  */
-export function isolateActiveCaptchaProvider( activeProvider ) {
-	[ 'recaptcha', 'hcaptcha', 'turnstile' ].forEach( ( provider ) => {
+export function isolateActiveCaptchaProvider( activeProvider, keepInside ) {
+	[ 'recaptcha' ].forEach( ( provider ) => {
 		if ( provider !== activeProvider ) {
 			unloadCaptchaProvider( provider );
 		} else {
-			cleanupCaptchaProviderDom( provider );
+			cleanupCaptchaProviderDom( provider, keepInside || null );
 		}
 	} );
 }
 
 /**
  * Soft reset for modal open/close — DOM leftovers only.
- * Script/global purge is avoided so Cloudflare Turnstile can render reliably.
  */
 export function resetCaptchaEnvironment() {
 	cleanupCaptchaProviderDom( 'all' );

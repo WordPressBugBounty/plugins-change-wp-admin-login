@@ -4,6 +4,7 @@
 			<button
 				type="submit"
 				:class="class"
+				:disabled="disabled"
 				@click="( e ) => $emit('button-click', e )">
 			<slot>{{ $t('Save Changes') }}</slot></button>
 		</p>
@@ -18,6 +19,10 @@ export default {
 		type: {
 			type: String,
 			default: 'primary'
+		},
+		disabled: {
+			type: Boolean,
+			default: false,
 		}
 	},
 
@@ -35,13 +40,24 @@ export default {
 
 <style scoped>
 .aio-login__primary {
-	border: #9516df;
+	border: 1px solid #9516df;
 	background-color: #9416de;
 	color: #fff;
 }
-.aio-login__primary:hover {
-	background-color: #7a12b8;
-	border-color: #7a12b8;
+
+.aio-login__primary:hover:not(:disabled) {
+	background-color: #8310c7;
 	color: #fff;
+}
+
+.aio-login__primary:disabled,
+.aio-login__primary[disabled] {
+	background-color: #9416de !important;
+	color: #ffffff !important;
+	opacity: 0.5 !important;
+	border-color: #9416de !important;
+	cursor: not-allowed !important;
+	box-shadow: none !important;
+	text-shadow: none !important;
 }
 </style>
