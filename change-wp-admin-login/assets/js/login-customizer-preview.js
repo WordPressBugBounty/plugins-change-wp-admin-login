@@ -76,23 +76,6 @@
 		return '';
 	}
 
-	function sanitizePreviewCustomCss(css) {
-		css = css === null || typeof css === 'undefined' ? '' : String(css);
-		if (!css) {
-			return '';
-		}
-		var lower = css.toLowerCase();
-		if (
-			lower.indexOf('javascript:') !== -1 ||
-			lower.indexOf('expression(') !== -1 ||
-			lower.indexOf('behavior:') !== -1 ||
-			lower.indexOf('-moz-binding') !== -1
-		) {
-			return '';
-		}
-		return css;
-	}
-
 	function ensureFontLink(fontFamily) {
 		var id = 'aio-login-pro-customizer-font';
 		var existing = document.getElementById(id);
@@ -665,10 +648,7 @@
 				' !important;background-size:cover !important;background-position:center !important;background-repeat:no-repeat !important;}';
 		}
 
-		// Custom CSS
-		if (state.customCss) css += '\n' + sanitizePreviewCustomCss(state.customCss);
-
-		// Future Tech: core #nav / #backtoblog after Additional CSS so preview cannot re-show them
+		// Future Tech: core #nav / #backtoblog after form styles so preview cannot re-show them
 		if (body.indexOf('template-09') !== -1) {
 			css +=
 				'\n' +
@@ -963,8 +943,7 @@
 		btnShadowOpacity: '0.2',
 		btnTextSize: '',
 		forgotBgColor: '',
-		forgotBgImageUrl: '',
-		customCss: ''
+		forgotBgImageUrl: ''
 	};
 
 	function applyLogoLinkState() {
@@ -1100,7 +1079,6 @@
 			case 'aio_login_forgot_background_image':
 				state.forgotBgImageUrl = v && typeof v === 'object' && v.url ? String(v.url) : '';
 				break;
-			case 'aio_login_custom-css': state.customCss = sanitizePreviewCustomCss(v); break;
 			default:
 				// ignore
 				break;

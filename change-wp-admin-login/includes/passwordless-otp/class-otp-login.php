@@ -134,6 +134,7 @@ if ( ! class_exists( 'AIO_Login\\Passwordless_Otp\\OTP_Login' ) ) {
 					'backToLogin'       => __( 'Back to login', 'change-wp-admin-login' ),
 					'verify'            => __( 'Verify', 'change-wp-admin-login' ),
 					'resend'            => __( 'Resend code', 'change-wp-admin-login' ),
+					/* translators: %d: seconds remaining before resend */
 					'resendIn'          => __( 'Resend code in %ds', 'change-wp-admin-login' ),
 					'successTitle'      => __( "You're signed in", 'change-wp-admin-login' ),
 					'successMessage'    => __( "You're signed in. Redirecting you to your dashboard…", 'change-wp-admin-login' ),
@@ -215,7 +216,7 @@ if ( ! class_exists( 'AIO_Login\\Passwordless_Otp\\OTP_Login' ) ) {
 		public function ajax_resend() {
 			$this->verify_ajax_nonce();
 
-			$token = isset( $_POST['token'] ) ? OTP_Service::normalize_session_token( wp_unslash( $_POST['token'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Missing
+			$token = isset( $_POST['token'] ) ? OTP_Service::normalize_session_token( sanitize_text_field( wp_unslash( $_POST['token'] ) ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Missing
 			$result = OTP_Service::resend_challenge( $token );
 
 			if ( is_wp_error( $result ) ) {
@@ -265,7 +266,7 @@ if ( ! class_exists( 'AIO_Login\\Passwordless_Otp\\OTP_Login' ) ) {
 		public function ajax_verify() {
 			$this->verify_ajax_nonce();
 
-			$token = isset( $_POST['token'] ) ? OTP_Service::normalize_session_token( wp_unslash( $_POST['token'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Missing
+			$token = isset( $_POST['token'] ) ? OTP_Service::normalize_session_token( sanitize_text_field( wp_unslash( $_POST['token'] ) ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Missing
 			$otp   = isset( $_POST['otp'] ) ? sanitize_text_field( wp_unslash( $_POST['otp'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Missing
 
 			$result = OTP_Service::verify_challenge( $token, $otp );
@@ -346,7 +347,8 @@ if ( ! class_exists( 'AIO_Login\\Passwordless_Otp\\OTP_Login' ) ) {
 					'token'     => $challenge['token'],
 					'length'    => OTP_Settings::get_otp_length( 'email' ),
 					'resend_in' => $challenge['resend_in'],
-					'message'   => __( 'Verification code sent to your email.', 'change-wp-admin-login' ),
+					// Same wording as unregistered path (anti-enumeration).
+					'message'   => __( 'If an account exists for this email, a verification code has been sent.', 'change-wp-admin-login' ),
 				)
 			);
 		}
@@ -646,34 +648,25 @@ if ( ! class_exists( 'AIO_Login\\Passwordless_Otp\\OTP_Login' ) ) {
 		}
 
 		/**
+		 * Anti-enumeration: same success shape as a real challenge; no account-existence signal.
+		 *
 		 * @param string $channel email|sms.
 		 */
 		private function reject_unregistered_otp_user( $channel ) {
-			wp_send_json_error(
+			$channel = ( 'sms' === $channel ) ? 'sms' : 'email';
+			$length  = OTP_Settings::get_otp_length( $channel );
+			$message = ( 'sms' === $channel )
+				? __( 'If an account is linked to this phone number, a verification code has been sent.', 'change-wp-admin-login' )
+				: __( 'If an account exists for this email, a verification code has been sent.', 'change-wp-admin-login' );
+
+			wp_send_json_success(
 				array(
-					'message'      => $this->get_not_registered_message( $channel ),
-					'code'         => 'not_registered',
-					'register_url' => $this->get_registration_url(),
+					'token'     => wp_generate_password( 32, false ),
+					'length'    => $length,
+					'resend_in' => 30,
+					'message'   => $message,
 				)
 			);
-		}
-
-		/**
-		 * @param string $channel email|sms.
-		 * @return string
-		 */
-		private function get_not_registered_message( $channel ) {
-			$register_url = $this->get_registration_url();
-
-			if ( 'sms' === $channel ) {
-				return __( 'No account is linked to this phone number. If you already have an account, add your mobile number in your profile. Otherwise, please register first.', 'change-wp-admin-login' );
-			}
-
-			if ( $register_url ) {
-				return __( 'You do not have an account yet. Please register first, then use Continue with Email.', 'change-wp-admin-login' );
-			}
-
-			return __( 'You do not have an account yet. Please register first or contact the site administrator.', 'change-wp-admin-login' );
 		}
 
 		/**

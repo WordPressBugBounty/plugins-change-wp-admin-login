@@ -83,7 +83,7 @@ if ( ! class_exists( 'AIO_Login\\Multisite\\Network_Admin' ) ) {
 				array(
 					'methods'             => 'GET',
 					'callback'            => array( $this, 'get_settings' ),
-					'permission_callback' => array( $this, 'can_manage_network_ui' ),
+					'permission_callback' => array( $this, 'can_manage_network' ),
 				)
 			);
 
@@ -169,19 +169,7 @@ if ( ! class_exists( 'AIO_Login\\Multisite\\Network_Admin' ) ) {
 		}
 
 		/**
-		 * Permission: view Network UI.
-		 *
-		 * @return bool
-		 */
-		public function can_manage_network_ui() {
-			if ( ! is_user_logged_in() ) {
-				return false;
-			}
-			return is_super_admin() || current_user_can( 'manage_options' );
-		}
-
-		/**
-		 * Permission: mutate network policies.
+		 * Permission: view or mutate network settings (network admins only).
 		 *
 		 * @return bool
 		 */

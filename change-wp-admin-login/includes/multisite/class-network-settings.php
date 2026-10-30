@@ -551,7 +551,7 @@ if ( ! class_exists( 'AIO_Login\\Multisite\\Network_Settings' ) ) {
 
 			// REST/AJAX from Network Admin on Main Site.
 			// phpcs:ignore WordPress.Security.NonceVerification.Recommended
-			if ( isset( $_REQUEST['aio_login_network_admin'] ) && '1' === (string) wp_unslash( $_REQUEST['aio_login_network_admin'] ) ) {
+			if ( isset( $_REQUEST['aio_login_network_admin'] ) && '1' === sanitize_text_field( wp_unslash( $_REQUEST['aio_login_network_admin'] ) ) ) {
 				return current_user_can( 'manage_network_options' );
 			}
 

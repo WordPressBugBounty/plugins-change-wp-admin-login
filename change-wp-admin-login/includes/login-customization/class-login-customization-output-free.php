@@ -191,7 +191,9 @@ if (!class_exists('AIO_Login\\Login_Customization\\Login_Customization_Output_Fr
 		 */
 		private function get_template_09_primary_nav_markup() {
 			$action = '';
-			if ( isset( $_REQUEST['action'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+			// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only wp-login.php action routing (same as core login).
+			if ( isset( $_REQUEST['action'] ) ) {
+				// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only; no state change.
 				$action = sanitize_text_field( wp_unslash( $_REQUEST['action'] ) );
 			}
 
@@ -360,7 +362,7 @@ if (!class_exists('AIO_Login\\Login_Customization\\Login_Customization_Output_Fr
 					$font_families[] = str_replace(' ', '+', $font) . ':wght@300;400;500;600;700';
 				}
 				$fonts_url = 'https://fonts.googleapis.com/css2?family=' . implode('&family=', $font_families) . '&display=swap';
-				wp_enqueue_style('aio-login-elements-fonts', $fonts_url, array(), null);
+				wp_enqueue_style( 'aio-login-elements-fonts', $fonts_url, array(), defined( 'AIO_LOGIN__VERSION' ) ? AIO_LOGIN__VERSION : '1.0.0' );
 			}
 
 			// Hide logo AFTER template CSS: inline on `login` prints before aio-login-free-template.css, so template

@@ -173,11 +173,6 @@ if ( ! class_exists( __NAMESPACE__ . '\Admin_JS_I18n' ) ) {
 			if ( is_readable( $mofile ) ) {
 				load_textdomain( $domain, $mofile );
 			}
-			load_plugin_textdomain(
-				$domain,
-				false,
-				dirname( plugin_basename( AIO_LOGIN__FILE ) ) . '/languages'
-			);
 		}
 
 		/**
@@ -228,7 +223,6 @@ if ( ! class_exists( __NAMESPACE__ . '\Admin_JS_I18n' ) ) {
 				'Allowed countries',
 				'Always included. Alerts when an IP or user is locked out after failed logins.',
 				'Amharic',
-				'AppSumo promotion',
 				'Apple',
 				'Apply custom CSS to style the login page.',
 				'Arabic',
@@ -330,7 +324,6 @@ if ( ! class_exists( __NAMESPACE__ . '\Admin_JS_I18n' ) ) {
 				'Disable Common Usernames',
 				'Disable WP Core Author Sitemaps',
 				'Dismiss',
-				'Dismiss promotion',
 				'Duration must be between 1 and 365 days.',
 				'Dutch',
 				'Edit',
@@ -438,11 +431,9 @@ if ( ! class_exists( __NAMESPACE__ . '\Admin_JS_I18n' ) ) {
 				'Real-Time Customer Templates & Fonts',
 				'Get Business Plan Now',
 				'Get Pro',
-				'Get Lifetime Deal Now',
 				'Get the Most Powerful WordPress Login Plugin Today',
 				'Getting Started',
 				'Go Unlimited with AIO Login',
-				'Good News!',
 				'Google',
 				'Google Social Login App',
 				'Google reCAPTCHA',

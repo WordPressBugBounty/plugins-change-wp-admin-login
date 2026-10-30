@@ -1,12 +1,10 @@
 <?php
 /**
  * Login / logout redirection (free): enable/disable, all_users rules, REST, fallback URL.
- * Per-user / per-role matching and sanitization live in Pro (filters below; Guideline 5).
- * Unreachable login URL on the highest-priority rule that defines one uses fallback (when enabled), not a lower-order rule.
- * Fallback applies to logout only when the top matching rule defines a logout URL that is unreachable (404 / HEAD failure).
+ * Per-user / per-role matching, rule priority (Order), and related sanitization live in Pro (Guideline 5).
+ * Unreachable login URL on the top matching rule that defines one uses fallback (when enabled).
+ * Fallback applies to logout only when the top matching rule defines a logout URL that is unreachable.
  * No logout URL on the rule ("No logout redirect") uses WordPress default logout — never fallback.
- * Logout URL comes only from the top-priority matching rule (no fall-through to lower-order rules).
- * Order 0 = no priority; order-0 rules apply only when no rule with order 1+ exists on the site.
  *
  * @package AIO_Login
  */
@@ -67,7 +65,7 @@ if ( ! class_exists( 'AIO_Login\\Login_Controller\\Login_Redirection' ) ) {
 		/**
 		 * Whether rule priority order (1, 2, …) is allowed.
 		 *
-		 * Free unlocks priority for G5 (PLUGIN-G05-001). Pro may still filter this.
+		 * Enabled on Free by default. Filter remains for Pro/tests to override.
 		 *
 		 * @return bool
 		 */
@@ -224,82 +222,8 @@ if ( ! class_exists( 'AIO_Login\\Login_Controller\\Login_Redirection' ) ) {
 		}
 
 		/**
-		 * Sort key for rule "order": lower = higher priority. 0 or missing = no explicit priority (last among numbered orders).
+		 * Sort by condition specificity then created_at (no Order priority).
 		 *
-		 * @param array<string, mixed> $rule Rule row.
-		 * @return int
-		 */
-		private function login_redirection_rule_sort_priority( $rule ) {
-			if ( ! is_array( $rule ) ) {
-				return 999999;
-			}
-			if ( ! isset( $rule['order'] ) || '' === trim( (string) $rule['order'] ) ) {
-				return 999999;
-			}
-			$n = (int) $rule['order'];
-			if ( $n < 1 ) {
-				return 999999;
-			}
-			return $n;
-		}
-
-		/**
-		 * Whether the rule uses an explicit order (1, 2, …). Order 0 means no priority.
-		 *
-		 * @param array<string, mixed> $rule Rule row.
-		 */
-		private function login_redirection_rule_has_numbered_order( $rule ) {
-			if ( ! is_array( $rule ) || ! isset( $rule['order'] ) ) {
-				return false;
-			}
-			if ( '' === trim( (string) $rule['order'] ) ) {
-				return false;
-			}
-			return (int) $rule['order'] >= 1;
-		}
-
-		/**
-		 * Whether any saved rule uses explicit order (1+). When true, order-0 rules are ignored site-wide.
-		 *
-		 * @param array<int, array<string, mixed>> $rules All redirection rules.
-		 */
-		private function site_has_numbered_order_rules( $rules ) {
-			foreach ( $rules as $rule ) {
-				if ( $this->login_redirection_rule_has_numbered_order( $rule ) ) {
-					return true;
-				}
-			}
-			return false;
-		}
-
-		/**
-		 * Rules eligible for this request after order policy:
-		 * - If any rule on the site has order 1+, only matching numbered rules are used (order 0 never runs).
-		 * - If no numbered rules exist site-wide, only matching order-0 / unset rules are used.
-		 *
-		 * @param array<int, array<string, mixed>> $matching Rules that match the current user.
-		 * @param array<int, array<string, mixed>> $all_rules All saved rules.
-		 * @return array<int, array<string, mixed>>
-		 */
-		private function resolve_matching_rules_for_order_pool( $matching, $all_rules ) {
-			$use_numbered_pool = $this->site_has_numbered_order_rules( $all_rules );
-			$pool              = array();
-
-			foreach ( $matching as $rule ) {
-				$is_numbered = $this->login_redirection_rule_has_numbered_order( $rule );
-				if ( $use_numbered_pool && ! $is_numbered ) {
-					continue;
-				}
-				if ( ! $use_numbered_pool && $is_numbered ) {
-					continue;
-				}
-				$pool[] = $rule;
-			}
-
-			return $this->sort_matching_rules( $pool );
-		}
-
-		/**
 		 * @param array<int, array<string, mixed>> $rules Matching rules.
 		 * @return array<int, array<string, mixed>>
 		 */
@@ -319,9 +243,88 @@ if ( ! class_exists( 'AIO_Login\\Login_Controller\\Login_Redirection' ) ) {
 
 			usort(
 				$rules,
+				static function( $a, $b ) use ( $type_rank ) {
+					$ta = isset( $a['condition_type'] ) ? $type_rank( (string) $a['condition_type'] ) : 9;
+					$tb = isset( $b['condition_type'] ) ? $type_rank( (string) $b['condition_type'] ) : 9;
+					if ( $ta !== $tb ) {
+						return $ta <=> $tb;
+					}
+					$a_created = isset( $a['created_at'] ) ? (int) $a['created_at'] : 0;
+					$b_created = isset( $b['created_at'] ) ? (int) $b['created_at'] : 0;
+					return $a_created <=> $b_created;
+				}
+			);
+			return $rules;
+		}
+
+		/**
+		 * @param array<string, mixed> $rule Rule row.
+		 * @return int
+		 */
+		private function rule_sort_priority( $rule ) {
+			if ( ! is_array( $rule ) ) {
+				return 999999;
+			}
+			if ( ! isset( $rule['order'] ) || '' === trim( (string) $rule['order'] ) ) {
+				return 999999;
+			}
+			$n = (int) $rule['order'];
+			if ( $n < 1 ) {
+				return 999999;
+			}
+			return $n;
+		}
+
+		/**
+		 * @param array<string, mixed> $rule Rule row.
+		 */
+		private function rule_has_numbered_order( $rule ) {
+			if ( ! is_array( $rule ) || ! isset( $rule['order'] ) ) {
+				return false;
+			}
+			if ( '' === trim( (string) $rule['order'] ) ) {
+				return false;
+			}
+			return (int) $rule['order'] >= 1;
+		}
+
+		/**
+		 * @param array<int, array<string, mixed>> $rules All rules.
+		 */
+		private function site_has_numbered_order_rules( $rules ) {
+			foreach ( $rules as $rule ) {
+				if ( $this->rule_has_numbered_order( $rule ) ) {
+					return true;
+				}
+			}
+			return false;
+		}
+
+		/**
+		 * Sort by Order, then condition specificity, then created_at.
+		 *
+		 * @param array<int, array<string, mixed>> $rules Matching rules.
+		 * @return array<int, array<string, mixed>>
+		 */
+		private function sort_matching_rules_by_order( $rules ) {
+			$type_rank = static function( $type ) {
+				if ( 'user' === $type ) {
+					return 0;
+				}
+				if ( 'user_role' === $type ) {
+					return 1;
+				}
+				if ( 'all_users' === $type ) {
+					return 2;
+				}
+				return 9;
+			};
+
+			usort(
+				$rules,
 				function( $a, $b ) use ( $type_rank ) {
-					$a_order = $this->login_redirection_rule_sort_priority( $a );
-					$b_order = $this->login_redirection_rule_sort_priority( $b );
+					$a_order = $this->rule_sort_priority( $a );
+					$b_order = $this->rule_sort_priority( $b );
 					if ( $a_order !== $b_order ) {
 						return $a_order <=> $b_order;
 					}
@@ -335,7 +338,46 @@ if ( ! class_exists( 'AIO_Login\\Login_Controller\\Login_Redirection' ) ) {
 					return $a_created <=> $b_created;
 				}
 			);
+
 			return $rules;
+		}
+
+		/**
+		 * Build Order-aware matching pool (numbered vs unnumbered).
+		 *
+		 * @param array<int, array<string, mixed>> $matching Rules that match the current user.
+		 * @param array<int, array<string, mixed>> $all_rules All saved rules.
+		 * @return array<int, array<string, mixed>>
+		 */
+		private function resolve_matching_rules_for_order_pool( $matching, $all_rules ) {
+			if ( ! self::rule_order_allowed() || ! is_array( $matching ) || ! is_array( $all_rules ) ) {
+				$sorted = $this->sort_matching_rules( is_array( $matching ) ? $matching : array() );
+			} else {
+				$use_numbered_pool = $this->site_has_numbered_order_rules( $all_rules );
+				$pool              = array();
+
+				foreach ( $matching as $rule ) {
+					$is_numbered = $this->rule_has_numbered_order( $rule );
+					if ( $use_numbered_pool && ! $is_numbered ) {
+						continue;
+					}
+					if ( ! $use_numbered_pool && $is_numbered ) {
+						continue;
+					}
+					$pool[] = $rule;
+				}
+
+				$sorted = $this->sort_matching_rules_by_order( $pool );
+			}
+
+			/**
+			 * Optionally replace the matching pool (Pro historically used this).
+			 *
+			 * @param array $sorted   Sorted matching rules.
+			 * @param array $matching Unsorted matching rules.
+			 * @param array $all_rules All saved rules.
+			 */
+			return apply_filters( 'aio_login_login_redirection_resolve_matching_pool', $sorted, $matching, $all_rules );
 		}
 
 		/**
@@ -567,7 +609,8 @@ if ( ! class_exists( 'AIO_Login\\Login_Controller\\Login_Redirection' ) ) {
 				array(
 					'timeout'            => $timeout,
 					'redirection'        => 5,
-					'sslverify'          => apply_filters( 'https_local_ssl_verify', false ),
+					// Verify TLS by default; sites may filter aio_login_login_redirection_sslverify if needed.
+					'sslverify'          => (bool) apply_filters( 'aio_login_login_redirection_sslverify', true, $url ),
 					'reject_unsafe_urls' => true,
 				)
 			);
@@ -1056,13 +1099,11 @@ if ( ! class_exists( 'AIO_Login\\Login_Controller\\Login_Redirection' ) ) {
 					$logout_target_type,
 					isset( $params['logout_target_value'] ) ? $params['logout_target_value'] : ''
 				),
-				'order'               => max( 0, absint( isset( $params['order'] ) ? $params['order'] : 0 ) ),
+				'order'               => self::rule_order_allowed()
+					? max( 0, absint( isset( $params['order'] ) ? $params['order'] : 0 ) )
+					: 0,
 				'created_at'          => time(),
 			);
-
-			if ( ! self::rule_order_allowed() ) {
-				$rule['order'] = 0;
-			}
 
 			if ( 'custom' === $rule['login_target_type'] && '' === trim( (string) $rule['login_target_value'] ) ) {
 				return new \WP_Error(

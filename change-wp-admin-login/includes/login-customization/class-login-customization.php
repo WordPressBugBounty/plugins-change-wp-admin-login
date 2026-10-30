@@ -29,25 +29,6 @@ if ( ! class_exists( 'AIO_Login\\Login_Customization\\Login_Customization' ) ) {
 		 */
 		public function rest_api_init() {
 			register_rest_route(
-				'aio-login/custom-css',
-				'/get-settings',
-				array(
-					'methods'  => 'GET',
-					'callback' => array( $this, 'get_custom_css_settings' ),
-					'permission_callback' => array( Helper::class, 'get_api_permission' ),
-				)
-			);
-			register_rest_route(
-				'aio-login/custom-css',
-				'save-custom-css-settings',
-				array(
-					'methods'  => 'POST',
-					'callback' => array( $this, 'save_custom_css_settings' ),
-					'permission_callback' => array( Helper::class, 'get_api_permission' ),
-				),
-			);
-
-			register_rest_route(
 				'aio-login/background',
 				'/get-settings',
 				array(
@@ -82,41 +63,6 @@ if ( ! class_exists( 'AIO_Login\\Login_Customization\\Login_Customization' ) ) {
 					'methods'  => 'POST',
 					'callback' => array( $this, 'save_logo_settings' ),
 					'permission_callback' => array( Helper::class, 'get_api_permission' ),
-				)
-			);
-		}
-
-		public function get_custom_css_settings() {
-			$option = get_option( 'aio_login_custom-css', '' );
-			$nonce  = wp_create_nonce( 'aio-login-custom-css' );
-
-			return rest_ensure_response( array(
-				'custom_css' => $option,
-				'nonce'      => $nonce,
-			) );
-		}
-
-		public function save_custom_css_settings( $request ) {
-			$params = $request->get_params();
-			if ( isset( $params['_wpnonce'] ) && wp_verify_nonce( sanitize_text_field( wp_unslash( $params['_wpnonce'] ) ), 'aio-login-custom-css' ) ) {
-				$custom_css = isset( $params['custom_css'] ) ? sanitize_text_field( wp_unslash( $params['custom_css'] ) ) : '';
-				update_option( 'aio_login_custom-css', $custom_css );
-
-				return rest_ensure_response(
-					array(
-						'success' => true,
-						'message' => __( 'Custom CSS saved successfully', 'change-wp-admin-login' ),
-					)
-				);
-			}
-
-			return new \WP_Error(
-				'unauthorized',
-				array(
-					'message' => __( 'Nonce verification failed', 'change-wp-admin-login' )
-				),
-				array(
-					'status' => 401
 				)
 			);
 		}

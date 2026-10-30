@@ -9,7 +9,7 @@ defined( 'ABSPATH' ) || exit;
 
 $redirect = '';
 if ( isset( $_REQUEST['redirect_to'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-	$redirect = wp_validate_redirect( wp_unslash( $_REQUEST['redirect_to'] ), admin_url() ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+	$redirect = wp_validate_redirect( esc_url_raw( wp_unslash( $_REQUEST['redirect_to'] ) ), admin_url() ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 }
 
 $show_resend      = false;
@@ -95,12 +95,21 @@ if ( ! is_array( $body_classes ) ) {
 					data-remaining="<?php echo esc_attr( (int) $resend_remaining ); ?>"
 					<?php echo $show_resend ? 'style="display:none;"' : ''; ?>
 				>
-					<?php echo esc_html( sprintf( __( 'Resend available in %d sec', 'change-wp-admin-login' ), $resend_remaining ) ); ?>
+					<?php
+					echo esc_html(
+						sprintf(
+							/* translators: %d: seconds until resend is available */
+							__( 'Resend available in %d sec', 'change-wp-admin-login' ),
+							$resend_remaining
+						)
+					);
+					?>
 				</span>
 			</div>
 		</form>
 	</div>
 	<?php
+	/* translators: %d: seconds until resend is available */
 	$resend_tpl = wp_json_encode( __( 'Resend available in %d sec', 'change-wp-admin-login' ) );
 	$aio_2fa_otp_js = 'document.addEventListener("DOMContentLoaded",function(){var note=document.getElementById("aio-login-resend-note"),btn=document.getElementById("aio-login-resend-btn");if(!note||!btn){return;}var remaining=parseInt(note.getAttribute("data-remaining")||"0",10),tpl=' . $resend_tpl . ';if(remaining<=0){note.style.display="none";btn.style.display="inline-block";return;}var tick=function(){if(remaining<=0){note.style.display="none";btn.style.display="inline-block";return;}note.textContent=tpl.replace("%d",String(remaining));remaining-=1;window.setTimeout(tick,1000);};tick();});';
 	wp_register_script( 'aio-login-2fa-otp', false, array(), defined( 'AIO_LOGIN__VERSION' ) ? AIO_LOGIN__VERSION : null, true );

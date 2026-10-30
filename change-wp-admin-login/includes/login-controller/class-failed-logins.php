@@ -55,7 +55,7 @@ if ( ! class_exists( 'AIO_Login\\Login_Controller\\Failed_Logins' ) ) {
 			$table_name = $wpdb->prefix . 'aio_login_login_attempts';
 
 			if ( 'all' === $id ) {
-				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.NotPrepared
+				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.NotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter
 				return $wpdb->query( $wpdb->prepare( 'TRUNCATE TABLE %i', $table_name ) );
 			}
 
@@ -68,7 +68,7 @@ if ( ! class_exists( 'AIO_Login\\Login_Controller\\Failed_Logins' ) ) {
 			$sql          = "DELETE FROM %i WHERE id IN ($placeholders)";
 			// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare -- dynamic IN list.
 			$prepared = $wpdb->prepare( $sql, array_merge( array( $table_name ), $ids ) );
-			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.NotPrepared
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.NotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter
 			return $wpdb->query( $prepared );
 		}
 
@@ -84,7 +84,7 @@ if ( ! class_exists( 'AIO_Login\\Login_Controller\\Failed_Logins' ) ) {
 			$table_name = $wpdb->prefix . 'aio_login_login_lockouts';
 
 			if ( 'all' === $id ) {
-				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.NotPrepared
+				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.NotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter
 				return $wpdb->query( $wpdb->prepare( 'TRUNCATE TABLE %i', $table_name ) );
 			}
 
@@ -97,7 +97,7 @@ if ( ! class_exists( 'AIO_Login\\Login_Controller\\Failed_Logins' ) ) {
 			$sql          = "DELETE FROM %i WHERE id IN ($placeholders)";
 			// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare -- dynamic IN list.
 			$prepared = $wpdb->prepare( $sql, array_merge( array( $table_name ), $ids ) );
-			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.NotPrepared
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.NotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter
 			return $wpdb->query( $prepared );
 		}
 
@@ -141,7 +141,7 @@ if ( ! class_exists( 'AIO_Login\\Login_Controller\\Failed_Logins' ) ) {
 
 			// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare
 			$prepared = $wpdb->prepare( $sql, $params );
-			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.PreparedSQL.NotPrepared
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.PreparedSQL.NotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter
 			return $wpdb->get_results( $prepared, ARRAY_A );
 		}
 
@@ -160,7 +160,7 @@ if ( ! class_exists( 'AIO_Login\\Login_Controller\\Failed_Logins' ) ) {
 			$sql        = 'SELECT COUNT(*) FROM %i WHERE time BETWEEN %d AND %d';
 			$sql        = $wpdb->prepare( $sql, $table_name, $timestamps['start'], $timestamps['end'] ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
 
-			return $wpdb->get_var( $sql ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.PreparedSQL.NotPrepared
+			return $wpdb->get_var( $sql ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.PreparedSQL.NotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter
 		}
 
 		/**
@@ -179,7 +179,7 @@ if ( ! class_exists( 'AIO_Login\\Login_Controller\\Failed_Logins' ) ) {
 			$sql        = 'SELECT COUNT(*) FROM %i WHERE status = %s AND time BETWEEN %d AND %d';
 			$sql        = $wpdb->prepare( $sql, $table_name, $type, $timestamps['start'], $timestamps['end'] ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
 
-			return $wpdb->get_var( $sql ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.PreparedSQL.NotPrepared
+			return $wpdb->get_var( $sql ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.PreparedSQL.NotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter
 		}
 
 		/**
@@ -193,7 +193,7 @@ if ( ! class_exists( 'AIO_Login\\Login_Controller\\Failed_Logins' ) ) {
 			$sql        = 'SELECT * FROM %i ORDER BY time DESC ';
 
 			$sql    = $wpdb->prepare( $sql, $table_name ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
-			$result = $wpdb->get_results( $sql, ARRAY_A ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.NotPrepared
+			$result = $wpdb->get_results( $sql, ARRAY_A ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.NotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter
 			$result = array_map( array( self::get_instance(), 'add_blocked_tag' ), $result );
 			return $result;
 		}
@@ -270,7 +270,7 @@ if ( ! class_exists( 'AIO_Login\\Login_Controller\\Failed_Logins' ) ) {
 
 			$sql  = 'SELECT * FROM %i WHERE `ip_address` = %s ORDER BY `time` DESC LIMIT 1';
 			$sql  = $wpdb->prepare( $sql, $table_name, $ip ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
-			$data = $wpdb->get_row( $sql, ARRAY_A ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.NotPrepared
+			$data = $wpdb->get_row( $sql, ARRAY_A ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.NotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter
 
 			if ( is_array( $data ) && isset( $data['time'] ) ) {
 				$timeout      = Helper::get_timeout( (int) $data['time'], $ip );
@@ -300,7 +300,7 @@ if ( ! class_exists( 'AIO_Login\\Login_Controller\\Failed_Logins' ) ) {
 
 			$sql  = 'SELECT * FROM %i WHERE `ip_address` = %s ORDER BY `time` DESC LIMIT 1';
 			$sql  = $wpdb->prepare( $sql, $table_name, $ip ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
-			$data = $wpdb->get_row( $sql, ARRAY_A ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.NotPrepared
+			$data = $wpdb->get_row( $sql, ARRAY_A ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.NotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter
 
 			return is_array( $data ) ? $data : false;
 		}

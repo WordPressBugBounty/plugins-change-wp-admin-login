@@ -119,12 +119,6 @@ export default {
 		helpingText: 'Set background images, colors, or slideshows.',
 	},
 
-	// Customizer - Custom CSS
-	customCss: {
-		content: '<p>Add custom CSS to fully style your login page according to your site\'s branding.</p>',
-		helpingText: 'Apply custom CSS to style the login page.',
-	},
-
 	// Customizer - Template
 	templates: {
 		content: '<p>Choose from pre-designed login templates to quickly apply a professional look.</p>',

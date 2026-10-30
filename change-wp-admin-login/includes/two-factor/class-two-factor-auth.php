@@ -137,7 +137,11 @@ if ( ! class_exists( 'AIO_Login\\Two_Factor\\Two_Factor_Auth' ) ) {
 				$remaining = max( 1, $remaining );
 				$this->wp_error->add(
 					'otp_locked',
-					sprintf( esc_html__( 'Too many OTP attempts. Try again in %d minute(s).', 'change-wp-admin-login' ), $remaining )
+					sprintf(
+						/* translators: %d: minutes remaining until unlock */
+						esc_html__( 'Too many OTP attempts. Try again in %d minute(s).', 'change-wp-admin-login' ),
+						$remaining
+					)
 				);
 				return;
 			}
@@ -150,7 +154,7 @@ if ( ! class_exists( 'AIO_Login\\Two_Factor\\Two_Factor_Auth' ) ) {
 			if ( $this->verify_email_otp( $otp ) ) {
 				$this->clear_otp_attempt_state( (int) $this->current_user->ID );
 				$this->login_user();
-				$redirect_to = isset( $_POST['redirect_to'] ) ? wp_validate_redirect( wp_unslash( $_POST['redirect_to'] ), admin_url() ) : admin_url(); // phpcs:ignore WordPress.Security.NonceVerification.Missing
+				$redirect_to = isset( $_POST['redirect_to'] ) ? wp_validate_redirect( esc_url_raw( wp_unslash( $_POST['redirect_to'] ) ), admin_url() ) : admin_url(); // phpcs:ignore WordPress.Security.NonceVerification.Missing
 				wp_safe_redirect( $redirect_to );
 				exit;
 			}
@@ -220,7 +224,11 @@ if ( ! class_exists( 'AIO_Login\\Two_Factor\\Two_Factor_Auth' ) ) {
 				$this->log_otp_lockout_event();
 				$this->wp_error->add(
 					'otp_locked',
-					sprintf( esc_html__( 'Too many OTP attempts. Try again in %d minute(s).', 'change-wp-admin-login' ), (int) $cfg['duration_minutes'] )
+					sprintf(
+						/* translators: %d: lockout duration in minutes */
+						esc_html__( 'Too many OTP attempts. Try again in %d minute(s).', 'change-wp-admin-login' ),
+						(int) $cfg['duration_minutes']
+					)
 				);
 			}
 		}
@@ -672,7 +680,7 @@ if ( ! class_exists( 'AIO_Login\\Two_Factor\\Two_Factor_Auth' ) ) {
 			delete_user_meta( $user_id, 'aio_login_pro__email_otp_expires' );
 			$this->maybe_issue_email_otp();
 
-			$redirect_to = isset( $_GET['redirect_to'] ) ? wp_validate_redirect( wp_unslash( $_GET['redirect_to'] ), admin_url() ) : admin_url(); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+			$redirect_to = isset( $_GET['redirect_to'] ) ? wp_validate_redirect( esc_url_raw( wp_unslash( $_GET['redirect_to'] ) ), admin_url() ) : admin_url(); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 			wp_safe_redirect(
 				add_query_arg(
 					array(
@@ -855,7 +863,11 @@ if ( ! class_exists( 'AIO_Login\\Two_Factor\\Two_Factor_Auth' ) ) {
 				$remaining = max( 0, $max_attempts - $attempts );
 				return new \WP_Error(
 					'aio_login_pro__error',
-					sprintf( esc_html__( 'Invalid code. %d attempt(s) remaining.', 'change-wp-admin-login' ), $remaining ),
+					sprintf(
+						/* translators: %d: remaining verification attempts */
+						esc_html__( 'Invalid code. %d attempt(s) remaining.', 'change-wp-admin-login' ),
+						$remaining
+					),
 					array( 'status' => 400 )
 				);
 			}

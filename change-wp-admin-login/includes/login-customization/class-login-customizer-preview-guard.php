@@ -42,12 +42,14 @@ function aio_login_may_enqueue_login_customizer_preview_scripts() {
 		return false;
 	}
 
-	// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Customizer preview entry uses core changeset/messenger params.
-	return (
+	// phpcs:disable WordPress.Security.NonceVerification.Recommended -- Customizer preview entry uses core changeset/messenger params.
+	$is_preview = (
 		! empty( $_GET['customize_changeset_uuid'] )
 		|| ! empty( $_GET['customize_messenger_channel'] )
 		|| ! empty( $_GET['aio_login_customizer_preview'] )
 	);
+	// phpcs:enable WordPress.Security.NonceVerification.Recommended
+	return $is_preview;
 }
 
 /**
@@ -64,15 +66,18 @@ function aio_login_is_login_customizer_preview_request() {
 		return false;
 	}
 
-	// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+	// phpcs:disable WordPress.Security.NonceVerification.Recommended -- Customizer preview flags; capability checked above.
 	if ( ! empty( $_GET['customize_changeset_uuid'] ) || ! empty( $_GET['customize_messenger_channel'] ) || ! empty( $_GET['aio_login_customizer_preview'] ) ) {
+		// phpcs:enable WordPress.Security.NonceVerification.Recommended
 		return true;
 	}
 
-	// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+	// phpcs:disable WordPress.Security.NonceVerification.Recommended
 	if ( ! empty( $_REQUEST['aio_login_customizer'] ) ) {
+		// phpcs:enable WordPress.Security.NonceVerification.Recommended
 		return true;
 	}
+	// phpcs:enable WordPress.Security.NonceVerification.Recommended
 
 	return false;
 }

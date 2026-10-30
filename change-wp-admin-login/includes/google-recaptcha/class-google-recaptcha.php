@@ -123,6 +123,7 @@ if (!class_exists('AIO_Login\\Google_Recaptcha\\Google_Recaptcha')) {
 				return $user;
 			}
 
+			// phpcs:ignore WordPress.Security.NonceVerification.Missing -- Login authentication flow; verified via Google siteverify.
 			$g_recaptcha_response = isset($_POST['g-recaptcha-response']) ? sanitize_text_field(wp_unslash($_POST['g-recaptcha-response'])) : '';
 			if (empty($g_recaptcha_response)) {
 				return new \WP_Error('empty_g_recaptcha_response', __('Please verify that you are not a robot.', 'change-wp-admin-login'));

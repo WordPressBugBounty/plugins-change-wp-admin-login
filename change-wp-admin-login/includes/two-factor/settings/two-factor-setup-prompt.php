@@ -53,7 +53,7 @@ if ( ! is_array( $body_classes ) ) {
 }
 
 // Same filters as wp-login.php — themes/plugins customize logo URL / image via CSS on this block.
-$login_header_url   = apply_filters( 'login_headerurl', 'https://wordpress.org/' );
+$login_header_url   = apply_filters( 'login_headerurl', home_url( '/' ) );
 $login_header_title = '';
 $login_header_title = apply_filters_deprecated(
 	'login_headertitle',
@@ -62,7 +62,8 @@ $login_header_title = apply_filters_deprecated(
 	'login_headertext',
 	__( 'Usage of the title attribute on the login logo is not recommended for accessibility reasons. Use the link text instead.', 'change-wp-admin-login' )
 );
-$login_header_text = empty( $login_header_title ) ? __( 'Powered by WordPress', 'change-wp-admin-login' ) : $login_header_title;
+// Use the site name — never a default "Powered by" credit on user-facing screens.
+$login_header_text = empty( $login_header_title ) ? get_bloginfo( 'name', 'display' ) : $login_header_title;
 $login_header_text = apply_filters( 'login_headertext', $login_header_text );
 ?>
 <!doctype html>

@@ -40,7 +40,6 @@ if (!class_exists('AIO_Login\Admin\Admin')) {
 			add_action('network_admin_menu', array($this, 'fix_customize_submenu_link' ), 999 );
 			// AIOL-774 #3: only the WP Admin submenu "Get Pro" opens tab=getpro. Other Get Pro CTAs use external pricing.
 			add_action('admin_enqueue_scripts', array($this, 'admin_enqueue_scripts'));
-			add_action('admin_enqueue_scripts', array($this, 'admin_mount_script'), 20);
 			add_action('admin_menu', array($this, 'admin_menu'));
 			add_action('network_admin_menu', array($this, 'network_admin_menu'));
 			add_filter('login_redirect', array($this, 'fix_subscriber_login_redirect'), 99, 3);
@@ -264,19 +263,14 @@ if (!class_exists('AIO_Login\Admin\Admin')) {
 				'has_pro' => (\AIO_Login\Aio_Login::has_pro()) ? 'true' : 'false',
 				'site_url' => site_url(),
 				'blog_name' => wp_specialchars_decode( get_bloginfo( 'name' ), ENT_QUOTES ),
-				'admin_email' => (string) get_option( 'admin_email', '' ),
+				// Site admin email only for users who can manage options (2FA sender defaults).
+				'admin_email' => current_user_can( 'manage_options' )
+					? (string) get_option( 'admin_email', '' )
+					: '',
 				'is_limited_user' => $is_limited_user ? 'true' : 'false',
 				'upgrade_popup_variant' => ( function_exists( 'aiologin_pro_is_custom_license_runtime' ) && aiologin_pro_is_custom_license_runtime() )
 					? 'appsumo'
 					: 'freemius',
-				'appsumo_deal_url'      => 'https://appsumo.8odi.net/DWbJmq',
-				'show_appsumo_hello_bar' => 'false',
-				'hello_bar_headline'          => __( 'Good News!', 'change-wp-admin-login' ),
-				'hello_bar_message_before'    => __( 'All In One Login is live on ', 'change-wp-admin-login' ),
-				'hello_bar_message_highlight' => __( 'AppSumo', 'change-wp-admin-login' ),
-				'hello_bar_cta_label'         => __( 'Get Lifetime Deal Now', 'change-wp-admin-login' ),
-				'hello_bar_aria_label'        => __( 'AppSumo promotion', 'change-wp-admin-login' ),
-				'hello_bar_dismiss_label'     => __( 'Dismiss promotion', 'change-wp-admin-login' ),
 				'has_active_license' => ( function_exists( 'aiologin_has_active_license' ) && aiologin_has_active_license() )
 					? 'true'
 					: 'false',
@@ -333,6 +327,7 @@ if (!class_exists('AIO_Login\Admin\Admin')) {
 				wp_localize_script('aio-login__app', 'aio_login__app_object', $l10n);
 
 			}
+			// Menu chrome only — needed on every admin screen where the AIO Login sidebar item shows.
 			wp_register_style( 'aio-login-admin-menu', false, array(), AIO_LOGIN__VERSION );
 			wp_enqueue_style( 'aio-login-admin-menu' );
 
@@ -424,22 +419,6 @@ if (!class_exists('AIO_Login\Admin\Admin')) {
 				'aio-login-admin-menu',
 				'document.addEventListener("DOMContentLoaded",function(){var li=document.getElementById("toplevel_page_aio-login");if(!li)return;var isCurrent=li.classList.contains("current")||li.classList.contains("wp-has-current-submenu");var img=li.querySelector(".wp-menu-image img");if(img){img.src=isCurrent?"' . $active_icon . '":"' . $grey_icon . '";}var parentLink=li.querySelector(":scope > a.menu-top, :scope > a");var submenu=li.querySelector(".wp-submenu");if(!submenu){return;}var dashHref="",custLi=null;submenu.querySelectorAll(":scope > li").forEach(function(item){var a=item.querySelector("a");if(!a){return;}var href=a.getAttribute("href")||"";if(href.indexOf("customize.php")!==-1){custLi=item;return;}try{var u=new URL(href,window.location.origin);if(u.searchParams.get("page")==="aio-login"&&!u.searchParams.get("tab")){dashHref=href;}}catch(e){if(/[?&]page=aio-login(?:&|$)/.test(href)&&href.indexOf("tab=")===-1){dashHref=href;}}});if(parentLink&&dashHref){parentLink.setAttribute("href",dashHref);}if(custLi&&submenu.firstElementChild!==custLi){submenu.insertBefore(custLi,submenu.firstElementChild);}});'
 			);
-		}
-
-		/**
-		 * Admin enqueue scripts
-		 *
-		 * @param string $hook Page hook.
-		 */
-		public function admin_mount_script($hook)
-		{
-			if ('toplevel_page_aio-login' === $hook) {
-				wp_add_inline_script(
-					'aio-login-dist',
-					'window.$aioLogin.aioLoginApp.mount( "#aio-login__app" )',
-					'after'
-				);
-			}
 		}
 
 		/**
@@ -740,6 +719,7 @@ if (!class_exists('AIO_Login\Admin\Admin')) {
 
 			// For limited users, always force URL to 2FA so Vue doesn't default to Dashboard.
 			if ($is_limited_user) {
+				// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Admin page routing; capability checked above.
 				$requested_tab = isset($_GET['tab']) ? sanitize_text_field(wp_unslash($_GET['tab'])) : '';
 
 				if ('2fa' !== $requested_tab) {
@@ -991,7 +971,7 @@ if (!class_exists('AIO_Login\Admin\Admin')) {
 
 			$logs = array_map(
 				function ($log) {
-					$log['time'] = date('F j, Y, g:i a', $log['time']);
+					$log['time'] = wp_date( 'F j, Y, g:i a', (int) $log['time'] );
 					return $log;
 				},
 				$logs
@@ -1008,7 +988,7 @@ if (!class_exists('AIO_Login\Admin\Admin')) {
 
 			$logs = array_map(
 				function ($log) {
-					$log['time'] = date('F j, Y, g:i a', $log['time']);
+					$log['time'] = wp_date( 'F j, Y, g:i a', (int) $log['time'] );
 					return $log;
 				},
 				$logs

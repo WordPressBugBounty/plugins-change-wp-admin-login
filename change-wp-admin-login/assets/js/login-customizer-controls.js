@@ -194,14 +194,53 @@
 		'aio_login_login_page_title',
 		'aio_login_favicon',
 		'aio_login_forgot_background_color',
-		'aio_login_el_btn_padding_tb',
-		'aio_login_custom-css'
+		'aio_login_el_btn_padding_tb'
 	];
 
 	function focusSection(sectionId) {
 		if (!sectionId) return;
 		var section = wp.customize.section(sectionId);
 		if (section && section.focus) section.focus();
+	}
+
+	/**
+	 * Open WordPress core Additional CSS (no plugin-owned CSS editor).
+	 */
+	function openWordPressAdditionalCss() {
+		var core = wp.customize.section('custom_css');
+		if (core && typeof core.focus === 'function') {
+			core.focus();
+			return true;
+		}
+		return false;
+	}
+
+	function bindAdditionalCssMenuLink() {
+		var aioSection = wp.customize.section('aio_login_custom_css');
+		if (aioSection && aioSection.expanded) {
+			aioSection.expanded.bind(function (isExpanded) {
+				if (!isExpanded) {
+					return;
+				}
+				// Section click in our panel → jump straight to core Additional CSS.
+				window.setTimeout(function () {
+					if (openWordPressAdditionalCss() && typeof aioSection.collapse === 'function') {
+						aioSection.collapse({ duration: 0 });
+					}
+				}, 0);
+			});
+		}
+
+		document.addEventListener('click', function (event) {
+			var btn = event.target && event.target.closest
+				? event.target.closest('#aio-login-open-additional-css, .aio-login-open-additional-css')
+				: null;
+			if (!btn) {
+				return;
+			}
+			event.preventDefault();
+			openWordPressAdditionalCss();
+		});
 	}
 
 	function bindSetting(id) {
@@ -550,20 +589,81 @@
 	}
 
 	wp.customize.bind('ready', function () {
-		// Ensure previewer points to wp-login.php and not wp-admin dashboard
+		// Only force wp-login preview while AIO Login Customize panel is expanded (or launched from AIO Login → Customize).
+		// Appearance → Customize (Site Identity / Homepage / etc.) must keep the normal homepage preview.
 		try {
 			if (wp.customize && wp.customize.previewer && wp.customize.previewer.previewUrl) {
+				var cfg = window.aioLoginCustomizer || {};
+				var homePreviewUrl = cfg.homeUrl || (window.location.origin + '/');
+				var loginBaseUrl = cfg.loginPhpUrl || (window.location.origin + '/wp-login.php');
+				var launchForceLogin = !!cfg.forceLoginPreview;
+
+				var captureHomeIfNeeded = function () {
+					var curUrl = wp.customize.previewer.previewUrl.get();
+					if (curUrl && curUrl.indexOf('wp-login.php') === -1) {
+						homePreviewUrl = curUrl;
+					}
+				};
+				captureHomeIfNeeded();
+
+				var isAioPanelExpanded = function () {
+					try {
+						var panel = wp.customize.panel('aio_login_customizer');
+						return !!(panel && panel.expanded && panel.expanded.get());
+					} catch (ePanel) {
+						return false;
+					}
+				};
+
+				var shouldShowLoginPreview = function () {
+					return isAioPanelExpanded() || launchForceLogin;
+				};
+
 				var ensureLoginUrl = function () {
+					if (!shouldShowLoginPreview()) {
+						return;
+					}
 					var curUrl = wp.customize.previewer.previewUrl.get();
 					if (!curUrl || curUrl.indexOf('wp-login.php') === -1) {
-						var loginUrl = (window.aioLoginCustomizer && window.aioLoginCustomizer.loginPhpUrl) || (window.location.origin + '/wp-login.php');
-						var targetUrl = loginUrl + (loginUrl.indexOf('?') === -1 ? '?' : '&') + 'aio_login_customizer_preview=1';
+						if (curUrl && curUrl.indexOf('wp-login.php') === -1) {
+							homePreviewUrl = curUrl;
+						}
+						var targetUrl = loginBaseUrl + (loginBaseUrl.indexOf('?') === -1 ? '?' : '&') + 'aio_login_customizer_preview=1';
 						wp.customize.previewer.previewUrl.set(targetUrl);
 					}
 				};
-				ensureLoginUrl();
+
+				var restoreHomePreview = function () {
+					launchForceLogin = false;
+					try {
+						document.cookie = 'aio_login_customizing=; path=/; max-age=0; SameSite=Lax';
+					} catch (eCookie) {}
+					var curUrl = wp.customize.previewer.previewUrl.get();
+					if (curUrl && curUrl.indexOf('wp-login.php') !== -1 && homePreviewUrl) {
+						wp.customize.previewer.previewUrl.set(homePreviewUrl);
+					}
+				};
+
+				if (shouldShowLoginPreview()) {
+					ensureLoginUrl();
+				} else {
+					// Appearance → Customize without AIO panel: never leave preview stuck on wp-login.php.
+					restoreHomePreview();
+				}
+
+				wp.customize.panel('aio_login_customizer', function (panel) {
+					panel.expanded.bind(function (isExpanded) {
+						if (isExpanded) {
+							ensureLoginUrl();
+						} else {
+							restoreHomePreview();
+						}
+					});
+				});
+
+				// While AIO panel is open, keep preview on wp-login.php. Do not hijack when browsing other panels.
 				wp.customize.previewer.previewUrl.bind(function (newUrl) {
-					if (newUrl && newUrl.indexOf('wp-login.php') === -1) {
+					if (isAioPanelExpanded() && newUrl && newUrl.indexOf('wp-login.php') === -1) {
 						ensureLoginUrl();
 					}
 				});
@@ -598,6 +698,7 @@
 		}, 1000);
 
 		SETTING_IDS.forEach(bindSetting);
+		bindAdditionalCssMenuLink();
 
 		try {
 			wp.customize('aio_login__customization_templates', function (setting) {

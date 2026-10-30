@@ -1,13 +1,14 @@
-### All In One Login – Login Page Security and Customization for WordPress
-
+=== All In One Login ===
 Contributors: wpexpertsio
 Tags: login url, login security, custom login, 2fa, recaptcha
-Requires at least: 4.6
-Tested up to: 7.1.3
+Requires at least: 6.2
+Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 2.5.0
+Stable tag: 2.5.1
 License: GPLv2 or later
+License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
+Secure and customize your WordPress login page with a custom login URL, 2FA, CAPTCHA, and more.
 
 == Description ==
 
@@ -156,7 +157,7 @@ Change your login URL, block unwanted users and IP addresses, and restrict login
 Limit failed login attempts and help prevent automated login attacks.
 
 * **Login Page Customization**
-Customize your WordPress login page with templates, logos, backgrounds, colors, fonts, and custom CSS.
+Customize your WordPress login page with templates, logos, backgrounds, colors, and fonts.
 
 * **Bot Protection**
 Integrate Google reCAPTCHA or hCaptcha to help protect your login page against bots and automated attacks.
@@ -188,11 +189,11 @@ Apply supported login security and customization features across your WordPress 
 * **Password Policy Controls**
 Configure password strength requirements to help users create stronger and more secure passwords.
 
-==External Services==
+== External Services ==
 
 = Third-Party Services We Use =
 
-All In One Login connects to third-party services to provide optional features. These services may process certain information when you enable and use the related features.
+All In One Login connects to third-party services to provide optional features. These services may process certain information when you enable and use the related features. Services marked “Pro plugin only” are used only when the separate AIO Login Pro plugin is installed and the related feature is enabled.
 
 * **Google reCAPTCHA**
 
@@ -204,15 +205,25 @@ Privacy Policy: [Google Privacy Policy](https://policies.google.com/privacy)
 
 Terms of Service: [Google Terms of Service](https://policies.google.com/terms)
 
-* **hCaptcha**
+* **hCaptcha** (Pro plugin only)
 
-Helps detect bots and automated activity on your WordPress login page. When enabled, the plugin communicates with hCaptcha to verify user interactions.
+Helps detect bots and automated activity on your WordPress login page when enabled in AIO Login Pro. When enabled, the Pro plugin communicates with hCaptcha to verify user interactions.
 
 Service: [hCaptcha](https://www.hcaptcha.com/)
 
 Privacy Policy: [hCaptcha Privacy Policy](https://www.hcaptcha.com/privacy)
 
 Terms of Service: [hCaptcha Terms of Service](https://www.hcaptcha.com/terms)
+
+* **Cloudflare Turnstile**
+
+Optional CAPTCHA alternative used when an administrator enables Cloudflare Turnstile (for example with passwordless or magic-link login features). When enabled, the visitor’s browser loads scripts from challenges.cloudflare.com and Cloudflare may process technical data such as IP address and browser information to verify the interaction.
+
+Service: [Cloudflare Turnstile](https://www.cloudflare.com/products/turnstile/)
+
+Privacy Policy: [Cloudflare Privacy Policy](https://www.cloudflare.com/privacypolicy/)
+
+Terms of Service: [Cloudflare Terms of Service](https://www.cloudflare.com/website-terms/)
 
 * **Google Fonts**
 
@@ -224,9 +235,9 @@ Privacy Policy: [Google Privacy Policy](https://policies.google.com/privacy)
 
 Terms of Service: [Google Terms of Service](https://policies.google.com/terms)
 
-* **Twilio**
+* **Twilio** (Pro plugin only)
 
-Delivers SMS verification codes when an administrator enables and configures SMS OTP login. Information shared with Twilio may include the recipient’s phone number and the message content required to deliver the code.
+Delivers SMS verification codes when an administrator enables and configures SMS OTP login in AIO Login Pro. Information shared with Twilio may include the recipient’s phone number and the message content required to deliver the code.
 
 Service: [Twilio](https://www.twilio.com/)
 
@@ -234,25 +245,31 @@ Privacy Policy: [Twilio Privacy Policy](https://www.twilio.com/en-us/legal/priva
 
 Terms of Service: [Twilio Terms of Service](https://www.twilio.com/en-us/legal/tos)
 
-* **Social Login Providers**
+* **Social Login Providers** (Pro plugin only)
 
-All In One Login supports social authentication through Google, Facebook, Microsoft, GitHub, Apple, Discord, and LINE. When a user selects a provider, the plugin communicates with that service to authenticate the user and process the information required for login.
+With AIO Login Pro, social authentication is available through Google, Facebook, Microsoft, GitHub, Apple, Discord, and LINE. When a user selects a provider, the Pro plugin communicates with that service to authenticate the user and process the information required for login.
 
-- [Google Privacy Policy](https://policies.google.com/privacy)
-- [Facebook Privacy Policy](https://www.facebook.com/privacy/policy/)
+- Google — [Privacy](https://policies.google.com/privacy) · [Terms](https://policies.google.com/terms)
+- Facebook — [Privacy](https://www.facebook.com/privacy/policy/) · [Terms](https://www.facebook.com/terms)
+- Microsoft — [Privacy](https://privacy.microsoft.com/) · [Terms](https://www.microsoft.com/servicesagreement)
+- GitHub — [Privacy](https://docs.github.com/en/site-policy/privacy-policies/github-privacy-statement) · [Terms](https://docs.github.com/en/site-policy/github-terms/github-terms-of-service)
+- Apple — [Privacy](https://www.apple.com/legal/privacy/) · [Terms](https://www.apple.com/legal/internet-services/terms/site.html)
+- Discord — [Privacy](https://discord.com/privacy) · [Terms](https://discord.com/terms)
+- LINE — [Privacy](https://line.me/en/terms/policy/) · [Terms](https://terms.line.me/line_terms)
 
-- [Microsoft Privacy Statement](https://privacy.microsoft.com/)
+* **ipapi.co** (Pro plugin only)
 
-- [GitHub Privacy Statement](https://docs.github.com/en/site-policy/privacy-policies/github-privacy-statement)
+Used by AIO Login Pro for optional IP geolocation (for example activity or security displays). When used, the visitor or admin IP may be sent to ipapi.co to resolve approximate location data.
 
-- [Apple Privacy Policy](https://www.apple.com/legal/privacy/)
+Service: [ipapi.co](https://ipapi.co/)
 
-- [Discord Privacy Policy](https://discord.com/privacy)
-- [LINE Privacy Policy](https://line.me/en/terms/policy/)
+Privacy Policy: [ipapi.co Privacy](https://ipapi.co/privacy/)
+
+Terms of Service: [ipapi.co Terms](https://ipapi.co/terms/)
 
 * **Freemius**
 
-Supports certain plugin-related services, including optional email opt-in. When an administrator consents to the opt-in, their email address may be shared with Freemius. Any additional data collection depends on the integration’s actual functionality.
+Supports optional admin email opt-in and licensing-related services for this plugin. When an administrator consents to the Freemius opt-in prompt, Freemius may receive the admin email address, site URL, and basic environment/plugin metadata needed for the opt-in and account services. No opt-in data is sent without that consent. Freemius premium remote install is disabled for the WordPress.org build.
 
 Service: [Freemius](https://freemius.com/)
 
@@ -264,21 +281,11 @@ Terms of Service: [Freemius Terms of Service](https://freemius.com/terms/)
 
 All In One Login may process information when you use its features or connect to third-party services. For more information about how we collect, use, and handle data, please read our [All In One Login Privacy Policy](https://aiologin.com/privacy-policy/).
 
-== Try Our Other Awesome WordPress Plugins ==
+== Other Plugins by Us ==
 
-* [**Gutena Forms**](https://wordpress.org/plugins/gutena-forms/): Create responsive contact forms in the Gutenberg block editor. Add advanced fields, protect against spam, and manage form entries.
 * [**Password Protected**](https://wordpress.org/plugins/password-protected/): Protect your WordPress site, posts, pages, and categories with password protection.
-* [**WP EasyPay**](https://wordpress.org/plugins/wp-easypay/): Accept Square payments and donations on your WordPress site.
-* [**WC Shop Sync**](https://wordpress.org/plugins/wc-shop-sync/): Accept Square payments and sync WooCommerce products, customers, and orders with Square POS.
-* [**Advanced File Manager**](https://wordpress.org/plugins/file-manager-advanced/): Manage and organize WordPress files directly from your dashboard.
 * [**Post SMTP**](https://wordpress.org/plugins/post-smtp/): Configure and manage WordPress email delivery with SMTP and detailed email logs.
-* [**CF7 Apps**](https://wordpress.org/plugins/cf7-apps/): Extend Contact Form 7 with honeypot protection, hCaptcha, database entries, and more.
-* [**myCred**](https://wordpress.org/plugins/mycred/): Add gamification features, rewards, ranks, badges, and points management to WordPress.
 * [**New User Approve**](https://wordpress.org/plugins/new-user-approve/): Manage user registrations by approving or denying new signups.
-* [**Bookify**](https://wordpress.org/plugins/bookify/): Manage online bookings and appointment scheduling on your WordPress site.
-* [**WPExperts WooCommerce Store**](https://store.wpexperts.io/woocommerce/): Explore premium WooCommerce plugins and professional solutions by WPExperts.
-
-== Requirements ==
 
 == Technical Documentation ==
 
@@ -334,7 +341,7 @@ Free includes login URL customization, Google reCAPTCHA, login activity logs, em
 
 = Can I restrict WordPress login access by IP address? =
 
-Yes. All In One Login Pro lets you block specific IP addresses and whitelist trusted IP addresses to control access to your WordPress login page.
+Yes. All In One Login Free includes IP blacklist and whitelist controls for the login page. Pro adds related advanced access features such as Limit Login Attempts lockouts and additional security tooling.
 
 = Can I temporarily give someone access to my WordPress site without sharing a password? =
 
@@ -363,12 +370,22 @@ Visit the [All In One Login website](https://aiologin.com/) to find plugin infor
 12. Email-Based Two-Factor Authentication (2FA)
 
 == Changelog ==
+= 2.5.1 – Oct 30, 2026 =
+* WordPress.org compliance and Plugin Check cleanup.
+* Harden 2FA settings REST, OTP anti-enumeration, and admin email localization.
+* Safer Free uninstall (no Pro option wipe); SSL verify on redirect URL checks.
+* Pair-guard notice dismiss persistence; network settings scripts extracted from HEREDOC.
+* Show AIO Login Customize panel under Appearance → Customize.
+* Move Login Redirection Order UI/logic to Pro; Free no longer ships Order feature code.
+* Readme external services, Free/Pro IP docs, and packaging metadata updates.
+
 = 2.5.0 – Oct 26, 2026 =
+
 * NEW: Added WordPress Multisite support.
 * NEW: Added Email-Based Two-Factor Authentication (2FA) for enhanced login security.
 * NEW: Added IP Blacklisting and Whitelisting to block unwanted IP addresses and allow trusted IP addresses.
 * NEW: Added the Disable Common Usernames feature to prevent the use of weak and predictable WordPress usernames.
-* Security Fix: Improved Email OTP Security.
+* Security Fix: Fixed an unauthenticated account takeover vulnerability related to Email OTP login.
 * Improvement: Updated Freemius SDK to version 2.13.4.
 * Fix: Removed bundled jQuery to improve compatibility with WordPress core.
 * Fix: Fixed internationalization (i18n), text domain, and gettext issues.

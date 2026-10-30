@@ -74,10 +74,39 @@ if ( ! class_exists( 'AIO_Login\\Login_Controller\\Login_Controller' ) ) {
 		/**
 		 * Log failed login only (no attempt counting / block_ip).
 		 *
-		 * @param string $username Username.
+		 * @param string               $username Username.
+		 * @param \WP_Error|null|mixed $error    Optional error from wp_authenticate().
 		 */
-		public function wp_login_failed( $username ) {
+		public function wp_login_failed( $username, $error = null ) {
+			if ( $this->should_skip_failed_login_log( $error ) ) {
+				return;
+			}
 			$this->insert_log( $username, 'failed' );
+		}
+
+		/**
+		 * Skip activity logs for Customizer login preview bootstrap (not a real login attempt).
+		 *
+		 * @param \WP_Error|null|mixed $error Optional authenticate error.
+		 * @return bool
+		 */
+		private function should_skip_failed_login_log( $error = null ) {
+			// phpcs:disable WordPress.Security.NonceVerification.Recommended,WordPress.Security.NonceVerification.Missing -- Read-only Customizer preview detection.
+			$is_preview = ! empty( $_GET['aio_login_customizer_preview'] ) || ! empty( $_REQUEST['aio_login_customizer_preview'] );
+			// phpcs:enable WordPress.Security.NonceVerification.Recommended,WordPress.Security.NonceVerification.Missing
+			if ( ! $is_preview ) {
+				return false;
+			}
+
+			if ( is_wp_error( $error ) && 'aio_customizer_preview' === $error->get_error_code() ) {
+				return true;
+			}
+
+			// phpcs:disable WordPress.Security.NonceVerification.Missing -- Preview iframe POST without credentials.
+			$empty_creds = empty( $_POST['log'] ) && empty( $_POST['pwd'] );
+			// phpcs:enable WordPress.Security.NonceVerification.Missing
+
+			return $empty_creds;
 		}
 
 		/**
@@ -158,7 +187,7 @@ if ( ! class_exists( 'AIO_Login\\Login_Controller\\Login_Controller' ) ) {
 
 			$logs = array_map(
 				function ( $log ) {
-					$log['time'] = date( 'F j, Y, g:i a', $log['time'] );
+					$log['time'] = wp_date( 'F j, Y, g:i a', (int) $log['time'] );
 					return $log;
 				},
 				$logs
@@ -177,7 +206,7 @@ if ( ! class_exists( 'AIO_Login\\Login_Controller\\Login_Controller' ) ) {
 
 			$logs = array_map(
 				function ( $log ) {
-					$log['time'] = date( 'F j, Y, g:i a', $log['time'] );
+					$log['time'] = wp_date( 'F j, Y, g:i a', (int) $log['time'] );
 					return $log;
 				},
 				$logs

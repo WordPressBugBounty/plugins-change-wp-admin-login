@@ -288,14 +288,16 @@ if (!class_exists('AIO_Login\\Helper\\Helper')) {
 		public static function drop_table($table_name)
 		{
 			global $wpdb;
-			$table_name = $wpdb->prefix . 'aio_login_' . $table_name;
+			$suffix = preg_replace( '/[^a-z0-9_]/', '', (string) $table_name );
+			if ( '' === $suffix ) {
+				return false;
+			}
+			$table_name = $wpdb->prefix . 'aio_login_' . $suffix;
 
-			$sql = "DROP TABLE IF EXISTS $table_name;";
-
-			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.DirectDatabaseQuery.SchemaChange,PluginCheck.Security.DirectDB.UnescapedDBParameter -- Uninstall/cleanup drops plugin-owned tables only.
 			return $wpdb->query(
-				// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
-				$sql
+				// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.DirectDatabaseQuery.SchemaChange -- Identifier-safe DROP of aio_login_* table.
+				$wpdb->prepare( 'DROP TABLE IF EXISTS %i', $table_name )
 			);
 		}
 

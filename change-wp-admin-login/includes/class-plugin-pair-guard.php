@@ -2,9 +2,9 @@
 /**
  * Free ↔ Pro release pairing guard.
  *
- * Free 2.5+ requires Pro 1.8+. An older active Pro is deactivated and an
- * admin notice asks the site owner to update Pro. No Pro feature code is
- * shipped or unlocked here (Guideline 5).
+ * Free 2.5+ requires Pro 1.8+. An older active Pro is flagged with an admin
+ * notice so the site owner can update or deactivate Pro themselves.
+ * This plugin does not activate or deactivate other plugins (Guideline).
  *
  * @package AIO_Login
  */
@@ -19,7 +19,8 @@ if ( ! class_exists( 'AIO_Login\\Plugin_Pair_Guard' ) ) {
 	 */
 	final class Plugin_Pair_Guard {
 
-		const NOTICE_OPTION = 'aio_login_incompatible_pro_notice';
+		const NOTICE_OPTION   = 'aio_login_incompatible_pro_notice';
+		const DISMISS_OPTION  = 'aio_login_incompatible_pro_notice_dismissed';
 
 		/**
 		 * Minimum Pro version that may stay active with this Free build.
@@ -38,17 +39,19 @@ if ( ! class_exists( 'AIO_Login\\Plugin_Pair_Guard' ) ) {
 		 * @return void
 		 */
 		public static function init() {
-			add_action( 'plugins_loaded', array( __CLASS__, 'maybe_deactivate_incompatible_pro' ), 1 );
+			add_action( 'plugins_loaded', array( __CLASS__, 'maybe_flag_incompatible_pro' ), 1 );
 			add_action( 'admin_notices', array( __CLASS__, 'render_admin_notice' ) );
 			add_action( 'network_admin_notices', array( __CLASS__, 'render_admin_notice' ) );
 			add_action( 'wp_ajax_aio_login_dismiss_pair_notice', array( __CLASS__, 'ajax_dismiss_notice' ) );
 		}
 
 		/**
+		 * Detect incompatible Pro and store a notice. Does not deactivate plugins.
+		 *
 		 * @return void
 		 */
-		public static function maybe_deactivate_incompatible_pro() {
-			if ( ! self::should_enforce() ) {
+		public static function maybe_flag_incompatible_pro() {
+			if ( wp_installing() ) {
 				return;
 			}
 
@@ -62,28 +65,37 @@ if ( ! class_exists( 'AIO_Login\\Plugin_Pair_Guard' ) ) {
 				return;
 			}
 
-			if ( version_compare( $pro_version, self::required_pro_version(), '>=' ) ) {
+			$required = self::required_pro_version();
+
+			if ( version_compare( $pro_version, $required, '>=' ) ) {
 				delete_option( self::NOTICE_OPTION );
+				delete_option( self::DISMISS_OPTION );
 				return;
 			}
 
-			if ( ! function_exists( 'deactivate_plugins' ) ) {
-				require_once ABSPATH . 'wp-admin/includes/plugin.php';
+			// Soft-disable Pro feature advertising until a compatible Pro is active.
+			add_filter( 'aio_login_has_pro', '__return_false', 999 );
+
+			if ( self::is_dismissed_for( $pro_version, $required ) ) {
+				return;
 			}
 
-			$network_wide = is_multisite() && function_exists( 'is_plugin_active_for_network' )
-				&& is_plugin_active_for_network( $pro['file'] );
-
-			deactivate_plugins( $pro['file'], true, $network_wide );
-
-			// Pro already booted earlier this request — stop advertising has_pro until reload.
-			add_filter( 'aio_login_has_pro', '__return_false', 999 );
+			$existing = get_option( self::NOTICE_OPTION, null );
+			if (
+				is_array( $existing )
+				&& isset( $existing['pro_version'], $existing['required_version'] )
+				&& (string) $existing['pro_version'] === (string) $pro_version
+				&& (string) $existing['required_version'] === (string) $required
+			) {
+				// Already flagged for this pair — do not rewrite every request.
+				return;
+			}
 
 			update_option(
 				self::NOTICE_OPTION,
 				array(
 					'pro_version'      => $pro_version,
-					'required_version' => self::required_pro_version(),
+					'required_version' => $required,
 					'pro_file'         => $pro['file'],
 					'time'             => time(),
 				),
@@ -92,17 +104,20 @@ if ( ! class_exists( 'AIO_Login\\Plugin_Pair_Guard' ) ) {
 		}
 
 		/**
+		 * Whether the admin dismissed the notice for this Pro/required pair.
+		 *
+		 * @param string $pro_version Detected Pro version.
+		 * @param string $required    Required Pro version.
 		 * @return bool
 		 */
-		private static function should_enforce() {
-			if ( wp_installing() ) {
+		private static function is_dismissed_for( $pro_version, $required ) {
+			$dismissed = get_option( self::DISMISS_OPTION, null );
+			if ( ! is_array( $dismissed ) ) {
 				return false;
 			}
-			// Avoid running during bulk plugin operations that already manage activation.
-			if ( defined( 'WP_CLI' ) && WP_CLI ) {
-				return true;
-			}
-			return true;
+			return isset( $dismissed['pro_version'], $dismissed['required_version'] )
+				&& (string) $dismissed['pro_version'] === (string) $pro_version
+				&& (string) $dismissed['required_version'] === (string) $required;
 		}
 
 		/**
@@ -179,16 +194,22 @@ if ( ! class_exists( 'AIO_Login\\Plugin_Pair_Guard' ) ) {
 				return;
 			}
 
+			$required    = isset( $notice['required_version'] ) ? (string) $notice['required_version'] : self::required_pro_version();
+			$pro_version = (string) $notice['pro_version'];
+
+			if ( self::is_dismissed_for( $pro_version, $required ) ) {
+				return;
+			}
+
 			// Clear stale notice once a compatible Pro is active again.
 			if ( defined( 'AIO_LOGIN_PRO__VERSION' )
 				&& version_compare( (string) AIO_LOGIN_PRO__VERSION, self::required_pro_version(), '>=' ) ) {
 				delete_option( self::NOTICE_OPTION );
+				delete_option( self::DISMISS_OPTION );
 				return;
 			}
 
-			$pro_version = esc_html( (string) $notice['pro_version'] );
-			$required    = esc_html( self::required_pro_version() );
-			$free_ver    = defined( 'AIO_LOGIN__VERSION' ) ? esc_html( (string) AIO_LOGIN__VERSION ) : '';
+			$free_ver = defined( 'AIO_LOGIN__VERSION' ) ? (string) AIO_LOGIN__VERSION : '';
 
 			$dismiss_url = wp_nonce_url(
 				admin_url( 'admin-ajax.php?action=aio_login_dismiss_pair_notice' ),
@@ -196,14 +217,14 @@ if ( ! class_exists( 'AIO_Login\\Plugin_Pair_Guard' ) ) {
 			);
 
 			echo '<div class="notice notice-warning is-dismissible aio-login-pair-notice">';
-			echo '<p><strong>' . esc_html__( 'All In One Login — incompatible Pro version deactivated', 'change-wp-admin-login' ) . '</strong></p>';
+			echo '<p><strong>' . esc_html__( 'All In One Login — incompatible Pro version detected', 'change-wp-admin-login' ) . '</strong></p>';
 			echo '<p>';
 			printf(
 				/* translators: 1: Free version, 2: detected Pro version, 3: required Pro version */
-				esc_html__( 'All In One Login %1$s requires AIO Login Pro %3$s or newer. Your Pro plugin (v%2$s) was deactivated to keep the site stable. Please update Pro to %3$s or later, then activate it again.', 'change-wp-admin-login' ),
-				$free_ver ? $free_ver : '2.5+',
-				$pro_version,
-				$required
+				esc_html__( 'All In One Login %1$s requires AIO Login Pro %3$s or newer. Your Pro plugin (v%2$s) is outdated. Please update Pro to %3$s or later, or deactivate it from the Plugins screen.', 'change-wp-admin-login' ),
+				esc_html( $free_ver ? $free_ver : '2.5+' ),
+				esc_html( $pro_version ),
+				esc_html( $required )
 			);
 			echo '</p>';
 			echo '<p><a class="button button-primary" href="' . esc_url( admin_url( 'plugins.php' ) ) . '">' . esc_html__( 'Go to Plugins', 'change-wp-admin-login' ) . '</a> ';
@@ -219,6 +240,27 @@ if ( ! class_exists( 'AIO_Login\\Plugin_Pair_Guard' ) ) {
 				wp_die( -1, 403 );
 			}
 			check_admin_referer( 'aio_login_dismiss_pair_notice' );
+
+			$notice = get_option( self::NOTICE_OPTION, null );
+			$pro    = is_array( $notice ) && ! empty( $notice['pro_version'] )
+				? (string) $notice['pro_version']
+				: '';
+			$required = is_array( $notice ) && ! empty( $notice['required_version'] )
+				? (string) $notice['required_version']
+				: self::required_pro_version();
+
+			if ( '' !== $pro ) {
+				update_option(
+					self::DISMISS_OPTION,
+					array(
+						'pro_version'      => $pro,
+						'required_version' => $required,
+						'time'             => time(),
+					),
+					false
+				);
+			}
+
 			delete_option( self::NOTICE_OPTION );
 			wp_safe_redirect( wp_get_referer() ? wp_get_referer() : admin_url() );
 			exit;

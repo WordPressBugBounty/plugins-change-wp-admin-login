@@ -295,7 +295,7 @@ class User_Enumeration_Protection {
 		}
 
 		// Check if this is a user-related endpoint
-		$request_uri = $_SERVER['REQUEST_URI'] ?? '';
+		$request_uri = isset( $_SERVER['REQUEST_URI'] ) ? esc_url_raw( wp_unslash( $_SERVER['REQUEST_URI'] ) ) : '';
 		if ( strpos( $request_uri, '/wp-json/wp/v2/users' ) !== false ) {
 			// Only allow authenticated requests
 			if ( ! is_user_logged_in() ) {

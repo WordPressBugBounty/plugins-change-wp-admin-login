@@ -50,7 +50,7 @@ export default {
 							<col class="aio-login-lr-col aio-login-lr-col--url" />
 							<col class="aio-login-lr-col aio-login-lr-col--narrow" />
 							<col class="aio-login-lr-col aio-login-lr-col--value" />
-							<col v-if="ruleOrderUnlocked" class="aio-login-lr-col aio-login-lr-col--order" />
+							<col class="aio-login-lr-col aio-login-lr-col--order" />
 							<col class="aio-login-lr-col aio-login-lr-col--actions" />
 						</colgroup>
 						<thead>
@@ -59,7 +59,7 @@ export default {
 								<th>{{ $t('Logout URL') }}</th>
 								<th>{{ $t('Condition') }}</th>
 								<th>{{ $t('Condition Value') }}</th>
-								<th v-if="ruleOrderUnlocked" class="col-order">
+								<th class="col-order">
 									<span class="aio-login-lr-order-th">{{ $t('Order') }}</span>
 								</th>
 								<th class="col-actions">{{ $t('Actions') }}</th>
@@ -84,7 +84,7 @@ export default {
 									</template>
 									<span v-else class="aio-login-lr-pill aio-login-lr-pill--value">{{ conditionValueLabel(rule) }}</span>
 								</td>
-								<td v-if="ruleOrderUnlocked" class="cell-order">
+								<td class="cell-order">
 									{{ rule.order ?? '-' }}
 								</td>
 								<td class="cell-actions">
@@ -466,22 +466,20 @@ export default {
 						<p v-if="ruleFormErrors.logout_custom" class="aio-login-lr-field-error">{{ ruleFormErrors.logout_custom }}</p>
 					</div>
 
-					<template v-if="ruleOrderUnlocked">
-						<label class="aio-login-lr-order-label">
-							<span>{{ $t('Order') }}</span>
-						</label>
-						<div class="aio-login-lr-order-control">
-							<input
-								type="number"
-								class="small-text aio-login-lr-order-input"
-								v-model.number="draft.order"
-								min="0"
-								step="1"
-								@blur="clampDraftOrder"
-							/>
-							<p class="aio-login-lr-help">{{ $t(orderHelpText) }}</p>
-						</div>
-					</template>
+					<label class="aio-login-lr-order-label">
+						<span>{{ $t('Order') }}</span>
+					</label>
+					<div class="aio-login-lr-order-control">
+						<input
+							type="number"
+							class="small-text aio-login-lr-order-input"
+							v-model.number="draft.order"
+							min="0"
+							step="1"
+							@blur="clampDraftOrder"
+						/>
+						<p class="aio-login-lr-help">{{ $t('Set the rule priority order. Lower numbers have higher priority (1, 2, 3, etc.), while 0 disables priority-based ordering.') }}</p>
+					</div>
 				</div>
 				</div>
 				<div class="aio-login-lr-modal-footer">
@@ -513,8 +511,6 @@ export default {
 	</div>`,
 	data: () => ({
 		featureTooltip: 'Login Redirection feature allows administrators to define simple, rule-based redirects for users on login and logout.',
-		orderHelpText:
-			'Set the rule priority order. Lower numbers have higher priority (1, 2, 3, etc.), while 0 disables priority-based ordering.',
 		fallbackHelpText:
 			'Used when a rule\'s login/logout URL is invalid or unreachable. Not used when the rule has "No logout redirect" — WordPress default logout applies then.',
 		logoutRedirectHelpText:
@@ -522,7 +518,6 @@ export default {
 		nonce: '',
 		page_loaded: false,
 		advanced_conditions: false,
-		rule_order_allowed: false,
 		condition_type_menu_open: false,
 		show_modal: false,
 		show_delete_modal: false,
@@ -589,11 +584,8 @@ export default {
 				this.ruleRowSearchBlob(r).includes(q)
 			);
 		},
-		ruleOrderUnlocked() {
-			return !!this.rule_order_allowed;
-		},
 		tableColspan() {
-			return this.ruleOrderUnlocked ? 6 : 5;
+			return 6;
 		},
 		totalFiltered() {
 			return this.filteredRules.length;
@@ -722,10 +714,8 @@ export default {
 					}
 					const meta = d.meta || {};
 					this.advanced_conditions = !!meta.advanced_conditions;
-					this.rule_order_allowed = !!meta.rule_order_allowed;
 					const metaRest = { ...meta };
 					delete metaRest.advanced_conditions;
-					delete metaRest.rule_order_allowed;
 					this.meta = Object.assign({}, this.meta, metaRest);
 				})
 				.catch(() => { })
@@ -771,10 +761,8 @@ export default {
 				rule.condition_type === 'all_users'
 					? 'all users'
 					: this.conditionValueLabel(rule),
+				String(rule.order ?? ''),
 			];
-			if (this.ruleOrderUnlocked) {
-				parts.push(String(rule.order ?? ''));
-			}
 			return parts.join(' ').toLowerCase();
 		},
 		conditionValueLabel(rule) {
@@ -1188,9 +1176,7 @@ export default {
 					? String(this.draft.login_target).replace(/^page:/, '')
 					: this.draft.login_custom,
 				...this.buildLogoutRulePayload(),
-				order: this.ruleOrderUnlocked
-					? this.normalizeOrderForSubmit(this.draft.order)
-					: 0,
+				order: this.normalizeOrderForSubmit(this.draft.order),
 			};
 			axios
 				.post('aio-login/login-redirection/save-rule', payload)
@@ -1254,10 +1240,8 @@ export default {
 				this.nonce = response.data.nonce;
 				const meta = response.data.meta || {};
 				this.advanced_conditions = !!meta.advanced_conditions;
-				this.rule_order_allowed = !!meta.rule_order_allowed;
 				const metaRest = { ...meta };
 				delete metaRest.advanced_conditions;
-				delete metaRest.rule_order_allowed;
 				this.settings = response.data.settings || this.settings;
 				this.savedRedirectionEnabled = !!this.settings.enabled;
 				this.rules = response.data.rules || [];

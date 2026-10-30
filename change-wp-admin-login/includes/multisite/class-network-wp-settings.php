@@ -30,8 +30,8 @@ if ( ! class_exists( 'AIO_Login\\Multisite\\Network_WP_Settings' ) ) {
 			add_action( 'wpmu_options', array( $this, 'render_policies_section' ) );
 			add_action( 'update_wpmu_options', array( $this, 'save_policies' ) );
 			add_action( 'network_admin_notices', array( $this, 'maybe_show_save_notice' ) );
-			add_action( 'admin_footer-settings.php', array( $this, 'print_footer_script' ) );
 			add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_styles' ) );
+			add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_scripts' ) );
 
 			// Old bookmarks: /admin.php?page=aio-login-network-policies → Network Settings.
 			add_action( 'network_admin_menu', array( $this, 'redirect_legacy_policies_page' ), 99 );
@@ -69,6 +69,39 @@ if ( ! class_exists( 'AIO_Login\\Multisite\\Network_WP_Settings' ) ) {
 		 *
 		 * @param string $hook Hook.
 		 */
+		/**
+		 * Network Settings scripts (moved out of HEREDOC inline blocks).
+		 *
+		 * @param string $hook Hook.
+		 */
+		public function enqueue_scripts( $hook ) {
+			if ( ! is_network_admin() || ! $this->can_manage() ) {
+				return;
+			}
+			if ( 'settings.php' !== $hook ) {
+				return;
+			}
+
+			$script_path = AIO_LOGIN__DIR_PATH . 'assets/js/network-wp-settings.js';
+			$script_ver  = file_exists( $script_path ) ? (string) filemtime( $script_path ) : AIO_LOGIN__VERSION;
+			wp_enqueue_script(
+				'aio-login-network-wp-settings',
+				AIO_LOGIN__DIR_URL . 'assets/js/network-wp-settings.js',
+				array(),
+				$script_ver,
+				true
+			);
+			wp_localize_script(
+				'aio-login-network-wp-settings',
+				'aioLoginNetworkSettings',
+				array(
+					'moveWrap'     => true,
+					'enabledText'  => __( 'Enabled — Network configuration is the default for every site.', 'change-wp-admin-login' ),
+					'disabledText' => __( 'Disabled — Each site manages AIO Login independently.', 'change-wp-admin-login' ),
+				)
+			);
+		}
+
 		public function enqueue_styles( $hook ) {
 			if ( ! is_network_admin() ) {
 				return;
@@ -414,126 +447,6 @@ if ( ! class_exists( 'AIO_Login\\Multisite\\Network_WP_Settings' ) ) {
 				)
 			);
 			echo '</p></div>';
-		}
-
-		/**
-		 * Scripts on core Network Settings page.
-		 */
-		public function print_footer_script() {
-			if ( ! $this->can_manage() ) {
-				return;
-			}
-			$this->print_move_script();
-			$this->print_category_script();
-			$this->print_master_toggle_script();
-		}
-
-		/**
-		 * Scripts on dedicated AIO Login Network Admin page.
-		 */
-		public function print_menu_page_scripts() {
-			if ( ! $this->can_manage() ) {
-				return;
-			}
-			$this->print_category_script();
-			$this->print_master_toggle_script();
-		}
-
-		/**
-		 * Insert before New Site Settings heading; keep fields inside the form.
-		 */
-		private function print_move_script() {
-			$script = <<<'JS'
-(function () {
-	var wrap = document.getElementById('aio-login-network-policies-wrap');
-	if (!wrap) return;
-	var form = document.querySelector('.wrap form[action="settings.php"], .wrap form');
-	var headings = document.querySelectorAll('.wrap form > h2, .wrap > form > h2');
-	var newSiteHeading = null;
-	headings.forEach(function (h) {
-		if (/new site settings/i.test((h.textContent || '').trim()) && !wrap.contains(h)) {
-			newSiteHeading = h;
-		}
-	});
-	if (newSiteHeading && newSiteHeading.parentNode) {
-		newSiteHeading.parentNode.insertBefore(wrap, newSiteHeading);
-	} else if (form && !form.contains(wrap)) {
-		var submit = form.querySelector('p.submit');
-		form.insertBefore(wrap, submit || null);
-	}
-	if (form) {
-		form.addEventListener('submit', function () {
-			wrap.querySelectorAll('select, input').forEach(function (el) {
-				el.disabled = false;
-			});
-		});
-	}
-})();
-JS;
-			$this->print_inline_script( $script );
-		}
-
-		/**
-		 * Show/hide Feature·Policy tables by Feature Category.
-		 */
-		private function print_category_script() {
-			$script = <<<'JS'
-(function () {
-	var select = document.getElementById('aio_login_feature_category');
-	if (!select) return;
-	function sync() {
-		var cat = select.value;
-		document.querySelectorAll('.aio-login-network-policy-table').forEach(function (table) {
-			table.style.display = table.getAttribute('data-category') === cat ? '' : 'none';
-		});
-	}
-	select.addEventListener('change', sync);
-	sync();
-})();
-JS;
-			$this->print_inline_script( $script );
-		}
-
-		/**
-		 * Update status text + dim override section when master toggle off.
-		 * Do not disable inputs — disabled fields are not submitted with the form.
-		 */
-		private function print_master_toggle_script() {
-			$enabled_text  = wp_json_encode( __( 'Enabled — Network configuration is the default for every site.', 'change-wp-admin-login' ) );
-			$disabled_text = wp_json_encode( __( 'Disabled — Each site manages AIO Login independently.', 'change-wp-admin-login' ) );
-			$script        = '(function () {
-	var input = document.getElementById("aio_login_network_level_enabled");
-	var status = document.getElementById("aio_login_network_level_status");
-	var section = document.getElementById("aio-login-site-override-section");
-	if (!input) return;
-	var enabledText = ' . $enabled_text . ';
-	var disabledText = ' . $disabled_text . ';
-	function sync() {
-		if (status) {
-			status.textContent = input.checked ? enabledText : disabledText;
-		}
-		if (section) {
-			section.style.opacity = input.checked ? "1" : "0.55";
-			section.style.pointerEvents = input.checked ? "" : "none";
-		}
-	}
-	input.addEventListener("change", sync);
-	sync();
-})();';
-			$this->print_inline_script( $script );
-		}
-
-		/**
-		 * Print an inline script via WP APIs (admin_footer context).
-		 *
-		 * @param string $script JavaScript source.
-		 */
-		private function print_inline_script( $script ) {
-			if ( function_exists( 'wp_print_inline_script_tag' ) ) {
-				wp_print_inline_script_tag( $script );
-				return;
-			}
-			echo '<script>' . $script . '</script>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 		}
 
 		/**

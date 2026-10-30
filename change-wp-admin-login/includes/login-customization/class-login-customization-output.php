@@ -81,12 +81,35 @@ if ( ! class_exists( 'AIO_Login\\Login_Customization\\Login_Customization_Output
 			$this->background_image = Login_Customization::file_exists( $this->background_image );
 
 			add_action( 'login_enqueue_scripts', array( $this, 'login_output' ), 15 );
-			// After template CSS is registered so Additional CSS prints last and overrides template !important rules.
-			add_action( 'login_enqueue_scripts', array( $this, 'output_additional_login_css_last' ), 999 );
+			add_action( 'login_enqueue_scripts', array( $this, 'enqueue_wordpress_additional_css' ), 999 );
 			add_action( 'login_enqueue_scripts', array( $this, 'enqueue_login_language_switcher_layout' ), 1000 );
 			add_action( 'login_footer', array( $this, 'print_login_language_switcher_move_script' ), 999 );
 			add_filter( 'login_headerurl', array( $this, 'login_header_url' ) );
 			add_filter( 'login_headertext', array( $this, 'login_header_text' ) );
+		}
+
+		/**
+		 * Apply WordPress Additional CSS on the login screen (no plugin-owned CSS storage).
+		 *
+		 * @return void
+		 */
+		public function enqueue_wordpress_additional_css() {
+			if ( ! function_exists( 'wp_get_custom_css' ) ) {
+				return;
+			}
+			$css = wp_get_custom_css();
+			if ( ! is_string( $css ) || '' === trim( $css ) ) {
+				return;
+			}
+
+			$handle = 'login';
+			if ( wp_style_is( 'aio-login-pro-template', 'enqueued' ) ) {
+				$handle = 'aio-login-pro-template';
+			} elseif ( wp_style_is( 'aio-login-free-template', 'enqueued' ) ) {
+				$handle = 'aio-login-free-template';
+			}
+
+			wp_add_inline_style( $handle, trim( $css ) );
 		}
 
 		/**
@@ -302,42 +325,6 @@ body.login:not(.interim-login) #registerform > .language-switcher .button {
 					wp_add_inline_style( $handle, $custom_css );
 				}
 			}
-		}
-
-		/**
-		 * Output "Additional CSS" on the last AIO template stylesheet handle so it always wins over template files.
-		 *
-		 * When rules were inlined on `login`, the template file (`aio-login-*-template`) loaded after `login`
-		 * and could override the same specificity / !important as user rules.
-		 *
-		 * @return void
-		 */
-		public function output_additional_login_css_last() {
-			$css = get_option( 'aio_login_custom-css', '' );
-			if ( ! is_string( $css ) || '' === trim( $css ) ) {
-				return;
-			}
-
-			$handle = 'login';
-			if ( wp_style_is( 'aio-login-pro-template', 'enqueued' ) ) {
-				$handle = 'aio-login-pro-template';
-			} elseif ( wp_style_is( 'aio-login-free-template', 'enqueued' ) ) {
-				$handle = 'aio-login-free-template';
-			}
-
-			/**
-			 * Which style handle Additional CSS is printed on (default: template handle, else `login`).
-			 *
-			 * @param string $handle Style handle.
-			 * @param string $css    Raw Additional CSS.
-			 */
-			$handle = apply_filters( 'aio_login_additional_css_style_handle', $handle, $css );
-
-			if ( ! is_string( $handle ) || '' === $handle ) {
-				return;
-			}
-
-			wp_add_inline_style( $handle, trim( $css ) );
 		}
 
 		/**

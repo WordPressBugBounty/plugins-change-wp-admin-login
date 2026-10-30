@@ -223,7 +223,10 @@ if ( ! class_exists( 'AIO_Login\\AIO_Login' ) ) {
 		}
 
 		/**
-		 * Uninstall AIO Login plugin.
+		 * Uninstall AIO Login Free plugin.
+		 *
+		 * Deletes Free-owned options explicitly. Does not use LIKE 'aio_login%' so
+		 * Pro (or other) settings are not wiped when Free is removed while Pro remains.
 		 */
 		public static function uninstall_plugin() {
 			\AIO_Login\Helper\Helper::drop_table( 'login_attempts' );
@@ -231,26 +234,106 @@ if ( ! class_exists( 'AIO_Login\\AIO_Login' ) ) {
 			// Legacy cleanup if an older Free install created this table before G5 split.
 			\AIO_Login\Helper\Helper::drop_table( 'aio_login_enumeration_logs' );
 
-			global $wpdb;
-			$sql = "DELETE FROM %i WHERE option_name LIKE 'aio_login%'";
-			$wpdb->query( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
-				$wpdb->prepare(
-				// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
-					$sql,
-					$wpdb->options
-				)
+			$free_options = array(
+				'aio_login__version',
+				'aio_login__update',
+				'aio_login__cwpal_enable',
+				'aio_login_change_login_url_enable',
+				'rwl_page',
+				'rwl_redirect',
+				'rwl_redirect_field',
+				'aio_login_google_recaptcha_enable',
+				'aio_login_google_recaptcha_version',
+				'aio_login_google_recaptcha_v2_site_key',
+				'aio_login_google_recaptcha_v2_secret_key',
+				'aio_login_google_recaptcha_v2_theme',
+				'aio_login_google_recaptcha_v3_site_key',
+				'aio_login_google_recaptcha_v3_secret_key',
+				'aio_login_google_recaptcha_v3_threshold',
+				'aio_login_user_enumeration_enable',
+				'aio_login_user_enumeration_rest_api',
+				'aio_login_user_enumeration_oembed',
+				'aio_login_user_enumeration_sitemaps',
+				'aio_login_user_enumeration_comments',
+				'aio_login_user_enumeration_login_registration',
+				'aio_login_otp_email_enable',
+				'aio_login_otp_email_length',
+				'aio_login_otp_email_expiration',
+				'aio_login_otp_email_resend_timer',
+				'aio_login_otp_email_max_retries',
+				'aio_login_otp_block_duration',
+				'aio_login_otp_length_hardened_6',
+				'aio_login_otp_upgrade_hardened_241',
+				'aio_login_logo',
+				'aio_login_logo_url',
+				'aio_login_logo_width',
+				'aio_login_logo_height',
+				'aio_login_logo_title',
+				'aio_login_margin_bottom',
+				'aio_login_disable_logo',
+				'aio_login_background_color',
+				'aio_login_background_image',
+				'aio_login_background_image_mobile',
+				'aio_login_favicon',
+				'aio_login_login_page_title',
+				'aio_login__customization_templates',
+				'aio_login_el_text_font_family',
+				'aio_login_elements_settings',
+				'aio_login_forgot_background_color',
+				'aio_login_forgot_background_image',
+				'aio_login_trusted_proxies',
+				'aio_login_trusted_proxy_header',
+				'aio_login_incompatible_pro_notice',
+				'aio_login_incompatible_pro_notice_dismissed',
+				'aio_login_limit_attempts_enable',
+				'aio_login_limit_attempts_maximum_attempts',
+				'aio_login_limit_attempts_timeout',
 			);
+
+			foreach ( $free_options as $option ) {
+				delete_option( $option );
+			}
+
+			// Shared Free/Pro-named options: only remove when Pro is not installed.
+			if ( ! function_exists( 'is_plugin_active' ) ) {
+				require_once ABSPATH . 'wp-admin/includes/plugin.php';
+			}
+			$pro_present = defined( 'AIO_LOGIN_PRO__VERSION' )
+				|| defined( 'AIO_LOGIN_PRO__FILE' )
+				|| is_plugin_active( 'aio-login-pro/aio-login-pro.php' )
+				|| is_plugin_active( 'aio-login-pro-released/aio-login-pro.php' );
+
+			if ( ! $pro_present ) {
+				$shared_when_free_only = array(
+					'aio_login_pro__two_factor_auth_enable',
+					'aio_login_pro__2fa_email_otp_enable',
+					'aio_login_pro__2fa_email_settings',
+					'aio_login_pro__2fa_policy_enforce_all',
+					'aio_login_pro__2fa_policy_enforce_specific',
+					'aio_login_pro__2fa_policy_roles',
+					'aio_login_pro_login_redirection_enabled',
+					'aio_login_pro_login_redirection_fallback_enabled',
+					'aio_login_pro_login_redirection_fallback_type',
+					'aio_login_pro_login_redirection_fallback_custom_url',
+					'aio_login_pro_login_redirection_rules',
+				);
+				foreach ( $shared_when_free_only as $option ) {
+					delete_option( $option );
+				}
+			}
 		}
 
 		/**
-		 * Load textdomain.
+		 * Load textdomain for non–WordPress.org installs (local /languages .mo).
+		 *
+		 * WordPress.org auto-loads translations for hosted plugins; avoid load_plugin_textdomain().
 		 */
 		public function load_textdomain() {
-			load_plugin_textdomain(
-				'change-wp-admin-login',
-				false,
-				dirname( plugin_basename( AIO_LOGIN__FILE ) ) . '/languages'
-			);
+			$locale = function_exists( 'determine_locale' ) ? determine_locale() : get_locale();
+			$mofile = AIO_LOGIN__DIR_PATH . 'languages/change-wp-admin-login-' . $locale . '.mo';
+			if ( is_readable( $mofile ) ) {
+				load_textdomain( 'change-wp-admin-login', $mofile );
+			}
 		}
 
 		/**

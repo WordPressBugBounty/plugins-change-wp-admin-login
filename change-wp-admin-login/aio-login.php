@@ -12,7 +12,7 @@ global $all_in_one_login;
 if ( is_null( $all_in_one_login ) ) {
 	define( 'AIO_LOGIN__DIR_PATH', plugin_dir_path( AIO_LOGIN__FILE ) );
 	define( 'AIO_LOGIN__DIR_URL', plugin_dir_url( AIO_LOGIN__FILE ) );
-	define( 'AIO_LOGIN__VERSION', '2.5.0' );
+	define( 'AIO_LOGIN__VERSION', '2.5.1' );
 	/** Minimum AIO Login Pro version allowed alongside this Free build. */
 	define( 'AIO_LOGIN__PAIRED_PRO_VERSION', '1.8.0' );
 	define(

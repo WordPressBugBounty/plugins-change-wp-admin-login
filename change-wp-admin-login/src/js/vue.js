@@ -52,7 +52,6 @@ import aioLoginLoginRedirection from './pages/login-redirection-feature.js';
 import aioLoginDatatable from './components/aio-login-datatable.vue';
 import aioLoginPopup from './components/aio-login-popup.vue';
 import aioLoginProPopup from './components/aio-login-pro-popup.vue';
-import aioLoginAppsumoHelloBar from './components/aio-login-appsumo-hello-bar.vue';
 import aioLoginTooltip from './components/aio-login-tooltip.vue';
 import aioLoginNetworkNotice from './components/aio-login-network-notice.vue';
 
@@ -110,7 +109,13 @@ aio_login__mount_helper.prototype.mount = function( element, required_components
 		aio_login__app.use( window.aio_login_pro.plugin(), { aio_login__object: aio_login__object, axios: axios, tabs: aio_login__app_object.tabs } );
 	}
 
-	aio_login__app.component( 'aio-login-login-redirection', aioLoginLoginRedirection );
+	// Pro owns Order / advanced UI; Free ships all_users-only when Pro is absent.
+	aio_login__app.component(
+		'aio-login-login-redirection',
+		( window.aio_login_pro && window.aio_login_pro.loginRedirection )
+			? window.aio_login_pro.loginRedirection
+			: aioLoginLoginRedirection
+	);
 
 	aio_login__app.component( 'aio-login-app', aioLoginApp );
 	aio_login__app.component( 'aio-login-header', aioLoginHeader );
@@ -145,7 +150,6 @@ aio_login__mount_helper.prototype.mount = function( element, required_components
 	aio_login__app.component( 'aio-login-getpro', aioLoginGetPro );
 	aio_login__app.component( 'aio-login-popup', aioLoginPopup );
 	aio_login__app.component( 'aio-login-pro-popup', aioLoginProPopup );
-	aio_login__app.component( 'aio-login-appsumo-hello-bar', aioLoginAppsumoHelloBar );
 	aio_login__app.component( 'aio-login-tooltip', aioLoginTooltip );
 	aio_login__app.component( 'aio-login-network-notice', aioLoginNetworkNotice );
 

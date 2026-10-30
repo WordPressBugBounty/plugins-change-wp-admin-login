@@ -185,7 +185,7 @@ if ( ! class_exists( 'AIO_Login\\Change_WP_Admin_Login\\Change_WP_Admin_Login' )
 					. sprintf(
 						// translators: %1$s: plugin name.
 						wp_kses_post( __( 'Please upgrade to the latest version of WordPress to activate %1$s.', 'change-wp-admin-login' ) ),
-						'<strong>' . wp_kses_post( __( 'Change wp-admin login', 'change-wp-admin-login' ) ) . '</strong>'
+						'<strong>' . wp_kses_post( __( 'All In One Login', 'change-wp-admin-login' ) ) . '</strong>'
 					)
 				. '</p>
 			</div>';
@@ -201,7 +201,7 @@ if ( ! class_exists( 'AIO_Login\\Change_WP_Admin_Login\\Change_WP_Admin_Login' )
 
 			$value = get_site_option( 'rwl_page', 'login' );
 			?>
-			<h3><?php echo esc_html__( 'Change wp-admin login', 'change-wp-admin-login' ); ?></h3>
+			<h3><?php echo esc_html__( 'Custom Login URL', 'change-wp-admin-login' ); ?></h3>
 			<p>
 				<?php
 				echo esc_html__(
@@ -252,14 +252,14 @@ if ( ! class_exists( 'AIO_Login\\Change_WP_Admin_Login\\Change_WP_Admin_Login' )
 
 			add_settings_section(
 				'change-wp-admin-login-section',
-				__( 'Change wp-admin login', 'change-wp-admin-login' ),
+				__( 'Custom Login URL', 'change-wp-admin-login' ),
 				array( $this, 'rwl_section_desc' ),
 				'permalink'
 			);
 
 			add_settings_section(
 				'aio_login__cwpal_sections',
-				__( 'Change wp-admin login', 'change-wp-admin-login' ),
+				__( 'Custom Login URL', 'change-wp-admin-login' ),
 				array( $this, 'rwl_section_desc' ),
 				'page=aio-login&tab=general'
 			);
@@ -323,10 +323,38 @@ if ( ! class_exists( 'AIO_Login\\Change_WP_Admin_Login\\Change_WP_Admin_Login' )
 				)
 			);
 
-			register_setting( 'aio_login__cwpal_settings', 'aio_login__cwpal_enable', array( $this, 'sanitize_toggle_switch' ) );
-			register_setting( 'aio_login__cwpal_settings', 'rwl_page_input', array( $this, 'sanitize_page_input' ) );
-			register_setting( 'aio_login__cwpal_settings', 'rwl_redirect_field', array( $this, 'sanitize_redirect_field' ) );
-			register_setting( 'aio_login__cwpal_settings', 'rwl_page', array( $this, 'sanitize_page_url' ) );
+			register_setting(
+				'aio_login__cwpal_settings',
+				'aio_login__cwpal_enable',
+				array(
+					'type'              => 'string',
+					'sanitize_callback' => array( $this, 'sanitize_toggle_switch' ),
+				)
+			);
+			register_setting(
+				'aio_login__cwpal_settings',
+				'rwl_page_input',
+				array(
+					'type'              => 'string',
+					'sanitize_callback' => array( $this, 'sanitize_page_input' ),
+				)
+			);
+			register_setting(
+				'aio_login__cwpal_settings',
+				'rwl_redirect_field',
+				array(
+					'type'              => 'string',
+					'sanitize_callback' => array( $this, 'sanitize_redirect_field' ),
+				)
+			);
+			register_setting(
+				'aio_login__cwpal_settings',
+				'rwl_page',
+				array(
+					'type'              => 'string',
+					'sanitize_callback' => array( $this, 'sanitize_page_url' ),
+				)
+			);
 
 			if ( current_user_can( 'manage_options' ) && isset( $_POST['_wpnonce'] ) && wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['_wpnonce'] ) ), 'update-permalink' ) ) {
 				if ( isset( $_POST['permalink_structure'] ) && isset( $_POST['rwl_redirect_field'] ) ) {
@@ -447,7 +475,7 @@ if ( ! class_exists( 'AIO_Login\\Change_WP_Admin_Login\\Change_WP_Admin_Login' )
 
 			echo '<p class="description">
 				<strong>'
-					. esc_attr__( 'Enable to customize your admin login URL.', 'change-wp-admin-login' )
+					. esc_html__( 'Enable to customize your admin login URL.', 'change-wp-admin-login' )
 				. '</strong>
 			</p>';
 		}
@@ -460,7 +488,7 @@ if ( ! class_exists( 'AIO_Login\\Change_WP_Admin_Login\\Change_WP_Admin_Login' )
 			echo '<code>' . esc_url( trailingslashit( home_url() ) ) . '</code> <input type="text" value="' . esc_attr( $value ) . '" name="rwl_redirect_field" id="rwl_redirect_field" class="regular-text" /> <code>/</code>';
 			echo '<p class="description">
 				<strong>'
-					. esc_attr__( 'Specify URL where attempts to access wp-login or wp-admin should be redirected to. If custom URL is set above, By default, this will redirect to your site\'s Home page unless you set it to something else.', 'change-wp-admin-login' )
+					. esc_html__( 'Specify URL where attempts to access wp-login or wp-admin should be redirected to. If custom URL is set above, By default, this will redirect to your site\'s Home page unless you set it to something else.', 'change-wp-admin-login' )
 				. '</strong>
 			</p>';
 		}
@@ -477,7 +505,7 @@ if ( ! class_exists( 'AIO_Login\\Change_WP_Admin_Login\\Change_WP_Admin_Login' )
 
 			echo '<p class="description">
 				<strong>'
-					. esc_attr__( 'Protect your website by changing the login page URL.', 'change-wp-admin-login' )
+					. esc_html__( 'Protect your website by changing the login page URL.', 'change-wp-admin-login' )
 				. '</strong>';
 		}
 

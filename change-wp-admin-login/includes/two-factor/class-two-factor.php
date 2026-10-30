@@ -95,7 +95,7 @@
 				if ( ! $this->is_user_strictly_enforced_by_2fa_policy( $user_id ) ) {
 					update_user_meta( $user_id, 'aio_login_pro__2fa_prompt_dismissed_until', time() + DAY_IN_SECONDS );
 				}
-				$redirect = isset( $_GET['redirect_to'] ) ? wp_validate_redirect( wp_unslash( $_GET['redirect_to'] ), admin_url() ) : admin_url(); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+				$redirect = isset( $_GET['redirect_to'] ) ? wp_validate_redirect( esc_url_raw( wp_unslash( $_GET['redirect_to'] ) ), admin_url() ) : admin_url(); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 				wp_safe_redirect( $redirect );
 				exit;
 			}
@@ -532,14 +532,15 @@
 
 				$settings = array(
 					'master_2fa_enabled'            => self::is_2fa_module_master_enabled(),
-					'site_method'                   => $site_method,
+					'site_method'                   => $is_admin_user ? $site_method : ( ( 'email' === $user_method ) ? 'email' : '' ),
 					'available_methods'             => self::get_available_methods(),
 					'enabled'                       => false,
 					'authenticator_app'             => false,
 					'email_otp'                     => $is_admin_user ? ( 'on' === get_option( 'aio_login_pro__2fa_email_otp_enable', 'off' ) ) : ( 'email' === $user_method ),
 					'remember_device'               => false,
 					'is_admin_user'                 => $is_admin_user,
-					'email_settings'                => $email_settings,
+					// Global email/OTP policy only for manage_options; limited users get their own prefs.
+					'email_settings'                => $is_admin_user ? $email_settings : array(),
 					'limited_email_settings'        => $limited_email_settings,
 					'totp_settings'                 => array(),
 					'remember_device_settings'      => array(),
@@ -557,7 +558,9 @@
 					'email_2fa_profile_verified'    => '1' === get_user_meta( $current_user->ID, 'aio_login_pro__2fa_email_profile_verified', true ),
 					'authenticator_plan_unlocked'   => false,
 					'professional_features_unlocked'=> false,
-					'network'                       => Network_Settings::get_feature_context( 'two_factor_authentication' ),
+					'network'                       => $is_admin_user
+						? Network_Settings::get_feature_context( 'two_factor_authentication' )
+						: array(),
 				);
 
 				return rest_ensure_response( $settings );

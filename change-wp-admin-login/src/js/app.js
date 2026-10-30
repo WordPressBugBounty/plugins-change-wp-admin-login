@@ -244,10 +244,6 @@ if (window.aio_login__object.routes.length) {
 			window.aio_login__object.routes[i].component = require('./pages/background.vue').default;
 		}
 
-		if ('custom-css' === route.my_slug) {
-			window.aio_login__object.routes[i].component = require('./pages/custom-css.vue').default;
-		}
-
 		if ('templates' === route.my_slug) {
 			assignFreeOrPro('templates', null);
 		}
